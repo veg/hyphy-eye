@@ -1,5 +1,3 @@
-<!-- TODO swap to using observable plot or something instead of d3/color-legend -->
-<!-- import {legend} from "@d3/color-legend" -->
 ```js
 import * as d3 from "npm:d3";
 import * as _ from "npm:lodash-es";
@@ -8,14 +6,15 @@ import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
 import * as ss from "./chi-squared.js";
+import * as colors from "./color-maps.js";
+import {FileAttachment} from "observablehq:stdlib";
 ```
 
 ```js
 const table_colors = {
-      'Diversifying' : '#e3243b',
-      'Neutral' : '#444',
-      'Purifying' : 'green',
-      'Invariable' : '#CCC'
+      'Diversifying' : colors.binary_with_gray[0],
+      'Neutral' : colors.binary_with_gray[1],
+      'Purifying' : colors.binary_with_gray[2],
     };
 const dyn_range_cap = 10;
 const vl = vegaLiteApi.register(vega, vegaLite);
@@ -23,23 +22,9 @@ const vl = vegaLiteApi.register(vega, vegaLite);
 
 # FEL analysis result visualization
 
-```js
-const params = new URLSearchParams(location.search)
-const fel_results_file = view(
-  params.get ("url") 
-    ? Inputs.file({accept: ".json", value : params.get ("url"), disable: true}) 
-    : Inputs.file({accept: ".json"})
-); 
-```
 
 ```js
-async function get_json(json_source)  {
-  if (json_source) {
-      return d3.json (json_source);
-  }
-  return fel_results_file.json();
-}
-const results_json = await get_json (params.get ("url"))
+const results_json = await FileAttachment("./data/fel_test_data.json").json();
 const has_srv = _.chain(results_json.MLE.content).some ((d)=>_.some (d,(dd)=>dd[0] > 0 && dd[0] != 1)).value()
 const has_ci = results_json ["confidence interval"]
 const has_T = _.some (_.map (results_json.MLE.content, (d)=>_.some(d, (dd)=>dd[5] > 0.)))
@@ -631,7 +616,6 @@ const plot_type =  view(Inputs.select(_.map (_.filter (plot_options, (d)=>d[1](r
 **Figure 1**. ${plot_legends[plot_type]}
 
 ```js
-console.log({"spec": plot_specs[plot_type] });
 const plot = vl.render({"spec": plot_specs[plot_type]});
 ```
 <div>${plot}</div>
