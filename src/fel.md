@@ -705,7 +705,7 @@ function display_tree(i) {
 const figure2 = display_tree((-1) + (+tree_id.split (" ")[1])).show()
 ```
 
-<link rel=stylesheet href='${resolve("phylotree@0.1/phylotree.css")}'>
+<link rel=stylesheet href='${import.meta.resolve("phylotree@0.1/phylotree.css")}'>
 <div id="tree_container">${figure2}</div>
 
 ```js
