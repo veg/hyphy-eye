@@ -11,7 +11,7 @@ import {FileAttachment} from "observablehq:stdlib";
  * A color map with three colors: dark blue, light gray, dark red
  * @type {Array<String>}
  */
-export const binary_with_gray = ['#001161','#757474','#611200'];
+export const binary_with_gray = ['#284073','#a6a4a4','#3f6c22'];
 
 /**
  * JSON Object with crameri color schemes, keys are scheme names, values are arrays of colors in '#RRGGBB' format.

@@ -12,9 +12,9 @@ import {FileAttachment} from "observablehq:stdlib";
 
 ```js
 const table_colors = {
-      'Diversifying' : colors.binary_with_gray[0],
+      'Diversifying' : colors.binary_with_gray[2],
       'Neutral' : colors.binary_with_gray[1],
-      'Purifying' : colors.binary_with_gray[2],
+      'Purifying' : colors.binary_with_gray[0],
     };
 const dyn_range_cap = 10;
 const vl = vegaLiteApi.register(vega, vegaLite);
@@ -140,7 +140,7 @@ const pv = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1"
 </tr>
 <tr>
 <td>
-  <div class="stati midnight_blue left ">
+  <div class="stati asbestos left ">
   <i class="icon-share icons"></i>
   <div>
   <b>${tested_branch_count}</b>
@@ -149,7 +149,7 @@ const pv = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1"
   </div>
 </td>
 <td style = 'width: 33%;'>
-  <div class="stati midnight_blue left ">
+  <div class="stati asbestos left ">
   <i class="icon-check icons"></i>
   <div>
   <b>${variable_site_count}</b>
@@ -158,7 +158,7 @@ const pv = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1"
   </div>
 </td>
 <td style = 'width: 33%;'>
-  <div class="stati midnight_blue left ">
+  <div class="stati asbestos left ">
   <i class="icon-layers icons"></i>
   <div>
   <b>${results_json.simulated || "N/A"}</b>
@@ -169,7 +169,7 @@ const pv = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1"
 </tr>
 <tr>
 <td style = 'width: 33%;'>
-  <div class="stati amethyst left ">
+  <div class="stati midnight_blue left ">
   <i class="icon-plus icons"></i>
   <div>
   <b>${_.filter (sites_table[1], (d)=>d.class == "Diversifying").length}</b>
@@ -178,7 +178,7 @@ const pv = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1"
   </div>
 </td>
 <td>
-  <div class="stati  amethyst left ">
+  <div class="stati  midnight_blue left ">
   <i class="icon-minus icons"></i>
   <div>
    <b>${_.filter (sites_table[1], (d)=>d.class == "Purifying").length}</b>
