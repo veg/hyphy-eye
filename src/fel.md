@@ -58,12 +58,12 @@ const fig1data = get_fig1data();
 ```
 
 ```js
-const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_options(has_pasmt), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
+const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_options(attrs.has_pasmt), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
 ```js
 const plot_description = plots.get_description(plot_type, pvalue_threshold)
-const plot_spec = plots.get_spec(plot_type, fig1data, pvalue_threshold, has_pasmt)
+const plot_spec = plots.get_spec(plot_type, fig1data, pvalue_threshold, attrs.has_pasmt)
 const tree_objects = plots.get_tree_objects(results_json)
 ```
 
