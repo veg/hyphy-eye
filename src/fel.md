@@ -6,22 +6,16 @@ import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
 import * as ss from "./chi-squared.js";
-import * as colors from "./color-maps.js";
+import * as utils from "./fel-utils.js";
+import * as plots from "./fel-plots.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
 ```js
-const table_colors = {
-      'Diversifying' : colors.binary_with_gray[2],
-      'Neutral' : colors.binary_with_gray[1],
-      'Purifying' : colors.binary_with_gray[0],
-    };
-const dyn_range_cap = 10;
 const vl = vegaLiteApi.register(vega, vegaLite);
 ```
 
-# FEL analysis result visualization
-
+# FEL results summary
 
 ```js
 const results_json = await FileAttachment("./data/fel_test_data.json").json();
@@ -31,81 +25,15 @@ const has_T = _.some (_.map (results_json.MLE.content, (d)=>_.some(d, (dd)=>dd[5
 const has_pasmt = results_json.MLE["LRT"]
 ```
 
+Statistical significance is evaluated based on  ${results_json.simulated  ? "<tt>" + results_json.simulated + "</tt> site-level parametric bootstrap replicates"  : "the asymptotic chi-squared distribution"}. This analysis **${has_srv? "includes" : "does not include"}** site to site synonymous rate variation. ${has_ci ? "Profile approximate confidence intervals for site-level dN/dS ratios have been computed." : ""}
+
 ```js
-function get_sites_table() {
-    const results    = [];
-    const headers  = _.clone(results_json.MLE.headers);
-    const format = {};
-    
-
-    format [headers[0][0]]  = (d)=>d.toFixed (3);
-    format [headers[1][0]]  = (d)=>d.toFixed (3);
-    format [headers[2][0]]  = (d)=>d.toFixed (3);
-    format [headers[3][0]]  = (d)=>d.toFixed (3);
-    format [headers[4][0]]  = (d)=>d <= pv ? html`<b>${d.toFixed (4)}</b>` : d.toFixed (4);
-    if (has_pasmt) {
-        format[headers[headers.length-1][0]] = format [headers[4][0]];
-    }
-    format [headers[5][0]]  = (d)=>d.toFixed (3);
-    headers.push (["class","Site classification at p<=" + pv]); 
-    format["class"] = (d)=>html`<span style = "color:${table_colors[d]}">${d}</span>`;
-  
-    _.each (results_json.MLE.content, (data, part)=> {
-        const site_lookup = results_json["data partitions"][part].coverage[0];
-        _.each (data, (row, i)=> {
-              let row_object = {
-                  'partition' : (+part) + 1,
-                  'codon' : site_lookup [i] + 1
-              };  
-              row_object[headers[0][0]] = +row[0];
-              row_object[headers[1][0]] = +row[1];
-              row_object[headers[2][0]] = +row[2];
-              row_object[headers[3][0]] = +row[3];
-              row_object[headers[4][0]] = +row[4];
-              if (has_T) {
-                  row_object[headers[5][0]] = +row[5];
-              }
-              if (has_ci) {
-                  row_object[headers[6][0]] = row[6];
-                  row_object[headers[7][0]] = row[7];
-                  row_object[headers[8][0]] = row[8];
-              }
-              if (has_pasmt) {
-                  row_object [headers[headers.length-2][0]] = row[ headers.length-2];
-              }
-              row_object[headers[headers.length-1][0]] = row[4] <= pv ? (row[0] < row[1] ? "Diversifying" : "Purifying") : (row[0] + row[1] ? "Neutral" : "Invariable");
-              results.push (row_object);
-        });
-       
-        
-    });
-    return [format, results, headers];
-}
-
-const sites_table = get_sites_table();
-const siteTableData = _.filter (sites_table[1], (x)=>table_filter.indexOf (x.class)>=0);
 const tested_branch_count =  d3.median (_.chain (results_json.tested).map ().map ((d)=>_.map (d, (dd)=>_.filter (dd, ddd=>ddd == "test"))).map ((d)=>d.length).value())
 const variable_site_count = d3.sum(_.chain (results_json.MLE.content).map ((d)=>_.filter (d, (dd)=>dd[0]+dd[1] > 0)).map (d=>d.length).value())
 ```
 
 ```js
-function qq(v) {
-  let vs = _.map (_.sortBy (v), (v)=> v <0 ? 0. : v);
-  let qq = [{'bs' : 0, 'c2' : 0}];
-  _.each (vs, (v, i)=> {
-      qq.push ({'bs' : (i+1)/vs.length, 'c2' : ss.cdf (v, 1)});
-  });
-  qq.push ([{'bs' : 1, 'c2' : 1}]);
-  return _.map (qq, (d)=>({'bs' : 1-d.bs, 'c2' : 1-d.c2}));
-}
-```
-
-FEL analysis was performed on the alignment from <tt>${results_json.input["file name"]}</tt>. Statistical significance is evaluated based on  ${results_json.simulated  ? "<tt>" + results_json.simulated + "</tt> site-level parametric bootstrap replicates"  : "the asymptotic &chi;<sup>2</sup> distribution"}. This analysis **${has_srv? "includes" : "does not include"}** site to site synonymous rate variation. ${has_ci ? "Profile approximate confidence intervals for site-level dN/dS ratios have been computed." : ""}
-
-<small>**Suggested citation**: <tt><small>${results_json.analysis["citation"]}</small></tt></small>
-
-```js
-const pv = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1", submit: "Update"}));
+const pvalue_threshold = await view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1", submit: "Update"}));
 ```
 
 <table style = 'font-size: 12px; width: 100%;'>
@@ -173,20 +101,37 @@ const pv = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1"
   <i class="icon-plus icons"></i>
   <div>
   <b>${_.filter (sites_table[1], (d)=>d.class == "Diversifying").length}</b>
-  <span>Sites under diversifying positive selection at p≤${pv}</span>
+  <span>Sites under diversifying positive selection at p≤${pvalue_threshold}</span>
   </div> 
   </div>
 </td>
-<td>
+<td style = 'width: 33%;'>
   <div class="stati  midnight_blue left ">
   <i class="icon-minus icons"></i>
   <div>
-   <b>${_.filter (sites_table[1], (d)=>d.class == "Purifying").length}</b>
-  <span>Sites under purifying selection at p≤${pv}</span>
+  <b>${_.filter (sites_table[1], (d)=>d.class == "Purifying").length}</b>
+  <span>Sites under purifying selection at p≤${pvalue_threshold}</span>
   </div> 
   </div>
-</td></tr>
+</td>
+</tr>
 </table>
+
+```js
+const sites_table = utils.get_sites_table(results_json, has_T, has_ci, has_pasmt, pvalue_threshold);
+const siteTableData = _.filter (sites_table[1], (x)=>table_filter.indexOf (x.class)>=0);
+```
+
+```js
+const table_filter = view(Inputs.checkbox(
+  ["Diversifying", "Purifying", "Neutral","Invariable"], 
+  {
+    value: ["Diversifying", "Purifying", "Neutral", "Invariable"], 
+    label: html`<b>Show</b>`, 
+    format: x => html`<span style="text-transform: capitalize; border-bottom: solid 2px ${plots.COLORS[x]}; margin-bottom: -2px;">${x}`
+  }
+));
+```
 
 ```js
 function get_fig1data() {
@@ -197,430 +142,19 @@ const fig1data = get_fig1data();
 ```
 
 ```js
-const plot_options = [["Site-level dN/dS estimates",(d)=>d["confidence interval"]],["alpha/beta site-level estimates", (d)=>1], ["Bootstrap vs asymptotic p-value", (d)=>has_pasmt], ["Rate density plots", (d)=>1], ["Q-Q plots", (d)=>has_pasmt], ["Dense rate plot", (d)=>1]]
-const plot_legends = {
-  "Site-level dN/dS estimates" : "Maximum likelihood estimates of dN/dS at each site, together with estimated profile condifence intervals (if available). dN/dS = 1 (neutrality) is depicted as a horizontal gray line. Boundaries between partitions (if present) are shown as vertibal dashed lines.",
-  "alpha/beta site-level estimates": "Maximum likelihood estimates of synonymous (α) and non-synonymous rates (β) at each site shown as bars. The line shows the estimates under the null model (α=β). Estimates above " + dyn_range_cap +" are censored at this value.",
-  "Dense rate plot" : "Maximum likelihood estimates of synonymous (α) and non-synonymous rates (β) at each site. Estimates above " + dyn_range_cap +" are censored at this value. p-values are also shown",
-  "Bootstrap vs asymptotic p-value" : "Comparison of site-level p-values for non-neutrality using parametric bootstrap and the asymptotic approximation. Rejection region (p ≤ " + pv + ") is shown as a shaded rectangle",
-  "Rate density plots" : "Kernel density estimates of site-level rate estimates. Means are shown with red rules. Estimates above " + dyn_range_cap +" are censored at this value.",
-  "Q-Q plots" : "Comparison of asymptotic vs boostrap LRT distributions (limited to 60 sites)."
-}
-
-function seqNames(tree) {
-    let seq_names = [];
-    tree.traverse_and_compute (n=>{
-        if (n.children && n.children.length) return;
-        seq_names.push (n.data.name);
-    });
-    return seq_names;
-};
-
-const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
-  let T = new phylotree.phylotree (tree);
-  T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name]["Global MG94xREV"];
-  return T;
-});
-
-function totalTreeLength(tree) {
-  let L = 0;
-  tree.traverse_and_compute ( (n)=> {
-     if (tree.branch_length (n)) {
-      L += +tree.branch_length (n);
-     }
-  });
-  return L;
-}
-
-function rate_density(data) {
-    let rate_options = [["alpha","α"],["beta","β"], ["omega", "dN/dS"]];
-    
-    return {
-        "data" : {"values" : _.map (data, 
-        (d)=> {
-            let dd = _.clone (d);
-            _.each (["alpha","beta","dN/dS MLE"], (f)=> {
-                dd[f] = Math.min (dyn_range_cap, dd[f]);
-            });
-            
-            return dd;
-        })}, 
-        "transform" : [{"calculate" : "min(" + dyn_range_cap + ",datum.alpha > 0 ? datum.beta/datum.alpha : datum.beta > 0 ? 10000 : 0)", "as" : "omega"}],
-        "vconcat" : _.map (rate_options, (rt)=>({"layer" : [{
-        "width": 800, "height": 100, 
-        "transform":[{
-            "density": rt[0],
-            "bandwidth": 0.2
-        }],
-        "mark": {type: "area", "opacity" : 0.5, tooltip : true, line : true},
-        "encoding": {
-            "x": {
-                "field": "value",
-                "grid" : null,
-                "title": rt[1],
-                "type": "quantitative",
-                "scale" : {"domain" : [0, dyn_range_cap]},
-                "axis": {"grid": false}
-            },
-            "y": {
-                "field": "density",
-                "type": "quantitative",
-                "title" : "",
-                "axis": {"grid": false}
-            },
-            "color" : {"value" : "grey"}
-        }},
-        {
-            "mark": "rule",
-            "encoding": {
-                "x": {"aggregate": "mean", "field": rt[0]},
-                "color": {"value": "firebrick"},
-                "size": {"value": 5},
-            }
-        },
-        {
-            "transform": [
-                {"aggregate": [{"op": "mean", "field": rt[0], "as": "rate_mean_" + rt[0]}]},
-                {"calculate": "format(datum['rate_mean_"+rt[0]+"'], '.2f')", "as": "fm1"}
-            ],
-            "mark": {
-                "type": "text",
-                "color": "gray",
-                "size" : 12,
-                "align": "left",
-                "y": -5,
-                "x": 2
-            },
-            "encoding": {
-                "x" : {"field" : "rate_mean_" + rt[0], "type": "quantitative"},
-                "text": {"type": "nominal", "field": "fm1"}
-            }
-        }]})
-        )            
-    }
-}
-function qq_plot(data, title) {
-    return {
-    "data": {"values": data},
-    "title" : title,
-    "layer" : [{
-        "mark": {"type" : "line", "color" : "firebrick", "clip" : true},
-        "width" : 100,
-        "height" : 100,
-        "encoding": {
-            "x": {
-                "field": "bs",
-                "type" : "quantitative",
-                "scale" : {"domain" : [0,0.25]},
-                "axis" : {"grid" : false, "title" : "Bootstrap p-value", "labelFontSize" : 12, "titleFontSize" : 14}
-            },
-            "y": {"field": "c2", "type" : "quantitative","axis" : {"grid" : false, "title" : "Asymptotic p-value", "labelFontSize" : 12, "titleFontSize" : 14}, "scale" : {"domain" : [0,0.25]}}
-        }
-    },{
-        "mark": {
-            "type": "rule",
-            "color": "grey",
-            "strokeWidth": 1,
-            "opacity" : 0.5,
-            "clip" : true
-        },
-        "encoding": {
-            "x": {
-                "datum": {"expr": "0"},
-                "type": "quantitative",
-            },
-            "y": {
-                "datum": {"expr": "0"},
-                "type": "quantitative",
-            },
-            "x2": {"datum": {"expr": "1"}},
-            "y2": {"datum": {"expr": "1"}}
-    }}]
-}}
-
-function pv_plot(data) {
-    let color_d = [];
-    let color_r = [];
-    _.each (table_colors, (v,c)=> {color_d.push (c); color_r.push (v);});
-    
-    return {
-        "width": 500, "height": 500, 
-        "data" : {"values" : data},
-        "transform" : [{"calculate" : "(datum['p-value'] -" + pv + ")* (datum['p-asmp'] -" + pv + ") >= 0 ? 'Yes' : 'No'", "as": "agree"}],
-        "layer" : [
-           {
-            "mark" : {"opacity": 0.1, "type": "rect", "color": "#DDD"},
-            "encoding": {
-                "x": {
-                  "datum": {"expr": "0"},
-                  "type": "quantitative",
-                 
-                },
-                "y": {
-                  "datum": {"expr": "0"},
-                  "type": "quantitative",
-                  
-                },
-                "x2": {"datum": {"expr": pv}},
-                "y2": {"datum": {"expr": pv}}
-              }
-          },
-           {
-             "mark" : {"type" : "point", "size" : 96, "tooltip" : {"content" : "data"}, "filled" : true, "opacity" : 0.4},
-             "encoding" : {
-               "x": {
-                "field": "p-value",
-                "type" : "quantitative",
-                "scale" : {"type" : "sqrt"},
-                "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Bootstrap p-value"}
-               },
-               "y": {
-                  "field": "p-asmp",
-                  "type" : "quantitative",
-                   "scale" : {"type" : "sqrt"},
-                  "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Asymptotic p-value"}
-              }, 
-              "color" : {"field" : "class", "scale" : {"domain" : color_d, "range" : color_r}, "title" : "Selection class"},
-              "shape": {
-                  "field" : "agree",
-                  "title" : "Both p-values agree",
-                "scale" : {"domain" : ["Yes","No"], "range" : ["circle", "cross"]}
-                }
-             }
-           }
-          ]
-    }
-  }
-  
-  function dNdS_with_ci(data, from, step) {
-    let color_d = [];
-    let color_r = [];
-    _.each (table_colors, (v,c)=> {color_d.push (c); color_r.push (v);});
-    return {
-        "width": {"step": 12},
-        "data" : {"values" : _.map (
-          _.filter (data, (d,i)=>i+1 >= from && i<= from + step),
-        (d)=> {
-            let dd = _.clone (d);
-            _.each (["dN/dS LB","dN/dS UB", "dN/dS MLE"], (f)=> {
-              dd[f] = Math.min (dyn_range_cap, dd[f]);
-            });
-            return dd;
-        })}, 
-        "transform" :[{"calculate": "1", "as": "neutral"}],
-        "encoding": {
-          "x": {
-            "field": "codon",
-            "type" : "nominal",
-            "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Codon"}
-          }
-        },
-        "layer": [
-          {
-            "mark": {"opacity": 1., "type": "line", "color": "steelblue"},
-            "encoding": {
-              "y": {
-                "field": "dN/dS LB",
-                "scale" : {"type" : "sqrt"},
-                "type" : "quantitative",
-                "axis": {"titleColor": "black", "grid" : false, "titleFontSize" : 14, "title" : "dN/dS"}
-              },
-              "y2": {
-                "field": "dN/dS UB",
-                "type" : "quantitative"
-              }
-            }
-          },
-          {
-            "mark": {"stroke": "black", "type": "point", "filled" : true, "size" : 64, "stroke" : null, "tooltip" : {"contents" : "data"}},
-            "encoding": {
-              "y": {
-                 "field": "dN/dS MLE",
-                  "type" : "quantitative",
-              },
-              "color" : {"field" : "class", "scale" : {"domain" : color_d, "range" : color_r}, "title" : "Selection class"}
-            }
-          },
-          /*{
-            "mark": {"stroke": "lightgrey", "type": "line", "size" : 1, "opacity" : 1.},
-            "encoding": {
-              "y": {
-                 "field": "dN/dS MLE",
-                  "type" : "quantitative",
-              },
-            }
-          }*/
-          {
-            "mark" : {"opacity": 0.5, "type": "line", "color": "gray"},
-            "encoding" : { "y": {
-                "field": "neutral",
-                "type" : "quantitative",
-              },
-               
-              "x": {
-              "field": "codon",
-              "type" : "nominal"},
-              "size": {"value": 2},
-            }
-          }
-          
-        ]
-    };
-  }
-  
-  function alpha_beta_plot(data, from, step) {
-    let color_d = [];
-    let color_r = [];
-    _.each (table_colors, (v,c)=> {color_d.push (c); color_r.push (v);});
-    return {
-        "width": {"step": 12},
-        "data" : {"values" : _.map (
-          _.filter (data, (d,i)=>i+1 >= from && i< from + step-1),
-        (d)=> {
-            let dd = _.clone (d);
-            _.each (["alpha","beta", "alpha=beta"], (f)=> {
-              dd[f] = Math.min (dyn_range_cap, dd[f]);
-            });
-            dd.alpha = -dd.alpha;
-            return dd;
-        })}, 
-        "transform" :[{"calculate": "0", "as": "neutral"},
-                      {"calculate": '-datum["alpha=beta"]', "as": "amb2"}],
-        "encoding": {
-          "x": {
-            "field": "codon",
-            "type" : "nominal",
-            "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Codon"}
-          }
-        },
-        "layer": [
-          {
-            "mark" : {"opacity": 0.5, "type": "line", "color": "gray"},
-            "encoding" : { "y": {
-                "field": "neutral",
-                "type" : "quantitative",
-              },
-               
-              "x": {
-              "field": "codon",
-              "type" : "nominal"},
-              "size": {"value": 2},
-            }
-          },
-          {
-            "mark": {"type": "bar", "filled" : true, "stroke" : null, "opacity" : 0.5, "tooltip" : {"contents" : "data"}},
-            "encoding": {
-              "y": {
-                 "field": "alpha",
-                  "type" : "quantitative",
-                  "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Rate estimate", "labelExpr": "datum.label > 0 ? 'β = ' + datum.label: (toNumber(datum.label) == '0' ? '0' : 'α = ' + replace (datum.label, /[^0-9\.]/,''))"}
-              },
-              "fill" : {"field" : "class", "scale" : {"domain" : color_d, "range" : color_r}, "title" : "Selection class"}
-            }
-          },
-          {
-            "mark": { "type": "bar", "filled" : true, "opacity" : 0.5, "stroke" : null, "tooltip" : {"contents" : "data"}},
-            "encoding": {
-              "y": {
-                 "field": "beta",
-                  "type" : "quantitative",
-              },
-              "fill" : {"field" : "class", "scale" : {"domain" : color_d, "range" : color_r}, "title" : "Selection class"}
-            }
-          },
-          {
-            "mark": {"opacity": 1., "type": "line", "color": "#444"},
-            "encoding": {
-              "y": {
-                "field": "alpha=beta",
-                "type" : "quantitative"
-              },
-              "y2": {
-                "field": "amb2",
-                "type" : "quantitative"
-              }
-            }
-          }
-          
-        ]
-    };
-  }
-  
-  function denser_plot(data) {
-    let columns = [["alpha","α"],["beta","β"],["p-value", "p-value"]];
-    return {
-        "data" : {"values" : _.map (data,
-        (d)=> {
-            let dd = _.clone (d);
-            _.each (columns, (f)=> {
-              dd[f[0]] = Math.min (dyn_range_cap, dd[f[0]]);
-            });
-            return dd;
-        })}, 
-        
-        "vconcat" : _.map (columns, (cc,i)=> ({
-          "width" : 800,
-          "height" : 50,
-          "mark": {"type": "area", "color" : "lightblue", "stroke" : "black", "interpolate" : "step"},
-          "encoding": {
-            "x": {
-              "field": "codon",
-              "type" : "quantitative",
-              "axis": {"grid" : false, "titleFontSize" : 14, "title" : i == columns.length -1 ? "Codon" : null}
-            },
-            "y": {
-                   "field": cc[0],
-                    "type" : "quantitative",
-                    "axis": {"grid" : false, "titleFontSize" : 14, "title" : cc[1]}
-                }
-          }}))
-    };
-  }
-
-const plot_specs = {
-  "Site-level dN/dS estimates" : {
-  "width": 800, "height": 200, 
-  "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-      return dNdS_with_ci (fig1data, d, 70)
-  })},
-  "alpha/beta site-level estimates" : {
-  "width": 800, "height": 200, 
-  "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-      return alpha_beta_plot (fig1data, d, 70)
-  })},
-  "Bootstrap vs asymptotic p-value": pv_plot (fig1data),
-  "Rate density plots" : rate_density (fig1data),
-  "Dense rate plot" : denser_plot(fig1data),
-  "Q-Q plots" : has_pasmt ? {
-    "columns": 5,
-    "hconcat": _.map (_.map (_.filter (table1, (d)=>d.class != "Invariable").slice (0,60), (d)=>[d.partition, d.codon]), (d)=>qq_plot (qq(_.map (results_json.MLE.LRT[d[0]-1][d[1]-1], (d)=>(d[0]))), "Site "+d[1]))
-  } : null
-}
+const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_options(has_pasmt), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
 ```js
-const table_filter = view(Inputs.checkbox(
-  ["Diversifying", "Purifying", "Neutral","Invariable"], 
-  {
-    value: ["Diversifying", "Purifying", "Neutral", "Invariable"], 
-    label: html`<b>Show</b>`, 
-    format: x => html`<span style="text-transform: capitalize; border-bottom: solid 2px ${table_colors[x]}; margin-bottom: -2px;">${x}`
-  }
-));
+const plot_description = plots.get_description(plot_type, pvalue_threshold)
+const plot_spec = plots.get_spec(plot_type, fig1data, pvalue_threshold, has_pasmt)
+const tree_objects = plots.get_tree_objects(results_json)
 ```
 
-```js
-const plot_type =  view(Inputs.select(_.map (_.filter (plot_options, (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
-```
+**Figure 1**. <small>${plot_description}</small>
+<div>${vl.render({"spec": plot_spec})}</div>
 
-**Figure 1**. ${plot_legends[plot_type]}
-
-```js
-const plot = vl.render({"spec": plot_specs[plot_type]});
-```
-<div>${plot}</div>
-
-**Table 1**. Detailed site-by-site results from the FEL analysis
+**Table 1**. <small>Detailed site-by-site results from the FEL analysis</small>
 
 ```js
 const table1 = view(Inputs.table (siteTableData, {
@@ -630,12 +164,10 @@ const table1 = view(Inputs.table (siteTableData, {
 ```
 
 <details>
-    <summary><b>Table column definitions</b></small></summary>
-<small>
-<dl>
-${_.map (sites_table[2], (d)=>"<dt><tt>"+d[0]+"</tt></dt><dd>" + d[1] + "</dd>")}
-</dl>
-</small>
+  <summary><b>Table column definitions</b></small></summary>
+  <small><dl>
+    ${_.map (sites_table[2], (d)=>"<dt><tt>"+d[0]+"</tt></dt><dd>" + d[1] + "</dd>")}
+  </dl></small>
 </details>
 
 ```js
@@ -705,8 +237,11 @@ function display_tree(i) {
 const figure2 = display_tree((-1) + (+tree_id.split (" ")[1])).show()
 ```
 
-
 <div id="tree_container">${figure2}</div>
+
+**Citation**
+
+<p><tt><small>${results_json.analysis["citation"]}</small></tt></p>
 
 ```js
 const floatFormat = d3.format ("2g")
