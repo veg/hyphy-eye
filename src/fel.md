@@ -6,8 +6,8 @@ import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
 import * as ss from "./stats/chi-squared.js";
-import * as utils from "./fel-utils.js";
-import * as plots from "./fel-plots.js";
+import * as utils from "./fel/fel-utils.js";
+import * as plots from "./fel/fel-plots.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
@@ -118,7 +118,7 @@ const pvalue_threshold = await view(Inputs.text({label: html`<b>p-value threshol
 </table>
 
 ```js
-const sites_table = utils.get_sites_table(results_json, has_T, has_ci, has_pasmt, pvalue_threshold);
+const sites_table = utils.get_sites_table(results_json, pvalue_threshold);
 const siteTableData = _.filter (sites_table[1], (x)=>table_filter.indexOf (x.class)>=0);
 ```
 

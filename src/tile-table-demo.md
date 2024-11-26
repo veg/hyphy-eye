@@ -1,6 +1,6 @@
 ```js
 import * as tileTable from "./components/tile-table.js";
-import * as utils from "./fel-utils.js";
+import * as felUtils from "./fel/fel-utils.js";
 ```
 
 # TileTable Component Examples
@@ -37,17 +37,19 @@ const trivial_tile_table = tileTable.tile_table(trivial_inputs);
 // TODO: we need utils for grabbing out these values, or one util that returns an object w these props
 // TODO: also a util for making a TileTable spec from the results
 const results_json = await FileAttachment("./data/fel_test_data.json").json();
-const has_srv = _.chain(results_json.MLE.content).some ((d)=>_.some (d,(dd)=>dd[0] > 0 && dd[0] != 1)).value()
-const has_ci = results_json ["confidence interval"]
-const has_T = _.some (_.map (results_json.MLE.content, (d)=>_.some(d, (dd)=>dd[5] > 0.)))
-const has_pasmt = results_json.MLE["LRT"]
-const tested_branch_count =  d3.median (_.chain (results_json.tested).map ().map ((d)=>_.map (d, (dd)=>_.filter (dd, ddd=>ddd == "test"))).map ((d)=>d.length).value())
-const variable_site_count = d3.sum(_.chain (results_json.MLE.content).map ((d)=>_.filter (d, (dd)=>dd[0]+dd[1] > 0)).map (d=>d.length).value())
-const pvalue_threshold = 0.01;
-const sites_table = utils.get_sites_table(results_json, has_T, has_ci, has_pasmt, pvalue_threshold);
+const fel_attrs = felUtils.get_attributes(results_json);
+const pvalue_threshold = 0.1;
+const tile_specs = felUtils.get_tile_specs(results_json, pvalue_threshold);
+const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
 ```
 
-<!-- as things are, this inherits stylesheets from the tile-table module, which i dont really like -->
+## The FEL TileTable Component Test
+
+</br>
+<div>${tileTable.tile_table(tile_specs)}</div>
+</br>
+
+
 ## The OG FEL TileTable for Comparison
 
 </br>
@@ -58,7 +60,7 @@ const sites_table = utils.get_sites_table(results_json, has_T, has_ci, has_pasmt
   <div class="stati asbestos left ">
   <i class="icon-options-vertical icons"></i>
   <div>
-  <b>${results_json.input["number of sequences"]}</b>
+  <b>${fel_attrs.number_sequences}</b>
   <span>sequences in the alignment</span>
   </div> 
   </div>
@@ -67,7 +69,7 @@ const sites_table = utils.get_sites_table(results_json, has_T, has_ci, has_pasmt
   <div class="stati asbestos left ">
   <i class="icon-options icons"></i>
   <div>
-  <b>${results_json.input["number of sites"]}</b>
+  <b>${fel_attrs.number_sites}</b>
   <span>codon sites in the alignment</span>
   </div> 
   </div>
@@ -76,7 +78,7 @@ const sites_table = utils.get_sites_table(results_json, has_T, has_ci, has_pasmt
   <div class="stati asbestos left ">
   <i class="icon-arrow-up icons"></i>
   <div>
-  <b>${results_json.input["partition count"]}</b>
+  <b>${fel_attrs.number_partitions}</b>
   <span>partitions</span>
   </div> 
   </div>
@@ -87,7 +89,7 @@ const sites_table = utils.get_sites_table(results_json, has_T, has_ci, has_pasmt
   <div class="stati asbestos left ">
   <i class="icon-share icons"></i>
   <div>
-  <b>${tested_branch_count}</b>
+  <b>${fel_attrs.tested_branch_count}</b>
   <span>median branches/partition used for testing</span>
   </div> 
   </div>
@@ -96,7 +98,7 @@ const sites_table = utils.get_sites_table(results_json, has_T, has_ci, has_pasmt
   <div class="stati asbestos left ">
   <i class="icon-check icons"></i>
   <div>
-  <b>${variable_site_count}</b>
+  <b>${fel_attrs.variable_site_count}</b>
   <span>non-invariant sites tested</span>
   </div> 
   </div>
