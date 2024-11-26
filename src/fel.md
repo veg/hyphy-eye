@@ -5,7 +5,7 @@ import * as phylotree from "npm:phylotree";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as ss from "./chi-squared.js";
+import * as ss from "./stats/chi-squared.js";
 import * as utils from "./fel-utils.js";
 import * as plots from "./fel-plots.js";
 import {FileAttachment} from "observablehq:stdlib";
