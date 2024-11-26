@@ -7,7 +7,7 @@
 <br/>
 
 ```js
-import * as colors from "./color-maps.js"
+import * as colors from "./color-maps/schemes.js"
 import * as Plot from "npm:@observablehq/plot";
 
 const continuous_schemes = colors.crameri;
@@ -60,7 +60,7 @@ function getLabeledSwatches(schemesJson) {
         const exLegend = Plot.legend({
             color: {
                 type: "categorical",
-                domain: scheme.map((d, i) => `${i + 1}`),
+                domain: scheme.map((d, i) => `${i}`),
                 range: scheme
             },
             width: scheme.length * 60,

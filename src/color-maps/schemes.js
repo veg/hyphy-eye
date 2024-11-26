@@ -1,7 +1,8 @@
 /**
- * @module color-maps
+ * @module color-maps/schemes
  * @description A collection of reusable and accessible color maps 
  * and functions for creating embeddable examples of the same.
+ * At some point I may break this out into separate modules like 'crameri' and 'tol', etc
  */
 
 import {FileAttachment} from "observablehq:stdlib";
@@ -19,14 +20,14 @@ export const binary_with_gray = ["#284073","#a6a4a4","#3f6c22"];
  * I may break this into "converging", "diverging", etc.
  * @type {Object}
  */
-export const crameri = await FileAttachment("data/crameri-color-schemes.json").json();
+export const crameri = await FileAttachment("../data/crameri-color-schemes.json").json();
 
 /**
  * JSON Object with tol color schemes, keys are scheme names, values are arrays of colors in "#RRGGBB" format.
  * These color schemes are all categorical.
  * @type {Object}
  */
-export const tol = await FileAttachment("data/tol-color-schemes.json").json();
+export const tol = await FileAttachment("../data/tol-color-schemes.json").json();
 
 /**
  * Given an array of colors, returns a function that ramps between them.
