@@ -11,21 +11,37 @@ import {FileAttachment} from "observablehq:stdlib";
  * A color map with three colors: dark blue, light gray, dark red
  * @type {Array<String>}
  */
-export const binary_with_gray = ['#284073','#a6a4a4','#3f6c22'];
+export const binary_with_gray = ["#284073","#a6a4a4","#3f6c22"];
 
 /**
- * JSON Object with crameri color schemes, keys are scheme names, values are arrays of colors in '#RRGGBB' format.
- * I may break this into 'converging', 'diverging', etc.
+ * JSON Object with crameri color schemes, keys are scheme names, values are arrays of colors in "#RRGGBB" format.
+ * These color schemes are all continuous.
+ * I may break this into "converging", "diverging", etc.
  * @type {Object}
  */
 export const crameri = await FileAttachment("data/crameri-color-schemes.json").json();
 
+/**
+ * JSON Object with tol color schemes, keys are scheme names, values are arrays of colors in "#RRGGBB" format.
+ * These color schemes are all categorical.
+ * @type {Object}
+ */
+export const tol = await FileAttachment("data/tol-color-schemes.json").json();
 
-
-
-
-
-
+/**
+ * Given an array of colors, returns a function that ramps between them.
+ * The returned function takes a value between 0 and 1 and returns a color.
+ * Intended for use with continuous color maps.
+ * see https://github.com/d3/d3-scale-chromatic/blob/main/src/sequential-multi/viridis.js
+ * @param {Array<String>} range - An array of colors in "#RRGGBB" format.
+ * @returns {Function} A function that takes a value from 0 to 1 and returns a color.
+ */
+export function ramp(range) {
+    var n = range.length;
+    return function(t) {
+        return range[Math.max(0, Math.min(n - 1, Math.floor(t * n)))];
+    };
+}
 
 
 
@@ -39,7 +55,6 @@ export const crameri = await FileAttachment("data/crameri-color-schemes.json").j
  */
 
 
-
 /**
  * Convert a color map (xml) to a string that can be used in Vega/d3/etc.
  * see https://observablehq.com/@fil/colormaps
@@ -47,8 +62,8 @@ export const crameri = await FileAttachment("data/crameri-color-schemes.json").j
  * @returns {string} string of hex color values.
  */
 function scheme(cmap) {
-    const m = [], fields = ['r', 'g', 'b'];
-    var f = cmap.getElementsByTagName('Point');
+    const m = [], fields = ["r", "g", "b"];
+    var f = cmap.getElementsByTagName("Point");
     for (var i = 0; i < f.length; i++) {
         for (let c in fields)
             m.push(
@@ -59,23 +74,9 @@ function scheme(cmap) {
 }
 
 /**
- * Given an array of colors, returns a function that ramps between them.
- * The returned function takes a value between 0 and 1 and returns a color.
- * see https://github.com/d3/d3-scale-chromatic/blob/main/src/sequential-multi/viridis.js
- * @param {Array<String>} range - An array of colors in '#RRGGBB' format.
- * @returns {Function} A function that takes a value from 0 to 1 and returns a color.
- */
-export function ramp(range) {
-    var n = range.length;
-    return function(t) {
-        return range[Math.max(0, Math.min(n - 1, Math.floor(t * n)))];
-    };
-}
-
-/**
  * Creates a canvas element showing a ramp of colors from a given color map.
  * The given color map should be a function that takes a value from 0 to 1 and
- * returns a color in '#RRGGBB' format. The returned canvas element is a
+ * returns a color in "#RRGGBB" format. The returned canvas element is a
  * horizontal strip showing a gradient of those colors.
  * see https://observablehq.com/@mbostock/ramp
  * @param {Function} color - A color map function.
@@ -83,7 +84,7 @@ export function ramp(range) {
  * @returns {HTMLCanvasElement} A canvas element.
  */
 export function draw_ramp(color, n = 512) {
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width  = n;
     canvas.height = 1;
     const context = canvas.getContext("2d");
