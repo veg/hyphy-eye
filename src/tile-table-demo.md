@@ -30,6 +30,27 @@ const trivial_inputs = [
 const trivial_tile_table = tileTable.tile_table(trivial_inputs);
 ```
 
+```
+import * as tileTable from "./components/tile-table.js";
+
+const trivial_inputs = [
+    {
+        "number": 12,
+        "description": "I'm a number!",
+        "icon": "icon-options-vertical icons",
+        "color": "asbestos",
+    },
+    {
+        "number": 24,
+        "description": "I'm twice the last number!",
+        "icon": "icon-options icons",
+        "color": "midnight_blue"
+    }
+]
+
+const trivial_tile_table = tileTable.tile_table(trivial_inputs);
+```
+
 <div>${trivial_tile_table}</div>
 </br>
 
