@@ -21,7 +21,7 @@ and then importing them elsewhere like:
 ```
 <script type="module">
 
-import {Chart} from "https://my-workspace.observablehq.cloud/my-app/component.js";
+import {Component} from "https://my-workspace.observablehq.cloud/my-app/component.js";
 
 document.body.append(await Component());
 
