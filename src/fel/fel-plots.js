@@ -1,6 +1,6 @@
 import * as phylotree from "npm:phylotree";
 import * as _ from "npm:lodash-es";
-import * as colors from "../color-maps/schemes.js";
+import * as colors from "../color-maps/custom.js";
 
 const DYN_RANGE_CAP = 10;
 export const COLORS = {

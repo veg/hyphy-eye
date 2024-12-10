@@ -27,7 +27,7 @@ const trivial_inputs = [
     }
 ]
 
-const trivial_tile_table = tileTable.tile_table(trivial_inputs);
+const trivial_tile_table = tileTable.get_html(trivial_inputs);
 ```
 
 ```
@@ -48,10 +48,15 @@ const trivial_inputs = [
     }
 ]
 
-const trivial_tile_table = tileTable.tile_table(trivial_inputs);
+const trivial_tile_table = tileTable.get_html(trivial_inputs);
 ```
 
-<div>${trivial_tile_table}</div>
+```js
+const ttDiv = document.createElement("div")
+ttDiv.innerHTML = trivial_tile_table
+```
+
+<div>${ttDiv}</div>
 </br>
 
 ```js
@@ -62,12 +67,14 @@ const fel_attrs = felUtils.get_attributes(results_json);
 const pvalue_threshold = 0.1;
 const tile_specs = felUtils.get_tile_specs(results_json, pvalue_threshold);
 const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
+const fel_tile_table = document.createElement("div")
+fel_tile_table.innerHTML = tileTable.get_html(tile_specs);
 ```
 
 ## The FEL TileTable Component Test
 
 </br>
-<div>${tileTable.tile_table(tile_specs)}</div>
+<div>${fel_tile_table}</div>
 </br>
 
 

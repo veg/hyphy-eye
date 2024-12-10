@@ -4,7 +4,6 @@
  * an icon and a description
  */
 
-
 /**
  * Creates a table of tiles with each tile showing a number, 
  * an icon and a description. The table will have a variable number of columns.
@@ -12,37 +11,47 @@
  * custom defined. See `supported_colors` for a list of recognized color names.
  * @param {Array} table_spec - An array of objects with properties number, description, icon and color
  * @param {number} columns - The number of columns in the table, defaults to 3
- * @returns {HTMLTableElement} - A table with the specified tiles
+ * @returns {string} - HTML string representing the table with the specified tiles
  */
-export function tile_table(table_spec, columns = 3) {
-    const table = document.createElement('table');
+export function get_html(table_spec, columns = 3) {
     const rows = calculate_rows(table_spec, columns);
-    
+    let tableHTML = `<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.css">
+                     <style>${stati_styles}</style>
+                     <table>`;
+
     for (let i = 0; i < rows; i++) {
-        const tr = document.createElement('tr');
+        tableHTML += '<tr>';
         for (let j = 0; j < columns; j++) {
             const index = i * columns + j;
             if (index < table_spec.length) {
                 const width = 100 / columns + '%';
-                tr.appendChild(build_tile(table_spec[index], width));
+                tableHTML += build_tile_html(table_spec[index], width);
             }
         }
-        table.appendChild(tr);
+        tableHTML += '</tr>';
     }
-    
-    // TODO: this is bad form i suppose, wip
-    // needs to only affect the returned element rather than the whole page
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.type = 'text/css';
-    link.href = "https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.css";
-    document.head.appendChild(link);
+    tableHTML += '</table>';
 
-    const style = document.createElement("style");
-    style.innerHTML = stati_styles;
-    document.head.appendChild(style);
+    return tableHTML;
+}
 
-    return table;
+/**
+ * Creates a string with the HTML for a table cell with a tile,
+ * containing a number, an icon, and a description.
+ * @param {Object} tile_json - Object with properties number, description, icon and color
+ * @param {string} width - The width of the table cell
+ * @returns {string} - HTML string for the table cell
+ */
+function build_tile_html(tile_json, width) {
+    const iconClasses = tile_json.icon.split(' ').join(' ');
+    return `<td style="width: ${width};">
+                <div class="stati ${tile_json.color} left">
+                    <i class="${iconClasses}"></i>
+                    <div>
+                        <b>${tile_json.number}</b><span>${tile_json.description}</span>
+                    </div>
+                </div>
+            </td>`;
 }
 
 /**
@@ -158,34 +167,4 @@ function calculate_rows(table_spec, columns) {
     const numRows = Math.ceil(numElements / columns);
 
     return numRows;
-}
-
-/**
- * Creates a table cell with a tile with a number, an icon and a description.
- * @param {Object} tile_json - Object with properties number, description, icon and color
- * @param {string} width - The width of the table cell
- * @returns {HTMLTableCellElement} - A table cell containing the tile 
- */
-function build_tile(tile_json, width) {
-    const td = document.createElement('td');
-    td.style.width = width;
-
-    const div = document.createElement('div');
-    div.classList.add('stati', tile_json.color, 'left');
-    const icon = document.createElement('i');
-    const iconClasses = tile_json.icon.split(' ');
-    icon.classList.add(...iconClasses);
-    div.appendChild(icon);
-
-    const div2 = document.createElement('div');
-    const b = document.createElement('b');
-    b.textContent = tile_json.number;
-    div2.appendChild(b);
-    const span = document.createElement('span');
-    span.textContent = tile_json.description;
-    div2.appendChild(span);
-    div.appendChild(div2);
-
-    td.appendChild(div);
-    return td;
 }
