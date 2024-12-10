@@ -37,9 +37,10 @@ export default {
   // preserveIndex: false, // drop /index from URLs
 
   dynamicPaths: [
-    "/color-maps/schemes.js",
-    "/data/crameri-color-schemes.json",
-    "/data/tol-color-schemes.json",
+    "/color-maps/custom.js",
+    "/color-maps/crameri.js",
+    "/color-maps/tol.js",
+    "/color-maps/utils.js",
     "/components/tile-table.js"
   ]
 };
