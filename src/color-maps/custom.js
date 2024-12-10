@@ -1,0 +1,1 @@
+export const binary_with_gray = ["#284073","#a6a4a4","#3f6c22"]

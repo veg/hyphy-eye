@@ -7,11 +7,13 @@
 <br/>
 
 ```js
-import * as colors from "./color-maps/schemes.js"
+import * as continuous_schemes from "./color-maps/crameri.js";
+import * as categorical_schemes from "./color-maps/tol.js";
+import * as custom_schemes from "./color-maps/custom.js";
+import * as utils from "./color-maps/utils.js";
 import * as Plot from "npm:@observablehq/plot";
 
-const continuous_schemes = colors.crameri;
-
+console.log(continuous_schemes)
 // TODO: refactor, as some of this logic is reused in the function below as well
 // and is likely to be reused for any other color schemes we add
 function getLabeledRamps(schemesJson) {
@@ -22,7 +24,7 @@ function getLabeledRamps(schemesJson) {
         const label = document.createElement("text")
         label.textContent = name
         schemeElement.append(label)
-        const rampFxn = colors.ramp(continuous_schemes[name])
+        const rampFxn = utils.ramp(continuous_schemes[name])
         const exLegend = Plot.legend({
             color: {
                 type: "linear",
@@ -46,8 +48,6 @@ function getLabeledRamps(schemesJson) {
 </br>
 
 ```js
-const categorical_schemes = colors.tol;
-
 function getLabeledSwatches(schemesJson) {
     const allSchemes = document.createElement("div")
 
@@ -90,7 +90,7 @@ function getLabeledSwatches(schemesJson) {
 ## Custom Schemes
 
 ```js
-const scheme = colors.binary_with_gray
+const scheme = custom_schemes.binary_with_gray
 const legend = 
     Plot.legend({
         color: {
