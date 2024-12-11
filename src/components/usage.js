@@ -24,11 +24,18 @@ export function weeklyPlot(usageData) {
         Plot.axisX({ label: "Week", labelOffset: 40 }),
         Plot.rectY(
           transformedData,
-          Plot.binX({ y: "count" }, { x: "created", fill: "orange" }),
+          Plot.binX(
+            { y: "count" },
+            {
+              x: "created",
+              interval: "week",
+              fill: "orange",
+            },
+          ),
         ),
         Plot.ruleY([0]),
       ],
-    })
+    }),
   );
 }
 
@@ -61,11 +68,11 @@ export function sitesAndSequences(usageData) {
           y: "sequences",
           fill: "purple",
           title: (d) =>
-            `Date: ${
-              d3.utcFormat("%Y-%m-%d")(d.created)
-            }<br>Sites: ${d.sites}<br>Sequences: ${d.sequences}`,
+            `Date: ${d3.utcFormat("%Y-%m-%d")(
+              d.created,
+            )}<br>Sites: ${d.sites}<br>Sequences: ${d.sequences}`,
         }),
       ],
-    })
+    }),
   );
 }
