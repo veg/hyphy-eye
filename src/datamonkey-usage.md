@@ -9,7 +9,7 @@ const methods = [
   { name: "aBSREL", url: "//datamonkey.org/absrel/usage" },
   { name: "BGM", url: "//datamonkey.org/bgm/usage" },
   { name: "BUSTED", url: "//datamonkey.org/busted/usage" },
-  { name: "Contrast-FEL", url: "//datamonkey.org/contrast-fel/usage" },
+  { name: "Contrast-FEL", url: "//datamonkey.org/contrast_fel/usage" },
   { name: "FADE", url: "//datamonkey.org/fade/usage" },
   { name: "MEME", url: "//datamonkey.org/meme/usage" },
   { name: "NRM", url: "//datamonkey.org/nrm/usage" },
@@ -105,7 +105,7 @@ let bustedUsageData = await d3.json("//datamonkey.org/busted/usage");
 
 ```js
 // Load the usage data from a JSON file
-let cFelUsageData = await d3.json("//datamonkey.org/contrast-fel/usage");
+let cFelUsageData = await d3.json("//datamonkey.org/contrast_fel/usage");
 ```
 
 <div class="grid grid-cols-12">
@@ -155,25 +155,6 @@ let memeUsageData = await d3.json("//datamonkey.org/meme/usage");
   <div class="card">
     <h2>Sites vs Sequences</h2>
     ${sitesAndSequences(memeUsageData)}
-  </div>
-</div>
-
-## NRM
-
-```js
-// Load the usage data from a JSON file
-let nrmUsageData = await d3.json("//datamonkey.org/nrm/usage");
-```
-
-<div class="grid grid-cols-12">
-  <div class="card">
-    <h2>Weekly Stats</h2>
-    ${weeklyPlot(nrmUsageData)}
-  </div>
-
-  <div class="card">
-    <h2>Sites vs Sequences</h2>
-    ${sitesAndSequences(nrmUsageData)}
   </div>
 </div>
 
