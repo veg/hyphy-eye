@@ -2,7 +2,6 @@
   "name": "hyphy-framework-test",
   "version": "0.0.900",
   "type": "module",
-  "private": true,
   "scripts": {
     "clean": "rimraf src/.observablehq/cache",
     "build": "observable build",
