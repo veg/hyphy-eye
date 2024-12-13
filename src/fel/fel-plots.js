@@ -1,5 +1,5 @@
-import * as phylotree from "npm:phylotree";
-import * as _ from "npm:lodash-es";
+import * as phylotree from "phylotree";
+import * as _ from "lodash-es";
 import * as colors from "../color-maps/custom.js";
 
 const DYN_RANGE_CAP = 10;
@@ -235,6 +235,20 @@ export function pv_plot(data, pvalue_threshold) {
     }
   }
   
+  /**
+   * Create a Vega-Lite specification for a plot of dN/dS ratio estimates
+   * with bootstrapped confidence intervals.
+   *
+   * @param {array} data - an array of objects, each with the following properties:
+   *   - `codon` - a string representing the codon number
+   *   - `dN/dS LB` - the lower bound of the bootstrapped confidence interval
+   *   - `dN/dS MLE` - the maximum likelihood estimate of the dN/dS ratio
+   *   - `dN/dS UB` - the upper bound of the bootstrapped confidence interval
+   *   - `class` - a string indicating the selection class (one of "Diversifying", "Neutral", "Purifying")
+   * @param {number} from - the first codon number to include in the plot
+   * @param {number} step - the number of codons to include in the plot
+   * @returns {object} - a Vega-Lite specification for the plot
+   */
   export function dNdS_with_ci(data, from, step) {
     let color_d = [];
     let color_r = [];

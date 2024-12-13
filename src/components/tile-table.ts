@@ -4,16 +4,24 @@
  * an icon and a description
  */
 
+
+export interface TileSpec {
+    number: number;
+    description: string;
+    icon: string;
+    color: string;
+}
+
 /**
  * Creates a table of tiles with each tile showing a number, 
  * an icon and a description. The table will have a variable number of columns.
  * Icons support currently are from simple-line-icons.com and colors are
  * custom defined. See `supported_colors` for a list of recognized color names.
- * @param {Array} table_spec - An array of objects with properties number, description, icon and color
+ * @param {TileSpec[]} table_spec - An array of objects with properties number, description, icon and color
  * @param {number} columns - The number of columns in the table, defaults to 3
  * @returns {string} - HTML string representing the table with the specified tiles
  */
-export function get_html(table_spec, columns = 3) {
+export function tile_table(table_spec: TileSpec[], columns: number = 3): string {
     const rows = calculate_rows(table_spec, columns);
     let tableHTML = `<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.css">
                      <style>${stati_styles}</style>
@@ -38,17 +46,17 @@ export function get_html(table_spec, columns = 3) {
 /**
  * Creates a string with the HTML for a table cell with a tile,
  * containing a number, an icon, and a description.
- * @param {Object} tile_json - Object with properties number, description, icon and color
+ * @param {TileSpec} tile_spec - Object with properties number, description, icon and color
  * @param {string} width - The width of the table cell
  * @returns {string} - HTML string for the table cell
  */
-function build_tile_html(tile_json, width) {
-    const iconClasses = tile_json.icon.split(' ').join(' ');
+function build_tile_html(tile_spec: TileSpec, width: string): string {
+    const iconClasses = tile_spec.icon.split(' ').join(' ');
     return `<td style="width: ${width};">
-                <div class="stati ${tile_json.color} left">
+                <div class="stati ${tile_spec.color} left">
                     <i class="${iconClasses}"></i>
                     <div>
-                        <b>${tile_json.number}</b><span>${tile_json.description}</span>
+                        <b>${tile_spec.number}</b><span>${tile_spec.description}</span>
                     </div>
                 </div>
             </td>`;
@@ -158,11 +166,11 @@ export const stati_styles = `
 
 /**
  * Calculates the number of rows needed for the table.
- * @param {Array} table_spec - An array of objects containing tile specifications.
+ * @param {TileSpec[]} table_spec - An array of objects containing tile specifications.
  * @param {number} columns - The number of columns in the table.
  * @returns {number} The number of rows required to accommodate all tiles.
  */
-function calculate_rows(table_spec, columns) {
+function calculate_rows(table_spec: TileSpec[], columns: number): number {
     const numElements = table_spec.length;
     const numRows = Math.ceil(numElements / columns);
 
