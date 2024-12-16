@@ -8,7 +8,7 @@ import * as vegaLiteApi from "npm:vega-lite-api";
 import * as ss from "./stats/chi-squared.js";
 import * as utils from "./fel/fel-utils.js";
 import * as plots from "./fel/fel-plots.js";
-import * as tileTable from "./components/tile-table.js";
+import * as tt from "./components/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
@@ -35,7 +35,7 @@ const sites_table = utils.get_sites_table(results_json, pvalue_threshold);
 const siteTableData = _.filter (sites_table[1], (x)=>table_filter.indexOf (x.class)>=0);
 const tile_specs = utils.get_tile_specs(results_json, pvalue_threshold)
 const tile_table = document.createElement("div")
-tile_table.innerHTML = tileTable.get_html(tile_specs)
+tile_table.innerHTML = tt.tile_table(tile_specs)
 ```
 
 <div>${tile_table}</div>

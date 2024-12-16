@@ -3,38 +3,30 @@
   "version": "0.0.999-beta",
   "type": "module",
   "files": [
-    "dist/hyphy-vision-components.d.ts",
     "dist/hyphy-vision-components.js",
     "dist/hyphy-vision-components.js.map"
   ],
   "main": "dist/hyphy-vision-components.js",
-  "types": "dist/hyphy-vision-components.d.ts",
   "scripts": {
     "clean": "rimraf src/.observablehq/cache",
     "clean-npm": "rimraf dist/*",
-    "tsc": "tsc",
     "bundle": "rollup --config",
     "build": "observable build",
     "dev": "observable preview",
     "deploy": "observable deploy",
     "observable": "observable",
-    "build-npm": "run-s clean-npm tsc bundle"
+    "build-npm": "run-s clean-npm bundle"
   },
   "dependencies": {
     "@observablehq/framework": "^1.13.0",
     "d3": "^7.9.0",
-    "fs": "^0.0.1-security",
     "lodash-es": "^4.17.21",
-    "phylotree": "^2.0.1",
-    "tslib": "^2.8.1"
+    "phylotree": "^2.0.1"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^12.1.1",
     "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.10",
-    "rollup": "^4.28.1",
-    "rollup-plugin-dts": "^6.1.1",
-    "typescript": "^5.7.2"
+    "rollup": "^4.28.1"
   },
   "engines": {
     "node": ">=18"
