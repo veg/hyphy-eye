@@ -16,7 +16,7 @@ to ObservableHQ with new commits. Devs can then easily identify when they've bro
 to using the component. Eventually we can cut Observable Notebooks out of the process entirely, except for
 use in building rapid prototypes.
 4. Components and demo pages should be designed, as much as is reasonable, to reduce code duplication and maximize
-reusability in other contexts.
+reusability in other contexts. I think I'd like to generally follow the design proposed [here](https://bost.ocks.org/mike/chart/).
 5. Eventually, and as needed, this repo can grow to incorporate formal unit testing, automated linting, other fun
 stuffs.
 
