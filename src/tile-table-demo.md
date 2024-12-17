@@ -31,7 +31,7 @@ const trivial_tile_table = tt.tile_table(trivial_inputs);
 ```
 
 ```
-import * as tt from "./components/tile-table.js";
+import * as tt from "./components/tile-table/tile-table.js";
 
 const trivial_inputs = [
     {

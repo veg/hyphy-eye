@@ -35,12 +35,4 @@ export default {
   // typographer: false, // smart quotes and other typographic improvements
   // preserveExtension: false, // drop .html from URLs
   // preserveIndex: false, // drop /index from URLs
-
-  dynamicPaths: [
-    "/color-maps/custom.js",
-    "/color-maps/crameri.js",
-    "/color-maps/tol.js",
-    "/color-maps/utils.js",
-    "/components/tile-table.js"
-  ]
 };
