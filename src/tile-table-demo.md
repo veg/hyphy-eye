@@ -1,5 +1,5 @@
 ```js
-import * as tt from "./components/tile-table.js";
+import * as tt from "./components/tile-table/tile-table.js";
 import * as felUtils from "./fel/fel-utils.js";
 ```
 

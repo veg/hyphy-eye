@@ -1,14 +1,14 @@
 ```js
-import * as d3 from "npm:d3";
-import * as _ from "npm:lodash-es";
-import * as phylotree from "npm:phylotree";
+import * as d3 from "d3";
+import * as _ from "lodash-es";
+import * as phylotree from "phylotree";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
 import * as ss from "./stats/chi-squared.js";
 import * as utils from "./fel/fel-utils.js";
 import * as plots from "./fel/fel-plots.js";
-import * as tt from "./components/tile-table.js";
+import * as tt from "./components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
