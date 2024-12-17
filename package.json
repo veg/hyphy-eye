@@ -1,6 +1,6 @@
 {
   "name": "hyphy-framework-test",
-  "version": "0.0.999-beta",
+  "version": "0.0.999-beta2",
   "type": "module",
   "files": [
     "dist/hyphy-vision-components.js",
