@@ -17,26 +17,32 @@
  * custom defined. See `supported_colors` for a list of recognized color names.
  * @param {TileSpec[]} table_spec - An array of objects each with properties number, description, icon and color
  * @param {number} columns - The number of columns in the table, defaults to 3
- * @returns {string} - HTML string representing the table with the specified tiles
+ * @returns {HTMLTableElement} - The table with the specified tiles
  * */
 export function tile_table(table_spec, columns = 3) {
     const rows = calculate_rows(table_spec, columns);
-    let tableHTML = `<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.css">
-                     <style>${stati_styles}</style>
-                     <table>`;
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
     for (let i = 0; i < rows; i++) {
-        tableHTML += '<tr>';
+        const row = table.insertRow();
         for (let j = 0; j < columns; j++) {
             const index = i * columns + j;
             if (index < table_spec.length) {
-                const width = 100 / columns + '%';
-                tableHTML += build_tile_html(table_spec[index], width);
+                row.insertCell().innerHTML = build_tile_html(table_spec[index], 100 / columns + '%');
             }
         }
-        tableHTML += '</tr>';
     }
-    tableHTML += '</table>';
-    return tableHTML;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.css';
+    const style = document.createElement('style');
+    style.innerHTML = stati_styles;
+    const head = document.head || document.getElementsByTagName('head')[0];
+    head.appendChild(link);
+    head.appendChild(style);
+    return table;
 }
 
 /**

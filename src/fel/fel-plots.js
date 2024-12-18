@@ -92,6 +92,16 @@ export function totalTreeLength(tree) {
   return L;
 }
 
+/**
+ * Create a Vega-Lite specification for a stacked area chart of rate densities for
+ * alpha, beta and omega.
+ *
+ * @param {array} data - an array of objects, each with the following properties:
+ *   - `alpha` - a number representing the synonymous rate
+ *   - `beta` - a number representing the non-synonymous rate
+ *   - `dN/dS MLE` - the maximum likelihood estimate of the dN/dS ratio
+ * @returns {object} - a Vega-Lite specification for the chart
+ */
 export function rate_density(data) {
     let rate_options = [["alpha","α"],["beta","β"], ["omega", "dN/dS"]];
     
