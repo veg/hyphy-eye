@@ -53,8 +53,6 @@ const trivial_inputs = [
 </br>
 
 ```js
-// TODO: we need utils for grabbing out these values, or one util that returns an object w these props
-// TODO: also a util for making a TileTable spec from the results
 const results_json = await FileAttachment("./data/fel_test_data.json").json();
 const fel_attrs = felUtils.get_attributes(results_json);
 const pvalue_threshold = 0.1;
