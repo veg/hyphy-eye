@@ -1,114 +1,101 @@
+import * as utils from "./absrel-utils.js";
 
-plot_legends = ({
-  "Synonymous rates" : "Posterior means for synonymous site-level substitution rates (α). ",
-  "Support for positive selection" : "Empirical Bayes Factors for ω>1 at a particular branch and site (only tested branches with 2 or more rate classes are included).",
-  "Evidence ratio alignment profile" : "Evidence ratios for for ω>1 at a particular branch and site (only tested branches with an ω>1 distribution component are included). Mouse over for more information"
-})
+const DYN_RANGE_CAP = 10000;
+const LABEL_COLOR_SCALE = d3.scaleOrdinal([], d3.schemeCategory10)
 
+/**
+ * Returns a human-readable description for a given plot type.
+ * The description provides context for interpreting the plot, such as
+ * describing what is shown and under what conditions the data is applicable.
+ *
+ * @param {string} plot_type - The identifier of the plot type to describe.
+ * @returns {string} A description of the plot type, or undefined if the plot type is not recognized.
+ */
 
-plot_extras = ({
-    'Evidence ratio alignment profile' : Inputs.select(['Total subs', 'Syn subs', 'Non-syn subs'], {'label' : 'Circle size'} ),
-    'Support for positive selection' : Inputs.select(['Total subs', 'Syn subs', 'Non-syn subs'], {'label' : 'Circle size'} )
-})
+export function get_plot_description(plot_type) {
+    const plot_legends = ({
+        "Synonymous rates" : "Posterior means for synonymous site-level substitution rates (α). ",
+        "Support for positive selection" : "Empirical Bayes Factors for ω>1 at a particular branch and site (only tested branches with 2 or more rate classes are included).",
+        "Evidence ratio alignment profile" : "Evidence ratios for for ω>1 at a particular branch and site (only tested branches with an ω>1 distribution component are included). Mouse over for more information"
+    })
 
-
-plot_options = [
-  ["Synonymous rates", (d)=>srv_rate_classes > 0 && srv_distribution], 
-  ["Support for positive selection", (d)=>bsPositiveSelection.length > 0],
-  ["Evidence ratio alignment profile", (d)=>profileBranchSites.length > 0]
-]
-
-
-plot_specs = (
-  { "Synonymous rates" : {
-  "width": 800, "height": 150, 
-  "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-      return SRVPlot (fig1data, d, 70, "SRV posterior mean", null)
-  })},
-  "Support for positive selection" : {
-    //"autosize": {"resize" : true},
-    "vconcat" : _.map (_.range (1, results_json.input["number of sites"], er_step_size()), (d)=> {
-        return BSPosteriorPlot (bsPositiveSelection, d, er_step_size())
-    })},
-   "Evidence ratio alignment profile" : {
-    //"autosize": {"resize" : true},
-    "vconcat" : _.map (_.range (1, results_json.input["number of sites"], er_step_size()), (d)=> {
-        return ERPosteriorPlot (profileBranchSites, d, er_step_size())
-    })}
-}
-)
-
-
-dyn_range_cap = 10000
-
-
-
-ERPlot = (data, from, step, key)=> {
-  let scale = d3.extent (data, (d)=>d[key]); 
-  scale[1] = Math.min (dyn_range_cap,Math.max (scale[1], pv));
-  scale = d3.nice (scale[0], scale[1], 10);
-  return {
-      "width": {"step": 12},
-      "data" : {"values" : _.map (
-        _.filter (data, (d,i)=>i+1 >= from && i< from + step - 1),
-      (d)=> {
-          let dd = _.clone (d);
-          _.each ([key], (f)=> {
-            dd[f] = Math.min (dyn_range_cap, dd[f]);
-          });
-          return dd;
-      })}, 
-      "encoding": {
-        "x": {
-          "field": "Codon",
-          "type" : "nominal",
-          "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Codon"}
-        }
-      },
-      "layer": [
-        {
-          "mark": {"stroke": "black", "type": "line", "size" : 2, "interpolate" : "step", "color" : "lightgrey", "opacity" : 0.5},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-                "scale" : {"type" : "symlog", "domain" : scale},
-                "axis" : {"grid" : false}
-            }
-          }
-        },
-        {
-          "mark": { "stroke": "black", "type": "point", "size" : 100, "filled" : true,  "color" : "lightgrey", "tooltip" : {"contents" : "data"}, "opacity" : 1.},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-                
-            },
-            "color" : {"condition": {"test": "datum['" + key + "'] > " + pv, "value": "firebrick"},
-                "value": "lightgrey"
-            }
-          }
-        },
-        {
-          "mark" : {"opacity": 0.5, "type": "line", "color": "steelblue"},
-          "encoding" : { "y": {
-                "datum": {"expr": "" + pv},
-                "type": "quantitative",
-                "scale" : {"domain" : scale}
-              },
-             
-            "size": {"value": 2},
-          }
-        }
-        
-      ]
-  };
+    return plot_legends[plot_type];
 }
 
+/**
+ * Returns additional plot options for a specified plot type. These options
+ * provide controls for visual customization, such as selecting the circle size
+ * in plots where applicable.
+ *
+ * @param {string} plot_type - The identifier of the plot type for which to retrieve extras.
+ * @returns {Object} An input control for the specified plot type, or undefined if the plot type is not recognized.
+ */
 
+export function get_plot_extras(plot_type) {
+    plot_extras = ({
+        'Evidence ratio alignment profile' : Inputs.select(['Total subs', 'Syn subs', 'Non-syn subs'], {'label' : 'Circle size'} ),
+        'Support for positive selection' : Inputs.select(['Total subs', 'Syn subs', 'Non-syn subs'], {'label' : 'Circle size'} )
+    })
 
-SRVPlot = (data, from, step, key, key2)=> {
+    return plot_extras[plot_type];
+}
+
+/**
+ * Returns an array of arrays, where each sub-array contains a string description
+ * of a plot, and a function that takes a data object and returns a boolean
+ * indicating whether the plot should be shown for that data object.
+ *
+ * @param {Object} results_json - The JSON object containing the aBSREL results
+ * @param {number} ev_threshold - The evidence ratio threshold used to consider a site as positively selected
+ * @returns {Array.<Array.<string|function>>} The array of arrays described above
+ */
+export function get_plot_options(results_json, ev_threshold) {
+    const attrs = utils.get_attributes(results_json);
+    const bsPositiveSelection = utils.posteriorsPerBranchSite(results_json, true, ev_threshold);
+    const profileBranchSites = utils.profileBranchSites(results_json);
+
+    const plot_options = [
+        ["Synonymous rates", (d)=>attrs.srv_rate_classes > 0 && attrs.srv_distribution], 
+        ["Support for positive selection", (d)=>bsPositiveSelection.length > 0],
+        ["Evidence ratio alignment profile", (d)=>profileBranchSites.length > 0]
+    ]
+
+    return plot_options;
+}
+
+/**
+ * Returns a Vega-Lite spec for a plot of the specified type.
+ *
+ * @param {string} plot_type - The type of plot to generate.
+ * @param {Object} results_json - The JSON object containing the aBSREL results
+ * @param {array} fig1data - The data object containing the site-level results of interest
+ * @param {number} ev_threshold - The evidence ratio threshold used to consider a site as positively selected
+ * @returns {Object} The Vega-Lite spec for the specified plot type
+ */
+export function get_plot_spec(plot_type, results_json, fig1data, ev_threshold) {
+    const bsPositiveSelection = utils.posteriorsPerBranchSite(results_json, true, ev_threshold);
+    const profileBranchSites = utils.profileBranchSites(results_json);
+
+    const plot_specs = ({
+        "Synonymous rates" : {
+            "width": 800, "height": 150, 
+            "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
+            return SRVPlot (fig1data, d, 70, "SRV posterior mean", null)
+        })},
+        "Support for positive selection" : {
+            "vconcat" : _.map (_.range (1, results_json.input["number of sites"], er_step_size()), (d)=> {
+            return BSPosteriorPlot (bsPositiveSelection, d, er_step_size())
+        })},
+        "Evidence ratio alignment profile" : {
+            "vconcat" : _.map (_.range (1, results_json.input["number of sites"], er_step_size()), (d)=> {
+            return ERPosteriorPlot (profileBranchSites, d, er_step_size())
+        })}
+    });
+
+    return plot_specs[plot_type];
+}
+
+function SRVPlot(data, from, step, key, key2) {
   let spec = {
       "width": {"step": 12},
       "data" : {"values" : _.map (
@@ -116,7 +103,7 @@ SRVPlot = (data, from, step, key, key2)=> {
       (d)=> {
           let dd = _.clone (d);
           _.each ([key], (f)=> {
-            dd[f] = Math.min (dyn_range_cap, dd[f]);
+            dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
           });
           return dd;
       })}, 
@@ -145,8 +132,7 @@ SRVPlot = (data, from, step, key, key2)=> {
                 "type" : "quantitative",
                 "scale" : {"type" : "symlog"},
                 "axis" : {"grid" : false}
-            },
-            //"color" : results_json["Evidence Ratios"]["constrained"] ? {"field" : "ER (constrained)", "type" : "quantitative", "scale" : {"type" : "log", "scheme": "turbo"}, "legend" : {"orient" : "top"}} : null
+            }
           }
         }
       ]
@@ -169,9 +155,9 @@ SRVPlot = (data, from, step, key, key2)=> {
 
 
 
-BSPosteriorPlot = (data, from, step)=> {
+function BSPosteriorPlot(results_json, tree_objects, data, from, step) {
   const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));
-  const branch_order = _.filter (treeNodeOrdering (0), (d)=>profilable_branches.has (d) && selected_branches.has (d));
+  const branch_order = _.filter (treeNodeOrdering (results_json, tree_objects, 0), (d)=>profilable_branches.has (d) && selected_branches.has (d));
   let N = tested_branch_count;
   let box_size = 10; 
   let font_size = 8;
@@ -200,16 +186,6 @@ BSPosteriorPlot = (data, from, step)=> {
         {"calculate" : "split(datum.Key, '|')[0]", "as" : "Branch"},
         {"filter" : {"field" : "Codon", "range" : [from, from+step-1]}}
       ],
-      /*"params": [{
-        "name": "character_view",
-        "select": {
-          "type": "interval",
-          "encodings": ["x","y"],
-          "nearest" : "true",
-          "mark" : {"stroke" : "#444", "strokeWidth" : 3},
-        },
-        "value": {"x": _.range (20), "y": branch_order}
-      }],*/
       "encoding": {
         "x": {
           "field": "Codon",
@@ -254,10 +230,10 @@ BSPosteriorPlot = (data, from, step)=> {
 
 
 
-ERPosteriorPlot = (data, from, step)=> {
+function ERPosteriorPlot(results_json, tree_objects, data, from, step) {
   
   const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));
-  const branch_order = _.filter (treeNodeOrdering (0), (d)=>profilable_branches.has (d) && selected_branches.has (d));
+  const branch_order = _.filter (treeNodeOrdering (results_json, tree_objects, 0), (d)=>profilable_branches.has (d) && selected_branches.has (d));
   let N = tested_branch_count;
   let box_size = 10; 
   let font_size = 8;
@@ -329,66 +305,18 @@ ERPosteriorPlot = (data, from, step)=> {
   return spec;
 }
 
-
-
-characterPlot = (data, data2)=> {
-  const branch_order = treeNodeOrdering (0, true);
-  let N = results_json.input["number of sequences"];
-  let box_size = 10; 
-  let font_size = 12;
-
-  console.log (data2);
-  
-  let spec = {
-      "width": {"step": 2.5*font_size},  "height" : {"step" : font_size},
-      "data" : {"values" : 
-        data,
-      }, 
-      "transform" : [
-        {"calculate" : "parseInt (split(datum.Key, '|')[1])", "as" : "Codon"},
-        {"calculate" : "split(datum.Key, '|')[0]", "as" : "Branch"},
-        {"filter": {"param": "character_view", "empty" : true}},
-        {
-          "lookup": "Key",
-          "from": {
-            "data": {"values" : data2},
-            "key": "Key",
-            "fields": ["ER"]
-          }
-        }
-      ],
-     
-      "encoding": {
-        "x": {
-          "field": "Codon",
-          "type" : "ordinal",
-          "scale": {"domain": {"selection": "character_view", "encoding": "x"}},
-          "axis": font_size ? {"grid" : false, "titleFontSize" : 14, "title" : "Codon", "labelFontSize" : font_size} : null
-        },
-        "y": {
-          "field": "Branch",
-          "scale": {"domain": {"selection": "character_view", "encoding": "y"}},
-          "type" : "ordinal",
-          "axis": font_size ? {"grid" : false, "titleFontSize" : 14, "title" : "Branch", "labelFontSize" : font_size} : null
-        }
-      },
-      "layer": [
-        {
-          "mark": {"type": "text", "clip" : true, "fontSize" : font_size, "font" : "monospace", "fontWeight" : "bold", "color" : "#444", "opacity" : 1.0, "tooltip" : true},
-          "encoding": {
-            "text" : {"field" : "value"},
-            "color": {
-               "field" : "aa"
-            }
-          }
-        }
-      ]
-  };
-  return spec;
-}
-
-
-function display_tree(index, T, options) {
+/**
+ * Render a tree with the given options, and return the
+ * Phylotree object. This is the main tree rendering function used in the
+ * application.
+ *
+ * @param {object} results_json - the results JSON
+ * @param {number} index - the index of the site in the partition
+ * @param {object} T - the tree object
+ * @param {object} options - an object with options
+ * @return {object} - the rendered tree
+ */
+export function display_tree(results_json, index, T, options) {
       let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     
       T.branch_length_accessor = (n)=>(n.data.name in results_json["branch attributes"][index] ? results_json["branch attributes"][index][n.data.name][branch_length] : 0) || 0;  
@@ -554,6 +482,28 @@ function display_tree(index, T, options) {
 
 
 
+  /**
+   * Takes a tree, a site number, the node labels at that site, and an options object
+   * and returns an object with the same keys as node_labels. The value of each key is
+   * a two-member array of strings, where the first element is a pipe-separated list of
+   * all the codon states at the site numbers that are within 4 of the given site number,
+   * and the second element is the same but for the amino acid states. The states at the
+   * given site number are marked with a leading and trailing "·".
+   * 
+   * This is used to generate the visual display of the codon and amino acid states at
+   * the sites that are neighbors to the given site number.
+   * @param {number} index - the index of the tree in the tree array
+   * @param {number|string} s - the site number
+   * @param {object} node_labels - an object with the node names as keys and two-member
+   *   arrays of strings as values, where the first element is the codon state and the
+   *   second element is the amino acid state.
+   * @param {object} T - the tree object
+   * @param {object} options - an object with options
+   * @param {object} results - the results object
+   * @param {number} site_count - the number of sites
+   * @return {object} - an object with the same keys as node_labels, with values as
+   *   described above.
+   */
 function display_tree_handle_neighbors(index, s, node_labels, T, options, results, site_count) {
   let extended_labels = {};
   if (options["neighbors"]) {
@@ -562,7 +512,7 @@ function display_tree_handle_neighbors(index, s, node_labels, T, options, result
         for (let idx = si-4; idx <= si+4; idx++) {
               if (idx >= 0 && idx < site_count) {
                     if (idx != si) {
-                        joint_labels.push (generateNodeLabels (T, results["substitutions"][index][idx]));
+                        joint_labels.push (utils.generateNodeLabels (T, results["substitutions"][index][idx]));
                     } else {
                         joint_labels.push (_.mapValues (node_labels, (d)=> {
                               return ["·" + d[0] + "·", "·" + d[1] + "·"] 
@@ -586,11 +536,22 @@ function display_tree_handle_neighbors(index, s, node_labels, T, options, result
 
 
 
-function display_tree_site(index, T,s,options) {
+  /**
+   * This function renders a tree with the given options, and returns the
+   * Phylotree object. This variant is used when rendering trees for individual sites.
+   * 
+   * @param {object} results_json - the results object
+   * @param {number} index - the index of the site in the partition
+   * @param {object} T - the tree object
+   * @param {number} s - the site number
+   * @param {object} options - an object with options
+   * @return {object} - the rendered tree
+   */
+export function display_tree_site(results_json, index, T,s,options) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     
     T.branch_length_accessor = (n)=>results_json["branch attributes"][index][n.data.name][branch_length] || 0;  
-    let node_labels = generateNodeLabels (T, results_json["substitutions"][index][(+s)-1]);
+    let node_labels = utils.generateNodeLabels (T, results_json["substitutions"][index][(+s)-1]);
     let extended_labels = {};
 
     let labelDomain = new Set();
@@ -691,7 +652,7 @@ function display_tree_site(index, T,s,options) {
 
         sort_nodes (true);
         t.style_nodes ((e,n) => {
-           e.selectAll ("text").style ("fill", label_color_scale(n.data.color_on));
+           e.selectAll ("text").style ("fill", LABEL_COLOR_SCALE(n.data.color_on));
            e.selectAll ("title").data ([n.data.name]).join ("title").text ((d)=>d);
            e.selectAll ("text").style ("font-family", "ui-monospace");
         });
@@ -783,11 +744,22 @@ function display_tree_site(index, T,s,options) {
         } 
         t.placenodes();
         t.update();
-        label_color_scale.domain (labelDomain);
+        LABEL_COLOR_SCALE.domain (labelDomain);
         return t;      
     }
 
 
+
+/**
+ * Adds a text label to a branch in a phylogenetic tree visualization. The label
+ * is positioned based on the branch's SVG path data and is styled with a specific
+ * font and background filter.
+ *
+ * @param {d3.selection} e - The D3 selection of the branch element.
+ * @param {string|number} text - The text content to be displayed as the label.
+ * @param {number} font_size - The base font size for the label text.
+ * @param {d3.selection} container - The SVG container where the label will be added.
+ */
 
 function add_branch_label(e, text, font_size, container) {
   const where2 = _.get (parse_svg.default(e.attr("d")),["1"]);
@@ -805,6 +777,15 @@ function add_branch_label(e, text, font_size, container) {
 
 
 
+/**
+ * Adds an SVG filter to the given SVG element that can be used to provide a
+ * lightgray background for branch labels. The filter is given the id
+ * "tree_branchlabel_bgfill".
+ *
+ * @param {d3.selection} svg - The SVG element to which the filter will be added.
+ *
+ * @returns {void}
+ */
 function add_svg_defs(svg) {
     let filter = svg.selectAll ("defs").append ("filter").attr ("x", 0).attr ("y", 0).attr ("width", 1).attr ("height", 1).attr ("id", "tree_branchlabel_bgfill");
     filter.append ("feFlood").attr ("flood-color", "lightgray");
@@ -834,4 +815,90 @@ function subs_by_branch(i) {
         });
     });
     return counts;
+}
+
+/**
+ * Computes a depth-first ordering of the tree nodes for a given index. If `root`
+ * is true, the root node is included in the ordering. The ordering is computed
+ * by traversing the tree and computing the maximum depth of each node, then
+ * sorting the nodes by their maximum depth. The root node comes first, followed
+ * by the nodes in a depth-first ordering. The ordering includes only those nodes
+ * that are tested and excludes the root node if `root` is false.
+ * 
+ * @param {Object} results_json - The results JSON object.
+ * @param {Array} tree_objects - An array of tree objects.
+ * @param {number} index - The index of the tree in the `tree_objects` array.
+ * @param {boolean} root - Whether to include the root node in the ordering.
+ * 
+ * @returns {string[]} An array of node names in the computed ordering.
+ */
+function treeNodeOrdering(results_json, tree_objects, index, root) {
+    let order = [];
+    if (root) {order.push ('root');}
+    const T = tree_objects[index];
+    function sort_nodes (asc) {
+        T.traverse_and_compute (function (n) {
+                var d = 1;
+                if (n.children && n.children.length) {
+                    d += d3.max (n.children, function (d) { return d["count_depth"];});
+                } 
+
+                n["count_depth"] = d;
+            });
+        T.resortChildren (function (a,b) {
+            return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
+        });
+    }
+    sort_nodes (true);
+    T.traverse_and_compute (function (n) {
+        if (results_json.tested[index][n.data.name] == "test") {
+          order.push (n.data.name);
+        }
+    });
+    return order;
+}
+
+/**
+ * Returns an array of strings representing the tree view options for the
+ * given results JSON object. The first element is "Alignment-wide tree".
+ * If the results JSON contains substitutions data, the remaining elements
+ * are strings of the form "Codon X", where X is the site number.
+ * 
+ * @param {Object} results_json - The results JSON object.
+ * 
+ * @returns {string[]} An array of strings representing the tree view options.
+ */
+export function treeViewOptions(results_json) {
+  let opts = ["Alignment-wide tree"];
+  if (results_json.substitutions) {
+    opts = opts.concat(_.map (_.range (1,results_json.input["number of sites"]+1), (d)=>"Codon " + d));
+  }
+  return opts;
+}
+
+/**
+ * Returns an array of strings representing the color options for branches
+ * in a phylogenetic tree based on the provided results JSON. The options
+ * include "Tested" by default. Additional options are included based on
+ * the presence of substitutions and multiple-hit rates in the data.
+ *
+ * @param {Object} results_json - The results JSON object containing tree data.
+ *
+ * @returns {string[]} An array of strings representing the branch color options.
+ */
+
+export function tree_color_options(results_json) {
+  let options = ["Tested"];
+  if (results_json.substitutions) {
+    options.push ("Support for selection");
+    options.push ("Substitutions");
+  }
+  if (_.size (mh_rates['DH'])) {
+      options.push ("2-hit rate");
+  }
+  if (_.size (mh_rates['TH'])) {
+      options.push ("3-hit rate");
+  }
+  
+  return options;
 }

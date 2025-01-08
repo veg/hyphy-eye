@@ -333,7 +333,16 @@ function getRateDistribution(results_json, keys, tags) {
     return null;
 }
 
-function siteIndexPartitionCodon() {
+/**
+ * Generates an array of arrays, where each sub-array contains the partition
+ * index and site index for each site in the results. The partition index is
+ * one-based, and the site index is zero-based.
+ *
+ * @param {Object} results_json - The JSON object containing the aBSREL results
+ * @returns {Array<Array<number>>} The array of arrays containing partition
+ *   index and site index for each site
+ */
+export function siteIndexPartitionCodon(results_json) {
     return _.chain (results_json['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
 }
 
@@ -452,7 +461,7 @@ function subs_for_pair(from, to) {
      *  of [label, translation, parent label, number of substitutions].  Substitutions are only counted between
      *  non-ambiguous, non-degenerate codons.
      */
-function generateNodeLabels(T, labels) {
+export function generateNodeLabels(T, labels) {
     let L = {};
     T.traverse_and_compute (function (n) {
         if (n.data.name in labels) {
@@ -579,3 +588,48 @@ function get_translation_table() {
 }
 
 floatFormat = d3.format (".4g")
+
+export function siteTableData(results_json, ev_threshold) {
+    const attrs = results_json["attributes"];
+    const profileBranchSites = results_json["branch sites"];
+    const siteIndexPartitionCodon = siteIndexPartitionCodon(results_json);
+
+  let site_info = [];
+  let index = 0;
+  let bySite = _.groupBy (profileBranchSites, (d)=>d.site);
+  _.each (results_json["data partitions"], (pinfo, partition)=> {
+      _.each (pinfo["coverage"][0], (ignore, i)=> {
+          
+              let site_record = {
+                  'Codon' : siteIndexPartitionCodon[index][1],
+              };
+
+              const sll = _.get (results_json, ["Site Log Likelihood",'unconstrained',0,index]);
+              if (sll) {
+                site_record['LogL'] = sll;
+              }
+        
+              if (attrs.srv_distribution) {
+                  let site_srv = [];
+                  _.each (attrs.srv_distribution, (d,i)=> {
+                       site_srv.push ({'value' : d.value, 'weight' : results_json["Synonymous site-posteriors"][i][index]});
+                  });
+                  site_record['SRV posterior mean'] = utils.distMean (site_srv);
+              }
+
+              site_record ["Subs"] = d3.sum (bySite[i+1], (d)=>d.subs);
+              site_record ["ER"] = _.filter (bySite[i+1], (d)=>d.ER >= ev_threshold).length;
+              
+              site_info.push (site_record);
+              index++;
+          })  
+        
+      });
+    return [site_info, {
+      'Codon' : html`<abbr title = "Site">Codon</abbr>`,
+      'SRV posterior mean' : html`<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>`,
+      'LogL' : html`<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>`,
+      'Subs' : html`<abbr title = "Total # of substitutions (s+ns)">Subs</abbr>`,
+      'ER' : html`<abbr title = "Total # branches with evidence ratio > ${ev_threshold}">ER Branch</abbr>`,
+    }];
+}

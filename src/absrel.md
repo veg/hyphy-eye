@@ -20,6 +20,9 @@ import {FileAttachment} from "observablehq:stdlib";
 
 ```js
 const vl = vegaLiteApi.register(vega, vegaLite);
+const floatFormat = d3.format (".4g")
+const percentageFormat = d3.format (".2p")
+const proportionFormat = d3.format (".5p")
 ```
 
 # aBSREL results summary
@@ -37,10 +40,13 @@ const ev_threshold = view(Inputs.text({label: html`<b>Evidence ratio threshold</
 ```
 
 ```js
-//const sites_table = utils.get_sites_table(results_json, pvalue_threshold);
-//const siteTableData = _.filter (sites_table[1], (x)=>table_filter.indexOf (x.class)>=0);
+const siteTableData = utils.siteTableData(results_json, ev_threshold);
+const sites_table = [{}, siteTableData[0], siteTableData[1]];
 const distributionTable = utils.distributionTable(results_json, ev_threshold);
-const tile_specs = utils.get_tile_specs(results_json, ev_threshold)
+const tile_specs = utils.get_tile_specs(results_json, ev_threshold);
+// TODO: consider these next two as potential attrs as well
+const profileBranchSites = profileBranchSites(results_json);
+const bsPositiveSelection = utils.posteriorsPerBranchSite(results_json, true, ev_threshold);
 ```
 
 <div>${tt.tile_table(tile_specs)}</div>
@@ -71,7 +77,7 @@ distComparisonPlot = rate_table.length == 2 ? renderTwoDiscreteDistributions (ra
 ```
 
 ```js
-const tree_id =  view(autoSelect ({options:treeViewOptions, size : 10, title: html`<b>Tree to view</b>`, placeholder : "Select something to view", "value" : "Alignment-wide tree"}))
+const tree_id =  view(autoSelect ({options:plots.treeViewOptions(results_json), size : 10, title: html`<b>Tree to view</b>`, placeholder : "Select something to view", "value" : "Alignment-wide tree"}))
 ```
 
 ```js
@@ -85,7 +91,7 @@ const treeLabels = view(Inputs.checkbox(
 ```
 
 ```js
-const color_branches =  view(Inputs.select(tree_color_options,{value: "Support for selection", label: html`<b>Color branches </b>`}))
+const color_branches =  view(Inputs.select(plots.tree_color_options(results_json),{value: "Support for selection", label: html`<b>Color branches </b>`}))
 ```
 
 ```js
@@ -119,10 +125,10 @@ function getFigure2() {
 const fig2 = getFigure2();
 ```
 
-**Figure 1**. ${plot_type ? plot_legends[plot_type] : "No plotting options available"}
+**Figure 1**. ${plot_type ? plots.get_plot_description(plot_type) : "No plotting options available"}
 
 ```js
-const plot_type =  view(Inputs.select(_.map (_.filter (plot_options, (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`, value : 'Evidence ratio alignment profile'}))
+const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_plot_options(results_json, ev_threshold), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`, value : 'Evidence ratio alignment profile'}))
 ```
 
 ```js
@@ -130,10 +136,20 @@ const fig1_controls = view(plot_extras[plot_type] || Inputs.text({label: "Plot o
 ```
 
 ```js
+function fig1data() {
+   let in_set = new Set (_.map (table1, (d)=>d.Codon));
+   return _.filter (siteTableData[0], (x)=>in_set.has (x.Codon));
+}
+const fig1data = fig1data();
+```
+
+```js
+let plot_spec;
 if (plot_type) {
-  figure1 = vegalite(plot_specs[plot_type])
+  plot_spec = plots.get_plot_spec(plot_type, results_json, fig1data, ev_threshold)
 }
 ```
+<div>${vl.render({"spec": plot_spec})}</div>
 
 **Table 2**. Detailed site-by-site results from the aBSREL analysis
 
@@ -158,6 +174,21 @@ const which_branch = view(Inputs.select(
 ```
 
 ```js
+function table3_data() {
+  let rc = _.keyBy (_.filter (profileBranchSites, (d)=>which_branch.indexOf (d.branch)>=0), (d)=>d.Key);
+  _.each (bsPositiveSelection, (d)=> {
+      if (d.Key in rc) {
+          rc[d.Key].EBF = d.ER;
+      }
+  });
+  return _.values (rc);
+     
+}
+
+const table3_data = table3_data();
+```
+
+```js
 const table3 = view(Inputs.table (table3_data,
   {
       rows : 10,
@@ -176,6 +207,12 @@ const table3 = view(Inputs.table (table3_data,
 ```
 
 ```js
+const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
+  let T = new phylotree.phylotree (tree);
+  T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name]["Global MG94xREV"];
+  return T;
+});
+
 function getFigure2() {
     let toDisplay = tree_id.split (" ");
     if (toDisplay.length > 1) {
@@ -186,11 +223,11 @@ function getFigure2() {
       
       if (toDisplay[0] == "Codon") {  
           const codon_index = (+toDisplay[1]);
-          let partition_id = siteIndexPartitionCodon [codon_index-1][0]-1;
-          let TT = display_tree_site (partition_id, tree_objects[0], codon_index, tree_options);
+          let partition_id = utils.siteIndexPartitionCodon(results_json)[codon_index-1][0]-1;
+          let TT = plots.display_tree_site (results_json, partition_id, tree_objects[0], codon_index, tree_options);
           return TT;
       } 
-      let TT = display_tree(0, tree_objects[0], tree_options);
+      let TT = plots.display_tree(results_json, 0, tree_objects[0], tree_options);
       return TT;
     }
     return null;
@@ -203,134 +240,3 @@ const figure2 = getFigure2();
 **Citation**
 
 <p><tt><small>${results_json.analysis["citation"]}</small></tt></p>
-
-```js
-floatFormat = d3.format (".4g")
-percentageFormat = d3.format (".2p")
-proportionFormat = d3.format (".5p")
-results_json = await get_json (params.get ("url"))
-```
-
-```js
-function fig1data() {
-   let in_set = new Set (_.map (table1, (d)=>d.Codon));
-   return _.filter (siteTableData[0], (x)=>in_set.has (x.Codon));
-}
-const fig2data = fig1data();
-```
-
-```js
-function siteTableData() {
-  let site_info = [];
-  let index = 0;
-  let bySite = _.groupBy (profileBranchSites, (d)=>d.site);
-  _.each (results_json["data partitions"], (pinfo, partition)=> {
-      _.each (pinfo["coverage"][0], (ignore, i)=> {
-          
-              let site_record = {
-                  'Codon' : siteIndexPartitionCodon[index][1],
-              };
-
-              const sll = _.get (results_json, ["Site Log Likelihood",'unconstrained',0,index]);
-              if (sll) {
-                site_record['LogL'] = sll;
-              }
-        
-              if (attrs.srv_distribution) {
-                  let site_srv = [];
-                  _.each (attrs.srv_distribution, (d,i)=> {
-                       site_srv.push ({'value' : d.value, 'weight' : results_json["Synonymous site-posteriors"][i][index]});
-                  });
-                  site_record['SRV posterior mean'] = utils.distMean (site_srv);
-              }
-
-              site_record ["Subs"] = d3.sum (bySite[i+1], (d)=>d.subs);
-              site_record ["ER"] = _.filter (bySite[i+1], (d)=>d.ER >= ev_threshold).length;
-              
-              site_info.push (site_record);
-              index++;
-          })  
-        
-      });
-    return [site_info, {
-      'Codon' : html`<abbr title = "Site">Codon</abbr>`,
-      'SRV posterior mean' : html`<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>`,
-      'LogL' : html`<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>`,
-      'Subs' : html`<abbr title = "Total # of substitutions (s+ns)">Subs</abbr>`,
-      'ER' : html`<abbr title = "Total # branches with evidence ratio > ${ev_threshold}">ER Branch</abbr>`,
-    }];
-}
-const siteTableData = siteTableData();
-```
-
-```js
-function sites_table() {
-    return [{}, siteTableData[0], siteTableData[1]];
-}
-const sites_table = sites_table();
-```
-
-```js
-const profileBranchSites = profileBranchSites(results_json);
-```
-
-```js
-function table3_data() {
-  let rc = _.keyBy (_.filter (profileBranchSites, (d)=>which_branch.indexOf (d.branch)>=0), (d)=>d.Key);
-  _.each (bsPositiveSelection, (d)=> {
-      if (d.Key in rc) {
-          rc[d.Key].EBF = d.ER;
-      }
-  });
-  return _.values (rc);
-     
-}
-
-const table3_data = table3_data();
-```
-
-```js
-const bsPositiveSelection = utils.posteriorsPerBranchSite(results_json, true, ev_threshold);
-```
-
-```js
-const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
-  let T = new phylotree.phylotree (tree);
-  T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name]["Global MG94xREV"];
-  return T;
-});
-```
-
-```js
-const label_color_scale = d3.scaleOrdinal([], d3.schemeCategory10)
-```
-
-```js
-function treeViewOptions() {
-  let opts = ["Alignment-wide tree"];
-  if (results_json.substitutions) {
-    opts = opts.concat(_.map (_.range (1,results_json.input["number of sites"]+1), (d)=>"Codon " + d));
-  }
-  return opts;
-}
-const treeViewOptions = treeViewOptions();
-```
-
-```js
-function tree_color_options() {
-  let options = ["Tested"];
-  if (results_json.substitutions) {
-    options.push ("Support for selection");
-    options.push ("Substitutions");
-  }
-  if (_.size (mh_rates['DH'])) {
-      options.push ("2-hit rate");
-  }
-  if (_.size (mh_rates['TH'])) {
-      options.push ("3-hit rate");
-  }
-  
-  return options;
-}
-const tree_color_options = tree_color_options();
-```
