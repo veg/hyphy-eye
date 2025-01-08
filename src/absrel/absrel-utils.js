@@ -1,10 +1,330 @@
+/**
+ * @module absrel-utils
+ * @description Utility functions for aBSREL visualization
+ */
 
-function getRateDistribution(keys, tags) {
+import * as _ from "lodash-es";
+import * as d3 from "d3";
+
+/**
+ * Extracts some summary attributes from aBSREL results that are used later in the
+ * visualization.
+ *
+ * @param {Object} results_json - The JSON object containing the aBSREL results
+ *
+ * @returns {Object} An object with the following attributes:
+ *   - positive_results: {Object} An object with the number of positive results
+ *     for each partition
+ *   - pvalue_threshold: {number} The P-value threshold used in the analysis
+ *   - profilable_branches: {Set<string>} A set of branch names that were tested
+ *     for positive selection
+ *   - tested_branch_count: {number} The median number of branches tested for
+ *     selection for each partition
+ *   - srv_rate_classes: {number} The number of rate classes for the synonymous
+ *     site-to-site rate distribution
+ *   - srv_distribution: {Object} An object with the rate values and their
+ *     associated weights for the synonymous site-to-site rate distribution
+ *   - omega_rate_classes: {Array<number>} An array of the number of rate
+ *     classes for the omega distribution for each partition
+ *   - mh_rates: {Object} An object with the median rates for two and three
+ *     nucleotide changes per codon
+ */
+export function get_attributes(results_json) {
+    const positive_results = results_json["test results"]["positive test results"]
+    const pvalue_threshold = results_json["test results"]["P-value threshold"]
+    const profilable_branches = new Set (_.chain (_.get (results_json, ["Site Log Likelihood","tested"])).keys().value())
+    const tested_branch_count =  d3.median (_.chain (results_json.tested).map ().map((d)=>_.filter (_.map (d), (d)=>d=="test").length).value())
+    const srv_rate_classes = results_json["Synonymous site-posteriors"] ? results_json["Synonymous site-posteriors"].length: 0
+    const srv_distribution = getRateDistribution (results_json, ["fits","Full adaptive model","Rate Distributions","Synonymous site-to-site rates"], ["rate","proportion"])
+    const omega_rate_classes = _.map (results_json["branch attributes"]["0"], (d)=>d["Rate classes"])
+    const mh_rates = ({
+        'DH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 2 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value(),
+        'TH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 3 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value()
+    })
+
+    return {
+        "positive_results" : positive_results,
+        "pvalue_threshold" : pvalue_threshold,
+        "profilable_branches" : profilable_branches,
+        "tested_branch_count" : tested_branch_count,
+        "srv_rate_classes" : srv_rate_classes,
+        "srv_distribution" : srv_distribution,
+        "omega_rate_classes" : omega_rate_classes,
+        "mh_rates" : mh_rates
+    }
+}
+
+/**
+ * Creates the data for the tile table that displays various summary attributes
+ * for an aBSREL analysis.
+ *
+ * @param {Object} results_json - The JSON object containing the aBSREL results
+ *
+ * @returns {Object} An object with the following attributes:
+ *   - tile_table_inputs: {Array<Object>} An array of objects with the following
+ *     attributes:
+ *       - number: {string} A string representation of the number to be displayed
+ *       - description: {string} A description of the number being displayed
+ *       - icon: {string} The CSS class for the icon associated with the number
+ *       - color: {string} The color to use for the icon
+ */
+export function get_tile_specs(results_json) {
+    const attrs = get_attributes(results_json, ev_threshold)
+    const distributionTable = distributionTable(results_json, ev_threshold)
+
+    const median_DH = _.size(attrs.mh_rates['DH']) ? floatFmt (d3.median (_.map (attrs.mh_rates['DH']))) : "N/A"
+    const median_TH = _.size(attrs.mh_rates['TH']) ? floatFmt (d3.median (_.map (attrs.mh_rates['TH']))) : "N/A"
+
+    const tile_table_inputs = [
+        {
+            "number": results_json.input["number of sequences"],
+            "description": "sequences in the alignment",
+            "icon": "icon-options-vertical icons",
+            "color": "asbestos",
+        },
+        {
+            "number": results_json.input["number of sites"],
+            "description": "codon sites in the alignment",
+            "icon": "icon-options icons",
+            "color": "asbestos"
+        },
+        {
+            "number": results_json.input["partition count"],
+            "description": "partitions",
+            "icon": "icon-arrow-up icons",
+            "color": "asbestos"
+        },
+        {
+            "number": attrs.tested_branch_count,
+            "description": "median branches/ partition used for testing",
+            "icon": "icon-share icons",
+            "color": "asbestos",
+        },
+        {
+            "number": d3.extent (attrs.omega_rate_classes).join ("-"),
+            "description": "rate classes per branch",
+            "icon": "icon-grid icons",
+            "color": "asbestos"
+        },
+        {
+            "number": attrs.srv_rate_classes ? "" + attrs.srv_rate_classes + " classes" : "None",
+            "description": "synonymous rate variation",
+            "icon": "icon-layers icons",
+            "color": "asbestos"
+        },
+        {
+            "number": attrs.positive_results,
+            "description": "branches with evidence of selection",
+            "icon": "icon-plus icons",
+            "color": "midnight_blue",
+        },
+        {
+            "number": floatFmt(d3.mean (_.map (_.filter (distributionTable, (r)=>r.tested == "Yes"), (d)=>d.sites))||0),
+            "description": "Sites/tested branch with ER≥" + ev_threshold + " for positive selection",
+            "icon": "icon-energy icons",
+            "color": "midnight_blue"
+        },
+        {
+            "number": median_DH + ":" + median_TH,
+            "description": "Median multiple hit rates (2H:3H)",
+            "icon": "icon-target icons",
+            "color": "midnight_blue"
+        }
+    ]
+
+    return tile_table_inputs;
+}
+
+  /**
+   * Create a table of results for each branch in the input aBSREL run.
+   *
+   * @param {Object} results_json - The JSON object containing the aBSREL results
+   * @param {number} ev_threshold - The threshold for the ER statistic
+   *
+   * @returns {Array} An array of objects each with the following properties:
+   *   - branch: The name of the branch
+   *   - tested: Whether the branch was tested for positive selection
+   *   - p-value: The p-value of the test if tested, null otherwise
+   *   - sites: The number of sites with ER >= ev_threshold if tested, null
+   *     otherwise
+   *   - rates: The number of rate classes in the omega distribution for the
+   *     branch
+   *   - dist: An array of three elements:
+   *     1. The string "&omega;"
+   *     2. The result of the test_omega function for this branch
+   *     3. An empty string
+   *   - plot: An array of two elements:
+   *     1. An empty string
+   *     2. The second element of the dist array
+   */
+export function distributionTable(results_json, ev_threshold) {
+  let table = [];
+
+  let site_er = posteriorsPerBranchSite (true, ev_threshold);
+  
+  _.each (results_json["branch attributes"][0], (info, b)=> {
+    let row = {'branch' : b};
+    const is_tested = results_json["tested"][0][b] == "test";
+    if (is_tested) {
+        row['tested'] = 'Yes';
+        row['p-value'] = info["Corrected P-value"];
+        row['sites'] = site_er[b] || 0;
+        
+    } else {
+        row['tested'] = 'No';
+        row['p-value'] = null;
+        row['sites'] = null;
+    }
+    row['rates'] = info['Rate classes'];
+    row ['dist'] = ["&omega;",test_omega(results_json, b),""];
+    row['plot'] = ["",row['dist'][1]];
+    table.push (row);
+  });
+  
+  return table;
+}
+
+/**
+ * Computes posterior probabilities for each branch-site combination and returns
+ * either a count of sites with evidence ratio (ER) above a threshold or detailed
+ * information for each site.
+ *
+ * @param {Object} results_json - The JSON object containing the results of the
+ * analysis, including branch attributes and substitution information.
+ * @param {boolean} do_counts - If true, returns a count of sites with ER >= er
+ * for each branch. If false, returns an array of objects containing detailed
+ * information for each site.
+ * @param {number} er - The threshold for the evidence ratio (ER) statistic.
+ *
+ * @returns {Object|Array} - If do_counts is true, returns an object with branch
+ * names as keys and counts of sites with ER >= er as values. If do_counts is
+ * false, returns an array of objects, each containing:
+ *   - Key: A string combining the branch name and site index
+ *   - Posterior: The posterior probability for the site
+ *   - ER: The evidence ratio for the site
+ *   - subs: Substitution information
+ *   - from: The originating state of the substitution
+ *   - to: The resulting state of the substitution
+ *   - syn_subs: The count of synonymous substitutions
+ *   - nonsyn_subs: The count of non-synonymous substitutions
+ */
+
+export function posteriorsPerBranchSite(results_json, do_counts, er) {
+  let results = do_counts ? {} : [];
+  let offset = 0;
+  const subs = _.get (results_json, ["substitutions","0"]);
+    
+  _.each (results_json["branch attributes"], (data, partition) => {
+      let partition_size = 0;
+      let subs_per_site = {};
+      _.each (data, (per_branch, branch)=> {
+          if (per_branch ["posterior"]) {
+            const prior_d = test_omega (results_json, branch);
+            let prior_odds = prior_d[prior_d.length-1].weight;
+            const rate_class = prior_d.length-1;
+            if (prior_odds < 1 && prior_odds > 0) {
+              prior_odds = prior_odds / (1-prior_odds);
+              _.each (per_branch ["posterior"][rate_class], (p,i)=> {
+                  if (! do_counts && (i in subs_per_site) == false) {
+                      subs_per_site[i] = generateNodeLabels (tree_objects[0], subs[i])
+                  }
+                 
+                  if (do_counts) {
+                    results[branch] = (results[branch] ? results[branch] : 0) + ((p/(1-p))/prior_odds >= er);
+                  } else {
+                    const info = subs_per_site [i][branch];
+                    let sub_count = subs_for_pair (info[2], info[0]);
+                    results.push ({'Key' : branch + "|" + (i + offset + 1), 
+                                   'Posterior' : p, 
+                                   'ER' : (p/(1-p))/prior_odds,
+                                   'subs' : info[3],
+                                   'from': info[2],
+                                   'to' : info[0],
+                                   'syn_subs' : sub_count[0],
+                                   'nonsyn_subs' : sub_count[1]
+                                  });
+                  }
+              });
+            }
+            partition_size = per_branch ["posterior"][rate_class].length;
+          }
+      });
+      offset += partition_size;
+  });
+  return results;
+}
+
+/**
+ * Profiles branch sites by calculating metrics based on log likelihoods
+ * and substitutions from the provided results JSON.
+ *
+ * @param {Object} results_json - The JSON object containing the results,
+ * which includes site log likelihoods and substitution data.
+ *
+ * @returns {Array<Object>} An array of objects, each representing a site
+ * with the following properties:
+ *   - Key: {string} A unique identifier for the site in the format "node|site_index".
+ *   - branch: {string} The name of the branch that the site belongs to.
+ *   - site: {number} The index of the site.
+ *   - ER: {number} The evidence ratio for the site.
+ *   - subs: {string} The substitution information for the site.
+ *   - from: {string} The originating state of the substitution.
+ *   - to: {string} The resulting state of the substitution.
+ *   - syn_subs: {number} The count of synonymous substitutions.
+ *   - nonsyn_subs: {number} The count of non-synonymous substitutions.
+**/
+export function profileBranchSites(results_json) {
+  let results = [];
+  const unc = _.get (results_json, ["Site Log Likelihood","unconstrained","0"]);
+  const subs = _.get (results_json, ["substitutions","0"]);
+  if (unc) {
+    _.each (unc, (ll, i)=> {
+        const subs_at_site = generateNodeLabels (tree_objects[0], subs[i]);
+        _.each (subs_at_site, (info, node)=> {
+      
+             if (node != 'root') {
+                const bs_ll = _.get (results_json, ["Site Log Likelihood","tested",node,0,i]);
+                if (bs_ll) {
+                    let bit = {};
+                    bit.Key = node + "|" + (i+1);
+                    bit.branch = node;
+                    bit.site = i+1;
+                    bit.ER = Math.exp (unc[i]-bs_ll);
+                    bit.subs = info[3];
+                    bit.from = info[2];
+                    bit.to = info[0];
+                    let sub_count = subs_for_pair (bit.from, bit.to);
+                    bit.syn_subs = sub_count[0];
+                    bit.nonsyn_subs = sub_count[1];
+                    results.push (bit);
+                }
+              }
+              
+        });
+    });
+  }
+  return results;
+}
+
+/**
+ * Retrieves and sorts rate distribution data from the results JSON.
+ *
+ * @param {Array} keys - The keys used to access the rate distribution data
+ *   within the results JSON.
+ * @param {Array} [tags=["omega", "proportion"]] - Optional tags to specify
+ *   the fields for rate value and weight in the rate distribution data.
+ *
+ * @returns {Array|null} A sorted array of objects, each containing:
+ *   - value: The rate value as specified by the first tag.
+ *   - weight: The corresponding weight as specified by the second tag.
+ *   The array is sorted by rate value. Returns null if no rate information
+ *   is found.
+ */
+
+function getRateDistribution(results_json, keys, tags) {
     tags = tags || ["omega", "proportion"];
     const rate_info = _.get (results_json, keys);
-    if (rate_info) {
-
-      
+    if (rate_info) { 
       return _.sortBy (_.map (rate_info, (d)=>({
         "value" : d[tags[0]],
         "weight" : d[tags[1]]
@@ -13,46 +333,77 @@ function getRateDistribution(keys, tags) {
     return null;
 }
 
-
-
-function partition_sizes() {
-    return _.chain (results_json['data partitions']).map ((d,k)=>(d['coverage'][0].length)).value();
-}
-
-
-
 function siteIndexPartitionCodon() {
     return _.chain (results_json['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
 }
 
 
 
-function test_omega(branch) {
-  getRateDistribution (["branch attributes","0",branch,"Rate Distributions"],["0","1"])
+/**
+ * Retrieves the rate distribution for a given branch in the results JSON.
+ *
+ * @param {Object} results_json - The JSON object containing the aBSREL results
+ * @param {string} branch - The name of the branch for which to retrieve the
+ *   rate distribution
+ *
+ * @returns {Array|null} A sorted array of objects, each containing:
+ *   - value: The rate value as specified by the first tag.
+ *   - weight: The corresponding weight as specified by the second tag.
+ *   The array is sorted by rate value. Returns null if no rate information
+ *   is found.
+ */
+function test_omega(results_json, branch) {
+  getRateDistribution (results_json, ["branch attributes","0",branch,"Rate Distributions"],["0","1"])
 }
 
 
-function test_pv(branch) {
-  _.get (results_json,["branch attributes","0",branch,"Corrected P-value"])
-}
 
+/**
+ * Computes the number of synonymous and nonsynonymous substitutions on a given
+ * path between two codons.
+ *
+ * @param {Array} from - The starting codon, represented as an array of 3
+ *   single-character strings.
+ * @param {Array} to - The ending codon, represented as an array of 3
+ *   single-character strings.
+ * @param {Array} path - An array of indices indicating the order in which
+ *   positions in the codon should be changed to get from the starting codon to
+ *   the ending codon.
+ *
+ * @returns {Array} An array of two elements. The first element is the number
+ *   of synonymous substitutions, and the second element is the number of
+ *   nonsynonymous substitutions.
+ */
 function path_diff(from,to,path) {
-    let res = [0,0];
+    let result = [0,0];
     let curr = _.map (from),
         next = _.clone (curr);
    
     next [path[0]] = to[path[0]];
     const is_syn = translate_ambiguous_codon (curr.join ("")) == translate_ambiguous_codon(next.join (""));
-    res[is_syn ? 0 : 1] += 1;
+    result[is_syn ? 0 : 1] += 1;
     for (let i = 1; i < path.length; i++) {
         curr = _.clone (next);
         next [path[i]] = to[path[i]];
         const is_syn = translate_ambiguous_codon (curr.join ("")) == translate_ambiguous_codon(next.join (""));
-        res[is_syn ? 0 : 1] += 1;
+        result[is_syn ? 0 : 1] += 1;
     }
   
-    return res;
+    return result;
 }
+
+/**
+ * Calculates the number of possible synonymous and non-synonymous substitutions
+ * between two codon sequences as they diverge.
+ *
+ * @param {string} from - The original codon sequence.
+ * @param {string} to - The target codon sequence.
+ *
+ * @returns {Array<number>} An array with two elements:
+ *   - The first element is the count of synonymous substitutions.
+ *   - The second element is the count of non-synonymous substitutions.
+ *   If either codon sequence is 'NNN', both counts are zero.
+ */
 
 function subs_for_pair(from, to) {
 
@@ -92,6 +443,15 @@ function subs_for_pair(from, to) {
 }
 
 
+    /**
+     * Computes a set of labels for each node in a tree.
+     *
+     * @param {PhyloTree} T - The tree.
+     * @param {Object.<string,string>} labels - A mapping of node names to their labels (as strings of length 3).
+     * @return {Object.<string,array>} - A mapping of node names to their labels, with the value being an array
+     *  of [label, translation, parent label, number of substitutions].  Substitutions are only counted between
+     *  non-ambiguous, non-degenerate codons.
+     */
 function generateNodeLabels(T, labels) {
     let L = {};
     T.traverse_and_compute (function (n) {
@@ -120,47 +480,38 @@ function generateNodeLabels(T, labels) {
     return L;
 }
 
+/**
+ * Computes the weighted mean of a distribution.
+ *
+ * @param {Array.<{value: number, weight: number}>} distribution - An array of objects representing the distribution, 
+ *        where each object contains a 'value' and a 'weight'.
+ * @return {number} The weighted mean of the distribution.
+ */
+export function distMean(distribution) {
+    let weightedSum = 0;
 
-
-function treeNodeOrdering(index, root) {
-    let order = [];
-    if (root) {order.push ('root');}
-    const T = tree_objects[index];
-    function sort_nodes (asc) {
-        T.traverse_and_compute (function (n) {
-                var d = 1;
-                if (n.children && n.children.length) {
-                    d += d3.max (n.children, function (d) { return d["count_depth"];});
-                } 
-
-                n["count_depth"] = d;
-            });
-        T.resortChildren (function (a,b) {
-            return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
-        });
-    }
-    sort_nodes (true);
-    T.traverse_and_compute (function (n) {
-        if (results_json.tested[index][n.data.name] == "test") {
-          order.push (n.data.name);
-        }
+    _.each(distribution, ({ value, weight }) => {
+        weightedSum += value * weight;
     });
-    return order;
+
+    // TODO ask sergei why we dont divide by sum of weights here
+    // thats either a bug, or a thing that needs documenting/ possibly changing some misleading var names or something
+
+    return weightedSum;
 }
 
 
 
-function distMean(d) {
-    let m = 0;
-    _.each (d, (r)=> {
-        m += r['value'] * r['weight'];
-    });
-    return m;
-}
+/**
+ * Computes the variance of a distribution specified by an array of objects,
+ * where each object has a 'value' and a 'weight' property.
+ *
+ * @param {Array.<Object>} d - An array of objects, each with a 'value'
+ *   property and a 'weight' property.
+ * @return {number} The variance of the distribution.
+ */
 
-
-
-function distVar(d) {
+export function distVar(d) {
     let m2 = 0, m = distMean (d);
     _.each (d, (r)=> {
         m2 += r['value']*r['value'] * r['weight'];
@@ -168,135 +519,19 @@ function distVar(d) {
     return m2 - m*m;
 }
 
-
-
-function er_step_size() {
-    let N = results_json.input["number of sequences"];
-    if (N < 100) return 70;
-    if (N < 200) return 140;
-    return 600;
-}
-
-function seqNames(tree) {
-    let seq_names = [];
-    tree.traverse_and_compute (n=>{
-        if (n.children && n.children.length) return;
-        seq_names.push (n.data.name);
-    });
-    return seq_names;
-};
-
-function totalTreeLength(tree) {
-  let L = 0;
-  tree.traverse_and_compute ( (n)=> {
-     if (tree.branch_length (n)) {
-      L += +tree.branch_length (n);
-     }
-  });
-  return L;
-}
-
-function subs_by_branch(i) {
-    let counts = {};
-    _.each (results_json.substitutions[i], (states, site)=> {
-        _.each (states, (state, branch)=> {
-          if (branch != "root") {
-              if (state != '---') {
-                    counts[branch] = 1 + (counts[branch] ? counts[branch] : 0);
-              }
-          }
-        });
-    });
-    return counts;
-}
-
-function site_support_by_branch(i, key, er) {
-    let counts = {};
-    _.each (results_json["branch attributes"][i], (attribs, branch)=> {
-        if (key in attribs) {
-          _.each (attribs[key], (d)=> {
-            if (d[1] >= er) {
-              counts[branch] = 1 + (counts[branch] ? counts[branch] : 0);
-            }
-          });
-        }});
-    return counts;
-}
-
-// TODO: we already know busted needs this too, should be a general util.
-// possible a lot of these are general utils, idk yet
-function cdsQuant(data, key1, title) {
-  
-  return {
-      "config": {
-          "mark": {"invalid": null}
-      },
-      "vconcat" : [
-        {
-          "width" : 400, "height" : 200,
-          "data" : {"values" : data}, 
-              "transform": [{
-                "sort": [{"field": key1}],
-                "window": [{"op": "sum", "field": key1, "as": "CC"}],
-                "frame": [null, 0]
-              }],
-              "layer" : [{
-                "mark": {"type" : "area", "opacity" : 0.5, "color" : "grey", "tooltip" : true, "interpolate" : "step"},
-                "encoding": {
-                  "x": {
-                    "field": key1,
-                    "type": "quantitative",
-                    "axis" : {"title" :  null},
-                  },
-                  "y": {
-                    "field": "CC",
-                    "type": "quantitative",
-                    "scale" : {"type" : "linear"},
-                    "axis" : {"title" : "Cumulative LRT", titleFontSize : 14}
-                  }
-              }},
-              {
-                "mark": {"type" : "line", "opacity" : 1.0, "color" : "black",  "interpolate" : "step"},
-                "encoding": {
-                  "x": {
-                    "field": key1,
-                   // "sort" : "descending",
-                    "type": "quantitative",
-                  },
-                  "y": {
-                    "field": "CC",
-                    "type": "quantitative",
-                    "scale" : {"type" : "linear"},
-                    //"title" : "Cumulative count"
-                  },
-              }}
-      ]
-  },
-  {
-      "width" : 400, "height" : 100,
-      "data" : {"values" : data}, 
-          
-        "mark": {"type" : "bar", "color" : "#ccc", "stroke" : "black", "tooltip" : true},
-        "encoding": {
-          "x": {
-            "field": key1,
-            "bin": {"maxbins":200},
-            "type": "quantitative",
-            "axis" : {"title" :  title ? title : key1, titleFontSize : 14},
-          },
-          "y": {
-            "aggregate": "count",
-            "type": "quantitative",
-            "scale" : {"type" : "sqrt"},
-            "axis" : {"title" :  "Count", titleFontSize : 14},
-            //"title" : "Cumulative count"
-          }
-      
-    }
-  }]}
-}
-
+/**
+ * Translate a codon to an amino acid, handling ambiguous codes.
+ * 
+ * If the codon is unambiguous, just return the translation.
+ * If the codon is ambiguous, return a string of all possible translations, 
+ * sorted alphabetically.
+ * 
+ * @param {string} codon - a three-nucleotide codon
+ * @return {string} the amino acid(s) corresponding to the codon
+ */
 function translate_ambiguous_codon(codon) {
+    const translation_table = get_translation_table();
+
     if (codon in translation_table) {
       return  translation_table[codon];
     }
@@ -321,3 +556,26 @@ function translate_ambiguous_codon(codon) {
     }
     return _.sortBy (options).join ("");
 }
+
+/**
+ * A dictionary mapping codons to amino acids. The dictionary is
+ * constructed from a table of codons and their corresponding amino
+ * acids, with the codons as keys and the amino acids as values.
+ * 
+ * The table is adapted from the GenBank documentation, with the
+ * addition of the codon 'NNN' mapping to the amino acid '?', and
+ * the codon '---' mapping to the amino acid '-'.
+ * 
+ * @return {Object} a dictionary mapping codons to amino acids
+ */
+function get_translation_table() {
+  var code = d3.csvParse("Codon,AA\nTTT,F\nTCT,S\nTAT,Y\nTGT,C\nTTC,F\nTCC,S\nTAC,Y\nTGC,C\nTTA,L\nTCA,S\nTAA,*\nTGA,*\nTTG,L\nTCG,S\nTAG,*\nTGG,W\nCTT,L\nCCT,P\nCAT,H\nCGT,R\nCTC,L\nCCC,P\nCAC,H\nCGC,R\nCTA,L\nCCA,P\nCAA,Q\nCGA,R\nCTG,L\nCCG,P\nCAG,Q\nCGG,R\nATT,I\nACT,T\nAAT,N\nAGT,S\nATC,I\nACC,T\nAAC,N\nAGC,S\nATA,I\nACA,T\nAAA,K\nAGA,R\nATG,M\nACG,T\nAAG,K\nAGG,R\nGTT,V\nGCT,A\nGAT,D\nGGT,G\nGTC,V\nGCC,A\nGAC,D\nGGC,G\nGTA,V\nGCA,A\nGAA,E\nGGA,G\nGTG,V\nGCG,A\nGAG,E\nGGG,G\n");
+  var mapped_code = {};
+  _.each (code, (v,k) => {mapped_code[v.Codon] = v.AA;});
+  mapped_code["---"] = "-";
+  mapped_code["NNN"] = "?";
+  
+  return mapped_code;
+}
+
+floatFormat = d3.format (".4g")

@@ -810,3 +810,28 @@ function add_svg_defs(svg) {
     filter.append ("feFlood").attr ("flood-color", "lightgray");
     filter.append ("feComposite").attr ("in", "SourceGraphic").attr ("operator", "atop");
 }
+
+
+/**
+ * Computes the number of substitutions for each branch, excluding the root,
+ * based on the substitutions data for a given index.
+ *
+ * @param {number} i - The index of the substitutions data in the results JSON.
+ * 
+ * @returns {Object} An object where keys are branch names and values are the
+ * count of substitutions for each branch.
+ */
+
+function subs_by_branch(i) {
+    let counts = {};
+    _.each (results_json.substitutions[i], (states, site)=> {
+        _.each (states, (state, branch)=> {
+          if (branch != "root") {
+              if (state != '---') {
+                    counts[branch] = 1 + (counts[branch] ? counts[branch] : 0);
+              }
+          }
+        });
+    });
+    return counts;
+}

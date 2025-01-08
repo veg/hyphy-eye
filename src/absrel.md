@@ -29,74 +29,21 @@ const results_json = await FileAttachment("./data/absrel_test_data.json").json()
 const attrs = utils.get_attributes(results_json);
 ```
 
-<span style = 'font-size: 1.1em; color: firebrick;'>Based on the likelihood ratio test, there **are ${results_json["test results"]["positive test results"]}** branches with evidence of _episodic diversifying selection_ in this dataset (<tt>p&leq;${floatFormat(results_json["test results"]["P-value threshold"] || 0.05)}</tt>).</span> <span style = 'font-size: 0.8em'><br>aBSREL analysis (<samp>${results_json.analysis.version}</samp>) was performed on the alignment from <samp>${results_json.input["file name"]}</samp> using HyPhy v<tt>${results_json.runtime}</tt>. <br>This analysis ** ${srv_rate_classes > 0 ? "included" : "did not include"}** site-to-site synonymous rate variation. ${_.size (mh_rates['DH']) == 0 ? "" : (_.size (mh_rates['TH'] == 0) ? "Double nucleotide substitutions were included in the model." : "Double and triple nucleotide substitutions were included in the model.")}${+results_json.analysis.version < 2.5 ? "<p><small><span class = 'stati bg-pumpkin'>Some of the visualizations are not available for BUSTED analyses before v2.5</span></small>" : ""} </span>
-
-<details><summary><small>**Suggested citation**</summary><tt><small>${results_json.analysis["citation"]}</small></tt></small></details>
+Based on the likelihood ratio test, there **are ${attrs.positive_results}** branches with evidence of _episodic diversifying selection_ in this dataset (<tt>p&leq;${floatFormat(attrs.pvalue_threshold || 0.05)}</tt>).
+This analysis ** ${attrs.srv_rate_classes > 0 ? "included" : "did not include"}** site-to-site synonymous rate variation. ${_.size (attrs.mh_rates['DH']) == 0 ? "" : (_.size (mh_rates['TH'] == 0) ? "Double nucleotide substitutions were included in the model." : "Double and triple nucleotide substitutions were included in the model.")}
 
 ```js
-const pv = view(Inputs.text({label: html`<b>Evidence ratio threshold</b>`, value: "100", submit: "Update"}))
+const ev_threshold = view(Inputs.text({label: html`<b>Evidence ratio threshold</b>`, value: "100", submit: "Update"}))
 ```
 
 ```js
-const tile_table_inputs = [
-    {
-        "number": results_json.input["number of sequences"],
-        "description": "sequences in the alignment",
-        "icon": "icon-options-vertical icons",
-        "color": "asbestos",
-    },
-    {
-        "number": results_json.input["number of sites"],
-        "description": "codon sites in the alignment",
-        "icon": "icon-options icons",
-        "color": "asbestos"
-    },
-    {
-        "number": results_json.input["partition count"],
-        "description": "partitions",
-        "icon": "icon-arrow-up icons",
-        "color": "asbestos"
-    },
-    {
-        "number": tested_branch_count,
-        "description": "median branches/ partition used for testing",
-        "icon": "icon-share icons",
-        "color": "asbestos",
-    },
-    {
-        "number": d3.extent (omega_rate_classes).join ("-"),
-        "description": "rate classes per branch",
-        "icon": "icon-grid icons",
-        "color": "asbestos"
-    },
-    {
-        "number": srv_rate_classes ? "" + srv_rate_classes + " classes" : "None",
-        "description": "synonymous rate variation",
-        "icon": "icon-layers icons",
-        "color": "asbestos"
-    },
-    {
-        "number": results_json["test results"]["positive test results"],
-        "description": "branches with evidence of selection",
-        "icon": "icon-plus icons",
-        "color": "midnight_blue",
-    },
-    {
-        "number": floatFmt(d3.mean (_.map (_.filter (distributionTable, (r)=>r.tested == "Yes"), (d)=>d.sites))||0),
-        "description": "Sites/tested branch with ER≥" + pv + " for positive selection",
-        "icon": "icon-energy icons",
-        "color": "midnight_blue"
-    },
-    {
-        "number": _.size(mh_rates['DH']) ? floatFmt (d3.median (_.map (mh_rates['DH']))) : "N/A"}:${_.size(mh_rates['TH']) ?floatFmt (d3.median (_.map (mh_rates['TH']))) : "N/A",
-        "description": "Median multiple hit rates (2H:3H)",
-        "icon": "icon-target icons",
-        "color": "midnight_blue"
-    }
-]
-
-<div>${tt.tile_table(trivial_inputs)}</div>;
+//const sites_table = utils.get_sites_table(results_json, pvalue_threshold);
+//const siteTableData = _.filter (sites_table[1], (x)=>table_filter.indexOf (x.class)>=0);
+const distributionTable = utils.distributionTable(results_json, ev_threshold);
+const tile_specs = utils.get_tile_specs(results_json, ev_threshold)
 ```
+
+<div>${tt.tile_table(tile_specs)}</div>
 
 #### Branch-by-branch results
 
@@ -110,7 +57,7 @@ const rate_table = view(Inputs.table (distributionTable, {
     'dist' : (d)=>{
         return html`<tt>
             ${_.map (d[1], (c,i)=> floatFormat(c.value) + " (" + proportionFormat (c.weight) + ") ")}
-            <br>Mean = <b>${floatFormat (distMean (d[1]))}</b>, CoV = <b>${floatFormat (Math.sqrt (distVar (d[1]))/distMean (d[1]))}</b></tt>`},
+            <br>Mean = <b>${floatFormat (utils.distMean (d[1]))}</b>, CoV = <b>${floatFormat (Math.sqrt (utils.distVar (d[1]))/utils.distMean (d[1]))}</b></tt>`},
      'plot' : (d)=>d[1].length > 1 ? renderDiscreteDistribution (d[1],{"height" : 40, "width" : 150, "ticks" : 2, "scale" : "log", "ref" : [1]}) : ''
   },
   layout: "auto",
@@ -203,7 +150,7 @@ const table1 = view(Inputs.table (sites_table[1], {
 
 ```js
 const which_branch = view(Inputs.select(
-  _.map ([...profilable_branches], (d)=>d),
+  _.map ([...attrs.profilable_branches], (d)=>d),
   {multiple: true,
   label: "Select some branches"
   }
@@ -228,10 +175,6 @@ const table3 = view(Inputs.table (table3_data,
 }))
 ```
 
-<link rel=stylesheet href='${resolve("phylotree@0.1/phylotree.css")}'>
-<div id="tree_container"></div>
-
-
 ```js
 function getFigure2() {
     let toDisplay = tree_id.split (" ");
@@ -255,7 +198,11 @@ function getFigure2() {
 const figure2 = getFigure2();
 ```
 
-TODO
+<div id="tree_container">${figure2}</div>
+
+**Citation**
+
+<p><tt><small>${results_json.analysis["citation"]}</small></tt></p>
 
 ```js
 floatFormat = d3.format (".4g")
@@ -270,64 +217,6 @@ function fig1data() {
    return _.filter (siteTableData[0], (x)=>in_set.has (x.Codon));
 }
 const fig2data = fig1data();
-```
-
-```js
-const profilable_branches = new Set (_.chain (_.get (results_json, ["Site Log Likelihood","tested"])).keys().value())
-```
-
-```js
-const tested_branch_count =  d3.median (_.chain (results_json.tested).map ().map((d)=>_.filter (_.map (d), (d)=>d=="test").length).value())
-```
-
-```js
-const srv_rate_classes = results_json["Synonymous site-posteriors"] ? results_json["Synonymous site-posteriors"].length: 0
-```
-
-```js
-const srv_distribution = getRateDistribution (["fits","Full adaptive model","Rate Distributions","Synonymous site-to-site rates"], ["rate","proportion"])
-```
-
-```js
-const omega_rate_classes = _.map (results_json["branch attributes"]["0"], (d)=>d["Rate classes"])
-```
-
-```js
-const mh_rates = ({
-    'DH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 2 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value(),
-    'TH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 3 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value()
-})
-```
-
-```js
-function distributionTable() {
-  let table = [];
-
-  let site_er = posteriorsPerBranchSite (true, pv);
-  
-  _.each (results_json["branch attributes"][0], (info, b)=> {
-    let row = {'branch' : b};
-    const is_tested = results_json["tested"][0][b] == "test";
-    if (is_tested) {
-        row['tested'] = 'Yes';
-        row['p-value'] = info["Corrected P-value"];
-        row['sites'] = site_er[b] || 0;
-        
-    } else {
-        row['tested'] = 'No';
-        row['p-value'] = null;
-        row['sites'] = null;
-    }
-    row['rates'] = info['Rate classes'];
-    row ['dist'] = ["&omega;",test_omega(b),""];
-    row['plot'] = ["",row['dist'][1]];
-    table.push (row);
-  });
-  
-  return table;
-}
-
-const distributionTable = distributionTable();
 ```
 
 ```js
@@ -347,16 +236,16 @@ function siteTableData() {
                 site_record['LogL'] = sll;
               }
         
-              if (srv_distribution) {
+              if (attrs.srv_distribution) {
                   let site_srv = [];
-                  _.each (srv_distribution, (d,i)=> {
+                  _.each (attrs.srv_distribution, (d,i)=> {
                        site_srv.push ({'value' : d.value, 'weight' : results_json["Synonymous site-posteriors"][i][index]});
                   });
-                  site_record['SRV posterior mean'] = distMean (site_srv);
+                  site_record['SRV posterior mean'] = utils.distMean (site_srv);
               }
 
               site_record ["Subs"] = d3.sum (bySite[i+1], (d)=>d.subs);
-              site_record ["ER"] = _.filter (bySite[i+1], (d)=>d.ER >= pv).length;
+              site_record ["ER"] = _.filter (bySite[i+1], (d)=>d.ER >= ev_threshold).length;
               
               site_info.push (site_record);
               index++;
@@ -368,7 +257,7 @@ function siteTableData() {
       'SRV posterior mean' : html`<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>`,
       'LogL' : html`<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>`,
       'Subs' : html`<abbr title = "Total # of substitutions (s+ns)">Subs</abbr>`,
-      'ER' : html`<abbr title = "Total # branches with evidence ratio > ${pv}">ER Branch</abbr>`,
+      'ER' : html`<abbr title = "Total # branches with evidence ratio > ${ev_threshold}">ER Branch</abbr>`,
     }];
 }
 const siteTableData = siteTableData();
@@ -382,90 +271,8 @@ const sites_table = sites_table();
 ```
 
 ```js
-function profileBranchSites() {
-  let results = [];
-  const unc = _.get (results_json, ["Site Log Likelihood","unconstrained","0"]);
-  const subs = _.get (results_json, ["substitutions","0"]);
-  if (unc) {
-    _.each (unc, (ll, i)=> {
-        const subs_at_site = generateNodeLabels (tree_objects[0], subs[i]);
-        _.each (subs_at_site, (info, node)=> {
-      
-             if (node != 'root') {
-                const bs_ll = _.get (results_json, ["Site Log Likelihood","tested",node,0,i]);
-                if (bs_ll) {
-                    let bit = {};
-                    bit.Key = node + "|" + (i+1);
-                    bit.branch = node;
-                    bit.site = i+1;
-                    bit.ER = Math.exp (unc[i]-bs_ll);
-                    bit.subs = info[3];
-                    bit.from = info[2];
-                    bit.to = info[0];
-                    let sub_count = subs_for_pair (bit.from, bit.to);
-                    bit.syn_subs = sub_count[0];
-                    bit.nonsyn_subs = sub_count[1];
-                    results.push (bit);
-                }
-              }
-              
-        });
-    });
-  }
-  return results;
-}
-const profileBranchSites = profileBranchSites();
+const profileBranchSites = profileBranchSites(results_json);
 ```
-
-```js
-function posteriorsPerBranchSite(do_counts, er) {
-  let results = do_counts ? {} : [];
-  let offset = 0;
-  const subs = _.get (results_json, ["substitutions","0"]);
-    
-  _.each (results_json["branch attributes"], (data, partition) => {
-      let partition_size = 0;
-      let subs_per_site = {};
-      _.each (data, (per_branch, branch)=> {
-          if (per_branch ["posterior"]) {
-            const prior_d = test_omega (branch);
-            let prior_odds = prior_d[prior_d.length-1].weight;
-            const rate_class = prior_d.length-1;
-            if (prior_odds < 1 && prior_odds > 0) {
-              prior_odds = prior_odds / (1-prior_odds);
-              _.each (per_branch ["posterior"][rate_class], (p,i)=> {
-                  if (! do_counts && (i in subs_per_site) == false) {
-                      subs_per_site[i] = generateNodeLabels (tree_objects[0], subs[i])
-                  }
-                 
-                  if (do_counts) {
-                    results[branch] = (results[branch] ? results[branch] : 0) + ((p/(1-p))/prior_odds >= er);
-                  } else {
-                    const info = subs_per_site [i][branch];
-                    let sub_count = subs_for_pair (info[2], info[0]);
-                    results.push ({'Key' : branch + "|" + (i + offset + 1), 
-                                   'Posterior' : p, 
-                                   'ER' : (p/(1-p))/prior_odds,
-                                   'subs' : info[3],
-                                   'from': info[2],
-                                   'to' : info[0],
-                                   'syn_subs' : sub_count[0],
-                                   'nonsyn_subs' : sub_count[1]
-                                  });
-                  }
-              });
-            }
-            partition_size = per_branch ["posterior"][rate_class].length;
-          }
-      });
-      offset += partition_size;
-  });
-  return results;
-}
-const posteriorsPerBranchSite = posteriorsPerBranchSite();
-```
-
-
 
 ```js
 function table3_data() {
@@ -483,7 +290,7 @@ const table3_data = table3_data();
 ```
 
 ```js
-const bsPositiveSelection = posteriorsPerBranchSite();
+const bsPositiveSelection = utils.posteriorsPerBranchSite(results_json, true, ev_threshold);
 ```
 
 ```js
