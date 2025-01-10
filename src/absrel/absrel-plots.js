@@ -18,7 +18,7 @@ export function get_plot_description(plot_type) {
     const plot_legends = ({
         "Synonymous rates" : "Posterior means for synonymous site-level substitution rates (α). ",
         "Support for positive selection" : "Empirical Bayes Factors for ω>1 at a particular branch and site (only tested branches with 2 or more rate classes are included).",
-        "Evidence ratio alignment profile" : "Evidence ratios for for ω>1 at a particular branch and site (only tested branches with an ω>1 distribution component are included). Mouse over for more information"
+        "Evidence ratio alignment profile" : "Evidence ratios for ω>1 at a particular branch and site (only tested branches with an ω>1 distribution component are included). Mouse over for more information"
     })
 
     return plot_legends[plot_type];
@@ -322,7 +322,6 @@ export function display_tree(results_json, index, T, options, ev_threshold, tree
       let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     
       T.branch_length_accessor = (n)=>(n.data.name in results_json["branch attributes"][index] ? results_json["branch attributes"][index][n.data.name][branch_length] : 0) || 0;  
-    console.log("tree labels", treeLabels);
       let alignTips = treeLabels.indexOf ("align tips") >= 0;
       var t = T.render({
         height: dim && dim[0], 

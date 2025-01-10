@@ -128,10 +128,17 @@ if (figure2 && figure2.color_scale) {
   const label = document.createElement("text")
   label.textContent = figure2.color_scale_title
   schemeElement.append(label)
+  console.log("color scale", figure2.color_scale.interpolator)
+  console.log("fig2", figure2)
   const legend = Plot.legend({
         color: {
             type: "linear",
-            interpolate: figure2.color_scale,
+            interpolate: figure2.color_scale.interpolate,
+            domain: figure2.color_scale.domain(),
+            range: figure2.color_scale.range(),
+            ticks: 5
+            //ticks: figure2.color_scale.ticks(),
+            //tickFormat: figure2.color_scale.tickFormat()
         },
         width: 200
     })
