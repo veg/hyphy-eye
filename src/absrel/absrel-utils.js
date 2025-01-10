@@ -5,6 +5,9 @@
 
 import * as _ from "lodash-es";
 import * as d3 from "d3";
+import * as phylotree from "phylotree";
+
+const floatFormat = d3.format (".2g")
 
 /**
  * Extracts some summary attributes from aBSREL results that are used later in the
@@ -28,6 +31,10 @@ import * as d3 from "d3";
  *     classes for the omega distribution for each partition
  *   - mh_rates: {Object} An object with the median rates for two and three
  *     nucleotide changes per codon
+ *   - tree_objects: {Array<phylotree.phylotree>} An array of phylotree objects
+ *     for each partition
+ *   - profileBranchSites: {Array<Object>} An array of objects containing
+ *     information about sites that were tested for positive selection
  */
 export function get_attributes(results_json) {
     const positive_results = results_json["test results"]["positive test results"]
@@ -41,6 +48,12 @@ export function get_attributes(results_json) {
         'DH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 2 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value(),
         'TH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 3 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value()
     })
+    const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
+        let T = new phylotree.phylotree (tree);
+        T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name]["Global MG94xREV"];
+        return T;
+    });
+    const profileBranchSites = getProfileBranchSites(results_json, tree_objects);
 
     return {
         "positive_results" : positive_results,
@@ -50,7 +63,9 @@ export function get_attributes(results_json) {
         "srv_rate_classes" : srv_rate_classes,
         "srv_distribution" : srv_distribution,
         "omega_rate_classes" : omega_rate_classes,
-        "mh_rates" : mh_rates
+        "mh_rates" : mh_rates,
+        "tree_objects" : tree_objects,
+        "profileBranchSites" : profileBranchSites
     }
 }
 
@@ -59,7 +74,7 @@ export function get_attributes(results_json) {
  * for an aBSREL analysis.
  *
  * @param {Object} results_json - The JSON object containing the aBSREL results
- *
+ * @param {number} ev_threshold - The evidence threshold *
  * @returns {Object} An object with the following attributes:
  *   - tile_table_inputs: {Array<Object>} An array of objects with the following
  *     attributes:
@@ -68,12 +83,12 @@ export function get_attributes(results_json) {
  *       - icon: {string} The CSS class for the icon associated with the number
  *       - color: {string} The color to use for the icon
  */
-export function get_tile_specs(results_json) {
-    const attrs = get_attributes(results_json, ev_threshold)
-    const distributionTable = distributionTable(results_json, ev_threshold)
+export function get_tile_specs(results_json, ev_threshold) {
+    const attrs = get_attributes(results_json)
+    const distributionTable = getDistributionTable(results_json, ev_threshold)
 
-    const median_DH = _.size(attrs.mh_rates['DH']) ? floatFmt (d3.median (_.map (attrs.mh_rates['DH']))) : "N/A"
-    const median_TH = _.size(attrs.mh_rates['TH']) ? floatFmt (d3.median (_.map (attrs.mh_rates['TH']))) : "N/A"
+    const median_DH = _.size(attrs.mh_rates['DH']) ? floatFormat (d3.median (_.map (attrs.mh_rates['DH']))) : "N/A"
+    const median_TH = _.size(attrs.mh_rates['TH']) ? floatFormat (d3.median (_.map (attrs.mh_rates['TH']))) : "N/A"
 
     const tile_table_inputs = [
         {
@@ -119,7 +134,7 @@ export function get_tile_specs(results_json) {
             "color": "midnight_blue",
         },
         {
-            "number": floatFmt(d3.mean (_.map (_.filter (distributionTable, (r)=>r.tested == "Yes"), (d)=>d.sites))||0),
+            "number": floatFormat(d3.mean (_.map (_.filter (distributionTable, (r)=>r.tested == "Yes"), (d)=>d.sites))||0),
             "description": "Sites/tested branch with ER≥" + ev_threshold + " for positive selection",
             "icon": "icon-energy icons",
             "color": "midnight_blue"
@@ -157,10 +172,11 @@ export function get_tile_specs(results_json) {
    *     1. An empty string
    *     2. The second element of the dist array
    */
-export function distributionTable(results_json, ev_threshold) {
+export function getDistributionTable(results_json, ev_threshold) {
   let table = [];
 
-  let site_er = posteriorsPerBranchSite (true, ev_threshold);
+  const attrs = get_attributes(results_json);
+  let site_er = getPosteriorsPerBranchSite(results_json, true, ev_threshold, attrs.tree_objects);
   
   _.each (results_json["branch attributes"][0], (info, b)=> {
     let row = {'branch' : b};
@@ -184,6 +200,9 @@ export function distributionTable(results_json, ev_threshold) {
   return table;
 }
 
+
+// TODO: this may need to be two functions. I dont like it returns different things
+// under different circumstances, uses different params, etc.
 /**
  * Computes posterior probabilities for each branch-site combination and returns
  * either a count of sites with evidence ratio (ER) above a threshold or detailed
@@ -193,7 +212,7 @@ export function distributionTable(results_json, ev_threshold) {
  * analysis, including branch attributes and substitution information.
  * @param {boolean} do_counts - If true, returns a count of sites with ER >= er
  * for each branch. If false, returns an array of objects containing detailed
- * information for each site.
+ * information for each site. 
  * @param {number} er - The threshold for the evidence ratio (ER) statistic.
  *
  * @returns {Object|Array} - If do_counts is true, returns an object with branch
@@ -208,8 +227,7 @@ export function distributionTable(results_json, ev_threshold) {
  *   - syn_subs: The count of synonymous substitutions
  *   - nonsyn_subs: The count of non-synonymous substitutions
  */
-
-export function posteriorsPerBranchSite(results_json, do_counts, er) {
+export function getPosteriorsPerBranchSite(results_json, do_counts, er, tree_objects) {
   let results = do_counts ? {} : [];
   let offset = 0;
   const subs = _.get (results_json, ["substitutions","0"]);
@@ -260,6 +278,7 @@ export function posteriorsPerBranchSite(results_json, do_counts, er) {
  *
  * @param {Object} results_json - The JSON object containing the results,
  * which includes site log likelihoods and substitution data.
+ * @param {Array<Object>} tree_objects - An array of tree objects.
  *
  * @returns {Array<Object>} An array of objects, each representing a site
  * with the following properties:
@@ -273,7 +292,7 @@ export function posteriorsPerBranchSite(results_json, do_counts, er) {
  *   - syn_subs: {number} The count of synonymous substitutions.
  *   - nonsyn_subs: {number} The count of non-synonymous substitutions.
 **/
-export function profileBranchSites(results_json) {
+export function getProfileBranchSites(results_json, tree_objects) {
   let results = [];
   const unc = _.get (results_json, ["Site Log Likelihood","unconstrained","0"]);
   const subs = _.get (results_json, ["substitutions","0"]);
@@ -309,6 +328,7 @@ export function profileBranchSites(results_json) {
 /**
  * Retrieves and sorts rate distribution data from the results JSON.
  *
+ * @param {Object} results_json - The JSON object containing the results
  * @param {Array} keys - The keys used to access the rate distribution data
  *   within the results JSON.
  * @param {Array} [tags=["omega", "proportion"]] - Optional tags to specify
@@ -324,12 +344,15 @@ export function profileBranchSites(results_json) {
 function getRateDistribution(results_json, keys, tags) {
     tags = tags || ["omega", "proportion"];
     const rate_info = _.get (results_json, keys);
+
     if (rate_info) { 
-      return _.sortBy (_.map (rate_info, (d)=>({
+      const rate_distribution = _.sortBy (_.map (rate_info, (d)=>({
         "value" : d[tags[0]],
         "weight" : d[tags[1]]
       })), (d)=>d.rate);
+      return rate_distribution;
     }
+
     return null;
 }
 
@@ -342,7 +365,7 @@ function getRateDistribution(results_json, keys, tags) {
  * @returns {Array<Array<number>>} The array of arrays containing partition
  *   index and site index for each site
  */
-export function siteIndexPartitionCodon(results_json) {
+export function getSiteIndexPartitionCodon(results_json) {
     return _.chain (results_json['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
 }
 
@@ -361,11 +384,23 @@ export function siteIndexPartitionCodon(results_json) {
  *   The array is sorted by rate value. Returns null if no rate information
  *   is found.
  */
-function test_omega(results_json, branch) {
-  getRateDistribution (results_json, ["branch attributes","0",branch,"Rate Distributions"],["0","1"])
+export function test_omega(results_json, branch) {
+  return getRateDistribution (results_json, ["branch attributes","0",branch,"Rate Distributions"],["0","1"])
 }
 
-
+/**
+ * Retrieves the corrected P-value for a given branch in the results JSON.
+ *
+ * @param {Object} results_json - The JSON object containing the aBSREL results
+ * @param {string} branch - The name of the branch for which to retrieve the
+ *   corrected P-value
+ *
+ * @returns {number|null} The corrected P-value for the given branch, or
+ *   null if no P-value information is found.
+ */
+export function test_pv(results_json, branch) {
+    return _.get (results_json,["branch attributes","0",branch,"Corrected P-value"])
+}
 
 /**
  * Computes the number of synonymous and nonsynonymous substitutions on a given
@@ -587,16 +622,13 @@ function get_translation_table() {
   return mapped_code;
 }
 
-floatFormat = d3.format (".4g")
-
 export function siteTableData(results_json, ev_threshold) {
-    const attrs = results_json["attributes"];
-    const profileBranchSites = results_json["branch sites"];
-    const siteIndexPartitionCodon = siteIndexPartitionCodon(results_json);
+    const attrs = get_attributes(results_json);
+    const siteIndexPartitionCodon = getSiteIndexPartitionCodon(results_json);
 
   let site_info = [];
   let index = 0;
-  let bySite = _.groupBy (profileBranchSites, (d)=>d.site);
+  let bySite = _.groupBy (attrs.profileBranchSites, (d)=>d.site);
   _.each (results_json["data partitions"], (pinfo, partition)=> {
       _.each (pinfo["coverage"][0], (ignore, i)=> {
           
@@ -614,9 +646,8 @@ export function siteTableData(results_json, ev_threshold) {
                   _.each (attrs.srv_distribution, (d,i)=> {
                        site_srv.push ({'value' : d.value, 'weight' : results_json["Synonymous site-posteriors"][i][index]});
                   });
-                  site_record['SRV posterior mean'] = utils.distMean (site_srv);
+                  site_record['SRV posterior mean'] = distMean (site_srv);
               }
-
               site_record ["Subs"] = d3.sum (bySite[i+1], (d)=>d.subs);
               site_record ["ER"] = _.filter (bySite[i+1], (d)=>d.ER >= ev_threshold).length;
               
@@ -626,10 +657,10 @@ export function siteTableData(results_json, ev_threshold) {
         
       });
     return [site_info, {
-      'Codon' : html`<abbr title = "Site">Codon</abbr>`,
-      'SRV posterior mean' : html`<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>`,
-      'LogL' : html`<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>`,
-      'Subs' : html`<abbr title = "Total # of substitutions (s+ns)">Subs</abbr>`,
-      'ER' : html`<abbr title = "Total # branches with evidence ratio > ${ev_threshold}">ER Branch</abbr>`,
+      'Codon' : "<abbr title = \"Site\">Codon</abbr>",
+      'SRV posterior mean' : "<abbr title = \"Posterior mean of the synonymous rate, α;\">E<sub>post</sub>[α]</abbr>",
+      'LogL' : "<abbr title = \"Site log-likelihood under the unconstrained model\">log(L)</abbr>",
+      'Subs' : "<abbr title = \"Total # of substitutions (s+ns)\">Subs</abbr>",
+      'ER' : "<abbr title = \"Total # branches with evidence ratio > ${ev_threshold}\">ER Branch</abbr>",
     }];
 }

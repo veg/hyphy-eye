@@ -1,4 +1,6 @@
 import * as utils from "./absrel-utils.js";
+import * as _ from "lodash-es";
+import * as d3 from "d3";
 
 const DYN_RANGE_CAP = 10000;
 const LABEL_COLOR_SCALE = d3.scaleOrdinal([], d3.schemeCategory10)
@@ -22,40 +24,21 @@ export function get_plot_description(plot_type) {
     return plot_legends[plot_type];
 }
 
-/**
- * Returns additional plot options for a specified plot type. These options
- * provide controls for visual customization, such as selecting the circle size
- * in plots where applicable.
- *
- * @param {string} plot_type - The identifier of the plot type for which to retrieve extras.
- * @returns {Object} An input control for the specified plot type, or undefined if the plot type is not recognized.
- */
-
-export function get_plot_extras(plot_type) {
-    plot_extras = ({
-        'Evidence ratio alignment profile' : Inputs.select(['Total subs', 'Syn subs', 'Non-syn subs'], {'label' : 'Circle size'} ),
-        'Support for positive selection' : Inputs.select(['Total subs', 'Syn subs', 'Non-syn subs'], {'label' : 'Circle size'} )
-    })
-
-    return plot_extras[plot_type];
-}
-
+// TODO: i think maybe profileBranchSites -> branchSiteProfiles. i keep forgetting what it means..
 /**
  * Returns an array of arrays, where each sub-array contains a string description
  * of a plot, and a function that takes a data object and returns a boolean
  * indicating whether the plot should be shown for that data object.
  *
- * @param {Object} results_json - The JSON object containing the aBSREL results
- * @param {number} ev_threshold - The evidence ratio threshold used to consider a site as positively selected
+ * @param {number} srv_rate_classes - the number of rate classes in the synonymous rate distribution
+ * @param {boolean} srv_distribution - whether the synonymous rate distribution is shown
+ * @param {Array.<Object>} bsPositiveSelection - a thing
+ * @param {Array.<Object>} profileBranchSites - profiles of branch sites
  * @returns {Array.<Array.<string|function>>} The array of arrays described above
  */
-export function get_plot_options(results_json, ev_threshold) {
-    const attrs = utils.get_attributes(results_json);
-    const bsPositiveSelection = utils.posteriorsPerBranchSite(results_json, true, ev_threshold);
-    const profileBranchSites = utils.profileBranchSites(results_json);
-
+export function get_plot_options(srv_rate_classes, srv_distribution, bsPositiveSelection, profileBranchSites) {
     const plot_options = [
-        ["Synonymous rates", (d)=>attrs.srv_rate_classes > 0 && attrs.srv_distribution], 
+        ["Synonymous rates", (d)=>srv_rate_classes > 0 && srv_distribution], 
         ["Support for positive selection", (d)=>bsPositiveSelection.length > 0],
         ["Evidence ratio alignment profile", (d)=>profileBranchSites.length > 0]
     ]
@@ -64,18 +47,31 @@ export function get_plot_options(results_json, ev_threshold) {
 }
 
 /**
+ * Determines the step size for plotting based on the number of sequences.
+ *
+ * @param {Object} results_json - The JSON object containing the input data.
+ * @returns {number} The step size for plotting. Returns 70 if the number of sequences is less than 100,
+ *                   140 if less than 200, and 600 otherwise.
+ */
+
+function er_step_size(results_json) {
+    let N = results_json.input["number of sequences"];
+    if (N < 100) return 70;
+    if (N < 200) return 140;
+    return 600;
+}
+
+/**
  * Returns a Vega-Lite spec for a plot of the specified type.
  *
  * @param {string} plot_type - The type of plot to generate.
  * @param {Object} results_json - The JSON object containing the aBSREL results
  * @param {array} fig1data - The data object containing the site-level results of interest
- * @param {number} ev_threshold - The evidence ratio threshold used to consider a site as positively selected
+ * @param {array} bsPositiveSelection - a thing
+ * @param {array} profileBranchSites - profiles of branch sites
  * @returns {Object} The Vega-Lite spec for the specified plot type
  */
-export function get_plot_spec(plot_type, results_json, fig1data, ev_threshold) {
-    const bsPositiveSelection = utils.posteriorsPerBranchSite(results_json, true, ev_threshold);
-    const profileBranchSites = utils.profileBranchSites(results_json);
-
+export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, rate_table, attrs, fig1_controls) {
     const plot_specs = ({
         "Synonymous rates" : {
             "width": 800, "height": 150, 
@@ -83,12 +79,12 @@ export function get_plot_spec(plot_type, results_json, fig1data, ev_threshold) {
             return SRVPlot (fig1data, d, 70, "SRV posterior mean", null)
         })},
         "Support for positive selection" : {
-            "vconcat" : _.map (_.range (1, results_json.input["number of sites"], er_step_size()), (d)=> {
-            return BSPosteriorPlot (bsPositiveSelection, d, er_step_size())
+            "vconcat" : _.map (_.range (1, results_json.input["number of sites"], er_step_size(results_json)), (d)=> {
+            return BSPosteriorPlot (results_json, attrs.tree_objects, rate_table, attrs, fig1_controls, bsPositiveSelection, d, er_step_size(results_json))
         })},
         "Evidence ratio alignment profile" : {
-            "vconcat" : _.map (_.range (1, results_json.input["number of sites"], er_step_size()), (d)=> {
-            return ERPosteriorPlot (profileBranchSites, d, er_step_size())
+            "vconcat" : _.map (_.range (1, results_json.input["number of sites"], er_step_size(results_json)), (d)=> {
+            return ERPosteriorPlot (results_json, attrs.tree_objects, rate_table, attrs, fig1_controls, attrs.profileBranchSites, d, er_step_size(results_json))
         })}
     });
 
@@ -155,10 +151,10 @@ function SRVPlot(data, from, step, key, key2) {
 
 
 
-function BSPosteriorPlot(results_json, tree_objects, data, from, step) {
+function BSPosteriorPlot(results_json, tree_objects, rate_table, attrs, fig1_controls, data, from, step) {
   const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));
-  const branch_order = _.filter (treeNodeOrdering (results_json, tree_objects, 0), (d)=>profilable_branches.has (d) && selected_branches.has (d));
-  let N = tested_branch_count;
+  const branch_order = _.filter (treeNodeOrdering (results_json, tree_objects, 0), (d)=>attrs.profilable_branches.has (d) && selected_branches.has (d));
+  let N = attrs.tested_branch_count;
   let box_size = 10; 
   let font_size = 8;
   var size_field = "subs";
@@ -230,11 +226,11 @@ function BSPosteriorPlot(results_json, tree_objects, data, from, step) {
 
 
 
-function ERPosteriorPlot(results_json, tree_objects, data, from, step) {
+function ERPosteriorPlot(results_json, tree_objects, rate_table, attrs, fig1_controls, data, from, step) {
   
   const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));
-  const branch_order = _.filter (treeNodeOrdering (results_json, tree_objects, 0), (d)=>profilable_branches.has (d) && selected_branches.has (d));
-  let N = tested_branch_count;
+  const branch_order = _.filter (treeNodeOrdering (results_json, tree_objects, 0), (d)=>attrs.profilable_branches.has (d) && selected_branches.has (d));
+  let N = attrs.tested_branch_count;
   let box_size = 10; 
   let font_size = 8;
 
@@ -314,12 +310,19 @@ function ERPosteriorPlot(results_json, tree_objects, data, from, step) {
  * @param {number} index - the index of the site in the partition
  * @param {object} T - the tree object
  * @param {object} options - an object with options
+ * @param {number} ev_threshold - the evidence threshold
+ * @param {string} treeDim - the dimensions of the tree
+ * @param {string} treeLabels - the labels to display
+ * @param {string} branch_length - option to display branch lengths by
+ * @param {string} color_branches - option to color branches by
  * @return {object} - the rendered tree
  */
-export function display_tree(results_json, index, T, options) {
+export function display_tree(results_json, index, T, options, ev_threshold, treeDim, treeLabels, branch_length, color_branches) {
+      const attrs = utils.get_attributes(results_json, ev_threshold)
       let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     
       T.branch_length_accessor = (n)=>(n.data.name in results_json["branch attributes"][index] ? results_json["branch attributes"][index][n.data.name][branch_length] : 0) || 0;  
+    console.log("tree labels", treeLabels);
       let alignTips = treeLabels.indexOf ("align tips") >= 0;
       var t = T.render({
         height: dim && dim[0], 
@@ -374,7 +377,7 @@ export function display_tree(results_json, index, T, options) {
             t.svg.selectAll ("defs").selectAll ("linearGradient").remove();
             let branch_gradients = {};
             T.traverse_and_compute ( (n)=> {
-                  let test_omegas = test_omega (n.data.name);
+                  let test_omegas = utils.test_omega(results_json, n.data.name);
                   if (test_omegas) {
                     let rate_class = test_omegas.length - 1 ;
                     branch_values[n.data.name] = test_omegas[rate_class].value;
@@ -387,7 +390,7 @@ export function display_tree(results_json, index, T, options) {
             let bID = 0;
             let max_omega_by_branch = {};
             T.traverse_and_compute ( (n)=> {
-                  let test_omegas = test_omega (n.data.name);
+                  let test_omegas = utils.test_omega(results_json, n.data.name);
                   if (test_omegas) {
                     let rate_class = test_omegas.length - 1 ;
                     branch_gradients [n.data.name] = "hyphy_phylo_branch_gradient_" + bID;
@@ -414,7 +417,7 @@ export function display_tree(results_json, index, T, options) {
                let t_string = n.target.data.name + " ";
                let b_string = "";
                if (is_tested) {
-                   let pv_l = test_pv (n.target.data.name); 
+                   let pv_l = utils.test_pv(results_json, n.target.data.name); 
                    t_string += "(p = " + pv_l.toFixed (3) + ")";
                    pv_l = -Math.floor(Math.log10(Math.max (pv_l,1e-6)));
                    let mxo = max_omega_by_branch[n.target.data.name].value;
@@ -444,19 +447,17 @@ export function display_tree(results_json, index, T, options) {
                 } 
                 break;
               case "2-hit rate" : {  
-                 labels = _.mapValues (mh_rates["DH"], d=>d.toFixed (2));
+                 labels = _.mapValues (attrs.mh_rates["DH"], d=>d.toFixed (2));
                  t.color_scale_title = "Double-nucleotide relative substitution rate (δ)";
                 } 
                 break;
               case "3-hit rate" : {  
-                 labels = _.mapValues (mh_rates["TH"], d=>d.toFixed (2));
+                 labels = _.mapValues (attrs.mh_rates["TH"], d=>d.toFixed (2));
                  t.color_scale_title = "Three-nucleotide relative substitution rate (ψ)";
                 } 
                 break;
             }
 
-            //console.log (labels, options["branch-labels"]);
-          
             let color_scale = d3.scaleSequential(d3.extent (_.map (labels, d=>d)), d3.interpolateTurbo);
             t.color_scale = color_scale;
 
@@ -545,9 +546,15 @@ function display_tree_handle_neighbors(index, s, node_labels, T, options, result
    * @param {object} T - the tree object
    * @param {number} s - the site number
    * @param {object} options - an object with options
+   * @param {number} ev_threshold - the event threshold
+   * @param {string} treeDim - the dimensions of the tree
+   * @param {string} treeLabels - the labels to display
+   * @param {string} branch_length - option to display branch lengths by
+   * @param {string} color_branches - option to color branches by
    * @return {object} - the rendered tree
    */
-export function display_tree_site(results_json, index, T,s,options) {
+export function display_tree_site(results_json, index, T,s,options, ev_threshold, treeDim, treeLabels, branch_length, color_branches) {
+    const attrs = utils.get_attributes(results_json, ev_threshold);
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     
     T.branch_length_accessor = (n)=>results_json["branch attributes"][index][n.data.name][branch_length] || 0;  
@@ -674,7 +681,7 @@ export function display_tree_site(results_json, index, T,s,options) {
               
                 let posteriors = results_json["branch attributes"][index][n.data.name];
                 if (posteriors && posteriors["posterior"]) {
-                    let test_omegas = test_omega (n.data.name);
+                    let test_omegas = utils.test_omega(results_json, n.data.name);
                     let rate_class = test_omegas.length - 1 ;
                     let prior = test_omegas[test_omegas.length-1].weight;
                     prior = prior / (1-prior);
@@ -706,12 +713,12 @@ export function display_tree_site(results_json, index, T,s,options) {
                 } 
                 break;
               case "2-hit rate" : {  
-                 labels = _.mapValues (mh_rates["DH"], (d)=>d.toFixed(2));
+                 labels = _.mapValues (attrs.mh_rates["DH"], (d)=>d.toFixed(2));
                  t.color_scale_title = "Double-nucleotide relative substitution rate (δ)";
                 } 
                 break;
               case "3-hit rate" : {  
-                 labels = _.mapValues (mh_rates["TH"], (d)=>d.toFixed(2));
+                 labels = _.mapValues (attrs.mh_rates["TH"], (d)=>d.toFixed(2));
                  t.color_scale_title = "Three-nucleotide relative substitution rate (ψ)";
                 } 
                 break;
@@ -763,7 +770,6 @@ export function display_tree_site(results_json, index, T,s,options) {
 
 function add_branch_label(e, text, font_size, container) {
   const where2 = _.get (parse_svg.default(e.attr("d")),["1"]);
-  //console.log (text);
   if (where2 && (text.length || _.isNumber (text))) {
       let my_id = e.attr ("id");
       if (!e.attr ("id")) {
@@ -883,20 +889,23 @@ export function treeViewOptions(results_json) {
  * the presence of substitutions and multiple-hit rates in the data.
  *
  * @param {Object} results_json - The results JSON object containing tree data.
+ * @param {number} ev_threshold - The evidence threshold.
  *
  * @returns {string[]} An array of strings representing the branch color options.
  */
 
-export function tree_color_options(results_json) {
+export function tree_color_options(results_json, ev_threshold) {
+  const attrs = utils.get_attributes(results_json, ev_threshold);
+
   let options = ["Tested"];
   if (results_json.substitutions) {
     options.push ("Support for selection");
     options.push ("Substitutions");
   }
-  if (_.size (mh_rates['DH'])) {
+  if (_.size (attrs.mh_rates['DH'])) {
       options.push ("2-hit rate");
   }
-  if (_.size (mh_rates['TH'])) {
+  if (_.size (attrs.mh_rates['TH'])) {
       options.push ("3-hit rate");
   }
   
