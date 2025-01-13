@@ -6,6 +6,9 @@
 import * as _ from "lodash-es";
 import * as d3 from "d3";
 import * as phylotree from "phylotree";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as utils from "../utils/general-utils.js";
+import * as summaryStats from "../stats/summaries.js";
 
 const floatFormat = d3.format (".2g")
 
@@ -244,14 +247,14 @@ export function getPosteriorsPerBranchSite(results_json, do_counts, er, tree_obj
               prior_odds = prior_odds / (1-prior_odds);
               _.each (per_branch ["posterior"][rate_class], (p,i)=> {
                   if (! do_counts && (i in subs_per_site) == false) {
-                      subs_per_site[i] = generateNodeLabels (tree_objects[0], subs[i])
+                      subs_per_site[i] = phylotreeUtils.generateNodeLabels (tree_objects[0], subs[i])
                   }
                  
                   if (do_counts) {
                     results[branch] = (results[branch] ? results[branch] : 0) + ((p/(1-p))/prior_odds >= er);
                   } else {
                     const info = subs_per_site [i][branch];
-                    let sub_count = subs_for_pair (info[2], info[0]);
+                    let sub_count = utils.subs_for_pair (info[2], info[0]);
                     results.push ({'Key' : branch + "|" + (i + offset + 1), 
                                    'Posterior' : p, 
                                    'ER' : (p/(1-p))/prior_odds,
@@ -298,7 +301,7 @@ export function getProfileBranchSites(results_json, tree_objects) {
   const subs = _.get (results_json, ["substitutions","0"]);
   if (unc) {
     _.each (unc, (ll, i)=> {
-        const subs_at_site = generateNodeLabels (tree_objects[0], subs[i]);
+        const subs_at_site = phylotreeUtils.generateNodeLabels (tree_objects[0], subs[i]);
         _.each (subs_at_site, (info, node)=> {
       
              if (node != 'root') {
@@ -312,7 +315,7 @@ export function getProfileBranchSites(results_json, tree_objects) {
                     bit.subs = info[3];
                     bit.from = info[2];
                     bit.to = info[0];
-                    let sub_count = subs_for_pair (bit.from, bit.to);
+                    let sub_count = utils.subs_for_pair (bit.from, bit.to);
                     bit.syn_subs = sub_count[0];
                     bit.nonsyn_subs = sub_count[1];
                     results.push (bit);
@@ -402,226 +405,6 @@ export function test_pv(results_json, branch) {
     return _.get (results_json,["branch attributes","0",branch,"Corrected P-value"])
 }
 
-/**
- * Computes the number of synonymous and nonsynonymous substitutions on a given
- * path between two codons.
- *
- * @param {Array} from - The starting codon, represented as an array of 3
- *   single-character strings.
- * @param {Array} to - The ending codon, represented as an array of 3
- *   single-character strings.
- * @param {Array} path - An array of indices indicating the order in which
- *   positions in the codon should be changed to get from the starting codon to
- *   the ending codon.
- *
- * @returns {Array} An array of two elements. The first element is the number
- *   of synonymous substitutions, and the second element is the number of
- *   nonsynonymous substitutions.
- */
-function path_diff(from,to,path) {
-    let result = [0,0];
-    let curr = _.map (from),
-        next = _.clone (curr);
-   
-    next [path[0]] = to[path[0]];
-    const is_syn = translate_ambiguous_codon (curr.join ("")) == translate_ambiguous_codon(next.join (""));
-    result[is_syn ? 0 : 1] += 1;
-    for (let i = 1; i < path.length; i++) {
-        curr = _.clone (next);
-        next [path[i]] = to[path[i]];
-        const is_syn = translate_ambiguous_codon (curr.join ("")) == translate_ambiguous_codon(next.join (""));
-        result[is_syn ? 0 : 1] += 1;
-    }
-  
-    return result;
-}
-
-/**
- * Calculates the number of possible synonymous and non-synonymous substitutions
- * between two codon sequences as they diverge.
- *
- * @param {string} from - The original codon sequence.
- * @param {string} to - The target codon sequence.
- *
- * @returns {Array<number>} An array with two elements:
- *   - The first element is the count of synonymous substitutions.
- *   - The second element is the count of non-synonymous substitutions.
- *   If either codon sequence is 'NNN', both counts are zero.
- */
-
-function subs_for_pair(from, to) {
-
-    if (from == 'NNN' || to == 'NNN') {
-        return [0,0];
-    }
-  
-    let diffs = [];
-    _.each (from, (c,i)=> {
-      if (c != to[i]) {
-          diffs.push (i);
-      }
-    });
-    switch (diffs.length) {
-      case 0:
-          return [0,0];
-      case 1:
-          if (translate_ambiguous_codon (from) == translate_ambiguous_codon(to)) {
-              return [1,0];
-          }
-          return [0,1];
-      case 2: {
-          let res = path_diff (from,to,[diffs[0],diffs[1]]);
-          _.each (path_diff (from,to,[diffs[1],diffs[0]]), (d,i) => {res[i] += d;});
-          return _.map (res, (d)=>0.5*d);
-      }
-       case 3: {
-          let res = path_diff (from,to,[diffs[0],diffs[1],diffs[2]]);
-          _.each (path_diff (from,to,[diffs[0],diffs[2],diffs[1]]), (d,i) => {res[i] += d;});
-          _.each (path_diff (from,to,[diffs[1],diffs[0],diffs[2]]), (d,i) => {res[i] += d;});
-          _.each (path_diff (from,to,[diffs[1],diffs[2],diffs[0]]), (d,i) => {res[i] += d;});
-          _.each (path_diff (from,to,[diffs[2],diffs[0],diffs[1]]), (d,i) => {res[i] += d;});
-          _.each (path_diff (from,to,[diffs[2],diffs[1],diffs[0]]), (d,i) => {res[i] += d;});
-          return _.map (res, (d)=>d/6); 
-       }
-    }
-}
-
-
-    /**
-     * Computes a set of labels for each node in a tree.
-     *
-     * @param {PhyloTree} T - The tree.
-     * @param {Object.<string,string>} labels - A mapping of node names to their labels (as strings of length 3).
-     * @return {Object.<string,array>} - A mapping of node names to their labels, with the value being an array
-     *  of [label, translation, parent label, number of substitutions].  Substitutions are only counted between
-     *  non-ambiguous, non-degenerate codons.
-     */
-export function generateNodeLabels(T, labels) {
-    let L = {};
-    T.traverse_and_compute (function (n) {
-        if (n.data.name in labels) {
-            L[n.data.name] = [labels[n.data.name], translate_ambiguous_codon (labels[n.data.name]),'',0];
-            if (n.parent) {
-              L[n.data.name][2] = L[n.parent.data.name][0];             
-              _.each (L[n.data.name][0], (c,i)=> {
-                  const c2 = L[n.data.name][2][i];
-                  if (c2 != c && c != '-' && c2 != '-' && c != 'N' && c2 != 'N') {
-                    L[n.data.name][3] ++;
-                  }
-              });
-            }
-        } else {
-          if (n.parent) {
-            L[n.data.name] = _.clone (L[n.parent.data.name]);
-            L[n.data.name][2] = L[n.data.name][0];
-            L[n.data.name][3] = 0;
-          } else {
-            L['root'] = [labels["root"], translate_ambiguous_codon (labels["root"]), "", 0];
-          }
-        }
-        L[n.data.name][4] = !_.isUndefined (n.children);
-    },"pre-order");
-    return L;
-}
-
-/**
- * Computes the weighted mean of a distribution.
- *
- * @param {Array.<{value: number, weight: number}>} distribution - An array of objects representing the distribution, 
- *        where each object contains a 'value' and a 'weight'.
- * @return {number} The weighted mean of the distribution.
- */
-export function distMean(distribution) {
-    let weightedSum = 0;
-
-    _.each(distribution, ({ value, weight }) => {
-        weightedSum += value * weight;
-    });
-
-    // TODO ask sergei why we dont divide by sum of weights here
-    // thats either a bug, or a thing that needs documenting/ possibly changing some misleading var names or something
-
-    return weightedSum;
-}
-
-
-
-/**
- * Computes the variance of a distribution specified by an array of objects,
- * where each object has a 'value' and a 'weight' property.
- *
- * @param {Array.<Object>} d - An array of objects, each with a 'value'
- *   property and a 'weight' property.
- * @return {number} The variance of the distribution.
- */
-
-export function distVar(d) {
-    let m2 = 0, m = distMean (d);
-    _.each (d, (r)=> {
-        m2 += r['value']*r['value'] * r['weight'];
-    });
-    return m2 - m*m;
-}
-
-/**
- * Translate a codon to an amino acid, handling ambiguous codes.
- * 
- * If the codon is unambiguous, just return the translation.
- * If the codon is ambiguous, return a string of all possible translations, 
- * sorted alphabetically.
- * 
- * @param {string} codon - a three-nucleotide codon
- * @return {string} the amino acid(s) corresponding to the codon
- */
-function translate_ambiguous_codon(codon) {
-    const translation_table = get_translation_table();
-
-    if (codon in translation_table) {
-      return  translation_table[codon];
-    }
-  
-    let options = {};
-    _.each (ambiguous_codes[codon[0]], (n1)=> {
-         _.each (ambiguous_codes[codon[1]], (n2)=> {
-            _.each (ambiguous_codes[codon[2]], (n3)=> {
-                let c = translation_table[n1+n2+n3];
-                if (c in options) {
-                  options[c] += 1; 
-                } else {
-                  options [c] = 1; 
-                }
-            });
-          });
-    });
-  
-    options = _.keys(options);
-    if (options.length == 0) {
-      return "?"; 
-    }
-    return _.sortBy (options).join ("");
-}
-
-/**
- * A dictionary mapping codons to amino acids. The dictionary is
- * constructed from a table of codons and their corresponding amino
- * acids, with the codons as keys and the amino acids as values.
- * 
- * The table is adapted from the GenBank documentation, with the
- * addition of the codon 'NNN' mapping to the amino acid '?', and
- * the codon '---' mapping to the amino acid '-'.
- * 
- * @return {Object} a dictionary mapping codons to amino acids
- */
-function get_translation_table() {
-  var code = d3.csvParse("Codon,AA\nTTT,F\nTCT,S\nTAT,Y\nTGT,C\nTTC,F\nTCC,S\nTAC,Y\nTGC,C\nTTA,L\nTCA,S\nTAA,*\nTGA,*\nTTG,L\nTCG,S\nTAG,*\nTGG,W\nCTT,L\nCCT,P\nCAT,H\nCGT,R\nCTC,L\nCCC,P\nCAC,H\nCGC,R\nCTA,L\nCCA,P\nCAA,Q\nCGA,R\nCTG,L\nCCG,P\nCAG,Q\nCGG,R\nATT,I\nACT,T\nAAT,N\nAGT,S\nATC,I\nACC,T\nAAC,N\nAGC,S\nATA,I\nACA,T\nAAA,K\nAGA,R\nATG,M\nACG,T\nAAG,K\nAGG,R\nGTT,V\nGCT,A\nGAT,D\nGGT,G\nGTC,V\nGCC,A\nGAC,D\nGGC,G\nGTA,V\nGCA,A\nGAA,E\nGGA,G\nGTG,V\nGCG,A\nGAG,E\nGGG,G\n");
-  var mapped_code = {};
-  _.each (code, (v,k) => {mapped_code[v.Codon] = v.AA;});
-  mapped_code["---"] = "-";
-  mapped_code["NNN"] = "?";
-  
-  return mapped_code;
-}
-
 export function siteTableData(results_json, ev_threshold) {
     const attrs = get_attributes(results_json);
     const siteIndexPartitionCodon = getSiteIndexPartitionCodon(results_json);
@@ -646,7 +429,7 @@ export function siteTableData(results_json, ev_threshold) {
                   _.each (attrs.srv_distribution, (d,i)=> {
                        site_srv.push ({'value' : d.value, 'weight' : results_json["Synonymous site-posteriors"][i][index]});
                   });
-                  site_record['SRV posterior mean'] = distMean (site_srv);
+                  site_record['SRV posterior mean'] = summaryStats.distMean (site_srv);
               }
               site_record ["Subs"] = d3.sum (bySite[i+1], (d)=>d.subs);
               site_record ["ER"] = _.filter (bySite[i+1], (d)=>d.ER >= ev_threshold).length;

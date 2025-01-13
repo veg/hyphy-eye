@@ -160,7 +160,5 @@ const figure2 = display_tree((-1) + (+tree_id.split (" ")[1])).show()
 <p><tt><small>${results_json.analysis["citation"]}</small></tt></p>
 
 ```js
-const floatFormat = d3.format ("2g")
-const floatFmt = d3.format (".2g")
 const svgSize = 700
 ```
