@@ -59,7 +59,18 @@ export function get_tree_objects(results_json) {
     return tree_objects;
 }
 
-export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, bsErrorSink, ev_threshold, srv_hmm, tree_objects) {
+export function get_plot_spec(
+    plot_type, 
+    results_json, 
+    fig1data, 
+    bsPositiveSelection, 
+    bsErrorSink, 
+    ev_threshold, 
+    srv_hmm, 
+    tree_objects, 
+    tested_branch_count, 
+    fig1_controls
+) {
     const twoHBranchSite = mutliHitER(results_json, "Evidence ratio for 2H")
     const threeHBranchSite = mutliHitER(results_json, "Evidence ratio for 3H")
     const multiHBranchSite = mutliHitER(results_json, "Evidence ratio for 2H+3H")
@@ -87,27 +98,27 @@ export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelec
         "Support for positive selection" : {
             "resolve": {"scale": {"color": "shared"}},
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], step_size), (d)=> {
-                return BSPosteriorPlot (results_json, tree_objects, bsPositiveSelection, d, step_size)
+                return BSPosteriorPlot (results_json, tree_objects, bsPositiveSelection, d, step_size, tested_branch_count, fig1_controls)
             })
         },
         "Error-sink support" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], step_size), (d)=> {
-                return BSPosteriorPlot (results_json, tree_objects, bsErrorSink, d, step_size)
+                return BSPosteriorPlot (results_json, tree_objects, bsErrorSink, d, step_size, tested_branch_count, fig1_controls)
             })
         },
         "Support for 2H" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], step_size), (d)=> {
-                return BSPosteriorPlot (results_json, tree_objects, twoHBranchSite, d, step_size)
+                return BSPosteriorPlot (results_json, tree_objects, twoHBranchSite, d, step_size, tested_branch_count, fig1_controls)
             })
         },
         "Support for 3H" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], step_size), (d)=> {
-                return BSPosteriorPlot (results_json, tree_objects, threeHBranchSite, d, step_size)
+                return BSPosteriorPlot (results_json, tree_objects, threeHBranchSite, d, step_size, tested_branch_count, fig1_controls)
             })
         },
         "Support for 2H+3H" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], step_size), (d)=> {
-                return BSPosteriorPlot (results_json, tree_objects, multiHBranchSite, d, step_size)
+                return BSPosteriorPlot (results_json, tree_objects, multiHBranchSite, d, step_size, tested_branch_count, fig1_controls)
             })
         },
         "Site-level LR support" : cdsQuant (fig1data, "LR", "Site LR")
@@ -387,7 +398,7 @@ function SRVPlot(results_json, data, from, step, key, key2) {
 
 
 
-function BSPosteriorPlot(results_json, tree_objects, data, from, step) {
+function BSPosteriorPlot(results_json, tree_objects, data, from, step, tested_branch_count, fig1_controls) {
   const branch_order = phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0);
   let N = tested_branch_count;
   let box_size = 10; 
@@ -503,7 +514,7 @@ function denser_plot(data) {
 
 
 
-function display_tree(results_json, ev_threshold, index, T, options) {
+export function display_tree(results_json, ev_threshold, index, T, options, treeDim, treeLabels, branch_length, color_branches) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
       
       T.branch_length_accessor = (n)=>(n.data.name in results_json["branch attributes"][index] ? results_json["branch attributes"][index][n.data.name][branch_length] : 0) || 0;  
@@ -520,7 +531,7 @@ function display_tree(results_json, ev_threshold, index, T, options) {
         'internal-names' : treeLabels.indexOf ("show internal") >= 0
        } );
       
-      add_svg_defs (t.svg);
+      phylotreeUtils.add_svg_defs (t.svg);
   
       function sort_nodes (asc) {
           T.traverse_and_compute (function (n) {
@@ -630,7 +641,7 @@ function site_support_by_branch(results_json, i, key, er) {
 }
 
 
-function display_tree_site(results_json, index,T,s,options) {
+export function display_tree_site(results_json, index,T,s,options, treeDim, treeLabels, branch_length, color_branches) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     T.branch_length_accessor = (n)=>results_json["branch attributes"][index][n.data.name][branch_length] || 0;  
     let node_labels = generateNodeLabels (T, results_json["substitutions"][index][(+s)-1]);
@@ -655,9 +666,9 @@ function display_tree_site(results_json, index,T,s,options) {
       'internal-names' : treeLabels.indexOf ("show internal") >= 0
      } );
 
-      add_svg_defs (t.svg);
+      phylotreeUtils.add_svg_defs (t.svg);
       
-      let extended_labels = display_tree_handle_neighbors (index,s,node_labels,T,options,results_json, partition_sizes[index]);
+      let extended_labels = phylotreeUtils.display_tree_handle_neighbors (index,s,node_labels,T,options,results_json, partition_sizes[index]);
       t.nodeLabel ((n)=> {
           if (!n._display_me) {
               return "";

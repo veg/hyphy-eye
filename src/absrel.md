@@ -8,6 +8,7 @@ import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
 import * as utils from "./absrel/absrel-utils.js";
 import * as plots from "./absrel/absrel-plots.js";
+import * as statsSummary from "./stats/summaries.js";
 import * as omegaPlots from "./components/omega-plots.js";
 import * as tt from "./components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
@@ -57,8 +58,8 @@ const rate_table = view(Inputs.table (distributionTable, {
     'dist' : (d)=>{
         return "<tt>" +
             _.map ( d[1], (c,i)=> floatFormat(c.value) + " (" + proportionFormat (c.weight) + ") ") +
-            "<br>Mean = <b>" + floatFormat (utils.distMean (d[1])) + "</b>," +
-            " CoV = <b>" + floatFormat (Math.sqrt (utils.distVar (d[1]))/utils.distMean (d[1])) + "</b></tt>"},
+            "<br>Mean = <b>" + floatFormat (statsSummary.distMean (d[1])) + "</b>," +
+            " CoV = <b>" + floatFormat (Math.sqrt (statsSummary.distVar (d[1]))/statsSummary.distMean (d[1])) + "</b></tt>"},
      'plot' : (d)=>d[1].length > 1 ? omegaPlots.renderDiscreteDistribution (d[1],{"height" : 40, "width" : 150, "ticks" : 2, "scale" : "log", "ref" : [1]}) : ''
   },
   layout: "auto",

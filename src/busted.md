@@ -7,6 +7,7 @@ import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
 import * as utils from "./busted/busted-utils.js";
 import * as plots from "./busted/busted-plots.js";
+import * as phylotreeUtils from "./utils/phylotree-utils.js";
 import * as omegaPlots from "./components/omega-plots.js";
 import * as tt from "./components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
@@ -97,9 +98,17 @@ const fig1_controls = view(plot_extras[plot_type] || Inputs.text({label: "Plot o
 **Figure 1**. ${plot_type ? plots.get_plot_description(plot_type, attrs.srv_hmm) : "No plotting options available"}`
 
 ```js
+function getFig1data() {
+   let in_set = new Set (_.map (table1, (d)=>d.Codon));
+   return _.filter (siteTableData[0], (x)=>in_set.has (x.Codon));
+}
+const fig1data = getFig1data()
+```
+
+```js
 let plot_spec;
 if (plot_type) {
-  plot_spec = plots.get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, bsErrorSink, ev_threshold, attrs.srv_hmm, tree_objects)
+  plot_spec = plots.get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, bsErrorSink, ev_threshold, attrs.srv_hmm, tree_objects, attrs.tested_branch_count, fig1_controls)
 }
 ```
 <div>${vl.render({"spec": plot_spec})}</div>
@@ -115,8 +124,10 @@ const table1 = view(Inputs.table (sites_table[1], {
 }))
 ```
 
+**Figure 2**.
+
 ```js
-const tree_id =  view(Inputs.select ({options:plots.getTreeViewOptions(results_json, tree_objects), size : 10, title: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
+const tree_id =  view(Inputs.select (plots.getTreeViewOptions(results_json, tree_objects), {size : 10, label: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
 ```
 
 ```js
@@ -138,39 +149,6 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", description: "Tree
 ```
 
 ```js
-const schemeElement = document.createElement("div")
-if (figure2 && figure2.color_scale) {
-  const label = document.createElement("text")
-  label.textContent = figure2.color_scale_title
-  schemeElement.append(label)
-  const legend = Plot.legend({
-        color: {
-            type: "linear",
-            interpolate: figure2.color_scale.interpolate,
-            domain: figure2.color_scale.domain(),
-            range: figure2.color_scale.range(),
-            ticks: 5
-            //ticks: figure2.color_scale.ticks(),
-            //tickFormat: figure2.color_scale.tickFormat()
-        },
-        width: 200
-    })
-  schemeElement.appendChild(legend)
-  schemeElement.appendChild(document.createElement("br"))
-}
-```
-<div>${schemeElement}</div>
-<div id="tree_container">${figure2.show()}</div>
-
-**Citation**
-
-<p><tt><small>${results_json.analysis["citation"]}</small></tt></p>
-
-
-#### Code, data, and libraries
-
-
-```js
 function getFigure2() {
 
     let toDisplay = tree_id.split (" ");
@@ -183,12 +161,12 @@ function getFigure2() {
       if (toDisplay[0] == "Codon") {  
           let codon_index = (+toDisplay[1]);
           let partition_id = utils.getSiteIndexPartitionCodon(results_json)[codon_index-1][0]-1;
-          codon_index -= d3.sum (partition_sizes.slice (0,partition_id));
-          let TT = display_tree_site (partition_id, tree_objects[partition_id], codon_index, tree_options);
+          codon_index -= d3.sum (attrs.partition_sizes.slice (0,partition_id));
+          let TT = plots.display_tree_site(results_json, partition_id, tree_objects[partition_id], codon_index, tree_options, treeDim, treeLabels, branch_length, color_branches);
           return TT;
       } 
       let pi = (-1) + (+toDisplay[1]);
-      let TT = display_tree(pi, tree_objects[pi], tree_options);
+      let TT = plots.display_tree(results_json, ev_threshold, pi, tree_objects[pi], tree_options, treeDim, treeLabels, branch_length, color_branches);
       return TT;
     }
     return null;
@@ -197,12 +175,29 @@ const figure2 = getFigure2();
 ```
 
 ```js
-function getFig1data() {
-   let in_set = new Set (_.map (table1, (d)=>d.Codon));
-   return _.filter (siteTableData[0], (x)=>in_set.has (x.Codon));
+const schemeElement = document.createElement("div")
+if (figure2 && figure2.color_scale) {
+  const label = document.createElement("text")
+  label.textContent = figure2.color_scale_title
+  schemeElement.append(label)
+  const legend = Plot.legend({
+        color: {
+            type: "linear",
+            interpolate: figure2.color_scale.interpolate,
+            domain: figure2.color_scale.domain(),
+            range: figure2.color_scale.range(),
+            ticks: 5
+        },
+        width: 200
+    })
+  schemeElement.appendChild(legend)
+  schemeElement.appendChild(document.createElement("br"))
 }
-const fig1data = getFig1data()
 ```
+<div>${schemeElement}</div>
+<div id="tree_container">${figure2.show()}</div>
+
+**Figure 3**.
 
 ```js
 const aliview_start = view(Inputs.range([1, sites_table[1].length], {label: "Start position", value : 1, step: 1}))
@@ -217,12 +212,13 @@ const ali_type = view(Inputs.radio (["Codon", "Amino-acid", "Both"], {label : "P
 ```
 
 ```js
-const ali_color_options = {
-  let options = [];
+function get_ali_color_options() {
+  const options = [];
   if (bsPositiveSelection.length) options.push ("Support for EDS");
   if (bsErrorSink.length) options.push ("Error Annotation");
   return options;
 }
+const ali_color_options = get_ali_color_options()
 ```
 
 ```js
@@ -230,17 +226,16 @@ const color_by = view(Inputs.radio (['Aminoacid'].concat (ali_color_options), {l
 ```
 
 ```js
-{
-  let lookup = null;
+  const lookup = null;
   if (color_by == 'Error Annotation') lookup = bsErrorSink;
   if (color_by == 'Support for EDS') lookup = bsPositiveSelection;
   
-  const ctest = codonComposition ((site,partition)=>site >= aliview_start-1 && site < aliview_start + window_span-1, 0);
+  const ctest = plots.codonComposition((results_json, tree_objects, site,partition)=>site >= aliview_start-1 && site < aliview_start + window_span-1, 0);
   let letters = _.groupBy (ctest, (d)=>d.Key);
   const aa_cut = (d)=>d.aa.length > 1 ? "#" : d.aa;
   if (lookup) {
       _.each (lookup, (d)=> {
-            let c = letters[d.Key];
+            const c = letters[d.Key];
             if (c) {
                 c[0].ER = d.ER;
                 c[0].sequence = d.Key.split ("|")[0];
@@ -254,12 +249,12 @@ const color_by = view(Inputs.radio (['Aminoacid'].concat (ali_color_options), {l
 
   
   letters = _.flatten (_.map (letters));
-  let sites = _.sortBy (_.uniq (_.map (ctest, (d)=>d.site)), (d)=>+d);
-  let text_label = ali_type == "Codon" ? "value" : (ali_type == "Both" ? (d)=>d.value + "/" + aa_cut(d) : aa_cut);
-  let text_spacing = ali_type == "Codon" ? 3 : (ali_type == "Both" ? 5 : 2.0);
-  const branches = treeNodeOrdering (0, false, 1);
+  const sites = _.sortBy (_.uniq (_.map (ctest, (d)=>d.site)), (d)=>+d);
+  const text_label = ali_type == "Codon" ? "value" : (ali_type == "Both" ? (d)=>d.value + "/" + aa_cut(d) : aa_cut);
+  const text_spacing = ali_type == "Codon" ? 3 : (ali_type == "Both" ? 5 : 2.0);
+  const branches = phylotreeUtils.treeNodeOrdering (results_json, tree_objects, 0, false, 1);
   const label_width = 8*d3.max (branches, (d)=>Math.min (15,d.length));
-  return Plot.plot({
+  const plot = Plot.plot({
       marginLeft : 20 + label_width,
       width : (8*text_spacing) * sites.length + 20 + label_width,
       height : 14 * branches.length + 60,
@@ -282,6 +277,9 @@ const color_by = view(Inputs.radio (['Aminoacid'].concat (ali_color_options), {l
           {y: "sequence", x: "site", "text" : text_label, "fill" : "black", "fontFamily" : "monospace", "fontWeight" : 400})
       ]
     });
-}
 ```
+<div>${plot}</div>
 
+**Citation**
+
+<p><tt><small>${results_json.analysis["citation"]}</small></tt></p>

@@ -1,3 +1,6 @@
+import * as d3 from "d3";
+import * as _ from "lodash-es";
+
 /**
  * Calculates the number of possible synonymous and non-synonymous substitutions
  * between two codon sequences as they diverge.

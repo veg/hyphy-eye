@@ -1,6 +1,8 @@
 // TODO: if we need these so often, do we need to do work in phylotree??
 
 import * as d3 from "d3";
+import * as _ from "lodash-es";
+import * as utils from "./general-utils.js";
 
 /**
  * Computes a set of labels for each node in a tree.
@@ -15,7 +17,7 @@ export function generateNodeLabels(T, labels) {
     let L = {};
     T.traverse_and_compute (function (n) {
         if (n.data.name in labels) {
-            L[n.data.name] = [labels[n.data.name], translate_ambiguous_codon (labels[n.data.name]),'',0];
+            L[n.data.name] = [labels[n.data.name], utils.translate_ambiguous_codon (labels[n.data.name]),'',0];
             if (n.parent) {
                 L[n.data.name][2] = L[n.parent.data.name][0];             
                 _.each (L[n.data.name][0], (c,i)=> {
@@ -31,7 +33,7 @@ export function generateNodeLabels(T, labels) {
                 L[n.data.name][2] = L[n.data.name][0];
                 L[n.data.name][3] = 0;
             } else {
-                L['root'] = [labels["root"], translate_ambiguous_codon (labels["root"]), "", 0];
+                L['root'] = [labels["root"], utils.translate_ambiguous_codon (labels["root"]), "", 0];
             }
         }
         L[n.data.name][4] = !_.isUndefined (n.children);

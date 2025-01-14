@@ -1,4 +1,6 @@
 
+import * as _ from "lodash-es";
+
 /**
  * Computes the weighted mean of a distribution.
  *
