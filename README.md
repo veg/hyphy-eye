@@ -1,5 +1,17 @@
 # hyphy-vision-components
 
+This repo is a WIP, all that follows should be considered subject to change.
+
+The idea for this so far is that it may serve as a place where visualization components for hyphy-vision can be built and tested.
+It has additionally grown to become home to some basic statistics and utility functions that those components are likely to rely on.
+There are also various demo pages for individual components (to help ensure they work properly) and demo pages for results summaries for
+any HyPhy methods that have existing Observable Notebooks already in production (to help ensure we port them over properly).
+Eventually, I would hope people might be willing to develop prototypes for new results summaries here rather than in Notebook.
+However, if someone is particularly attached to Notebook, thats ok! We can convert them as needed. Importantly, though, I do NOT currently
+expect demo pages for results summaries to go directly from here to production. These are for prototyping and component QC purposes.
+Components and their dependencies will be available as an npm package, which can be used in production. If we want to put markdown pages
+from here into production that will require some additional thinking/ planning/ development.
+
 This is an [Observable Framework](https://observablehq.com/framework/) app. To install the required dependencies, run:
 
 ```
