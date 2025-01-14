@@ -1,10 +1,4 @@
-```js
-md`# GARD analysis result visualization`
-```
-
-```js
-md`Load a GARD <tt>JSON</tt> result file `
-```
+# GARD result summary
 
 ```js
 viewof gard_results_file = params.get ("url") ? localFileInput({accept: [".json",".gz"], value : params.get ("url"), disable: true}) : localFileInput({accept: [".json",".gz"]})

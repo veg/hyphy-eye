@@ -1,10 +1,4 @@
-```js
-header1 = md`# NRM (non-reversible model) analysis result visualization`
-```
-
-```js
-load_prompt = md`Load an NRM <tt>JSON</tt> result file `
-```
+# NRM (non-reversible model) result summary
 
 ```js
 viewof nrm_results_file = params.get ("url") ? localFileInput({accept: ".json", value : params.get ("url"), disable: true}) : localFileInput({accept: ".json"}) 

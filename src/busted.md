@@ -162,7 +162,7 @@ function getFigure2() {
           let codon_index = (+toDisplay[1]);
           let partition_id = utils.getSiteIndexPartitionCodon(results_json)[codon_index-1][0]-1;
           codon_index -= d3.sum (attrs.partition_sizes.slice (0,partition_id));
-          let TT = plots.display_tree_site(results_json, partition_id, tree_objects[partition_id], codon_index, tree_options, treeDim, treeLabels, branch_length, color_branches);
+          let TT = plots.display_tree_site(results_json, partition_id, tree_objects[partition_id], codon_index, tree_options, treeDim, treeLabels, branch_length, color_branches, attrs.partition_sizes);
           return TT;
       } 
       let pi = (-1) + (+toDisplay[1]);

@@ -155,7 +155,7 @@ export function codonComposition(results_json, tree_objects, filter, diff_mode) 
   _.each (results_json["substitutions"], (data, partition) => {
       _.each (data, (per_site, site)=> {
             if (filter && ! filter (site, partition)) return;
-            let info = generateNodeLabels (tree_objects[partition], per_site);
+            let info = phylotreeUtils.generateNodeLabels (tree_objects[partition], per_site);
             
             if (diff_mode == false) {
                  _.each (info, (p,i)=> {
@@ -643,10 +643,10 @@ function site_support_by_branch(results_json, i, key, er) {
 }
 
 
-export function display_tree_site(results_json, index,T,s,options, treeDim, treeLabels, branch_length, color_branches) {
+export function display_tree_site(results_json, index,T,s,options, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     T.branch_length_accessor = (n)=>results_json["branch attributes"][index][n.data.name][branch_length] || 0;  
-    let node_labels = generateNodeLabels (T, results_json["substitutions"][index][(+s)-1]);
+    let node_labels = phylotreeUtils.generateNodeLabels (T, results_json["substitutions"][index][(+s)-1]);
 
     let labelDomain = new Set();
     let showAA = treeLabels.indexOf ("amino-acids") >= 0;

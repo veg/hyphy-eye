@@ -1,10 +1,4 @@
-```js
-md`# MULTI-HIT analysis result visualization`
-```
-
-```js
-md`Load a MULTIHIT <tt>JSON</tt> result file `
-```
+# MULTI-HIT result summary
 
 ```js
 viewof results_file = html`<input type=file accept="application/json">`
