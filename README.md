@@ -2,7 +2,7 @@
 
 This repo is a WIP, all that follows should be considered subject to change.
 
-The idea for this so far is that it may serve as a place where:
+**The idea for this so far is that it may serve as a place where:**
 1. visualization components for hyphy-vision/ datamonkey can be built and tested
 2. some basic statistics and utility functions that those components rely on can live
 3. we can build various demo pages for individual components, which are automatically deployed on commit to main, to try to protect them from regressions
@@ -11,7 +11,7 @@ The idea for this so far is that it may serve as a place where:
 6. components and utility functions get bundled into an npm package that get be used in production
 
 
-Importantly, though, I do NOT currently expect this project to:
+**Importantly, though, I do NOT currently expect this project to:**
 1. see results summaries go directly from here to production. 
 2. publish any artifacts directly through observable hq
 
