@@ -10,9 +10,7 @@ import * as d3 from "d3";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 
 const floatFmt = d3.format (".2g")
-const floatFormat = d3.format (".4g")
 const percentageFormat = d3.format (".2p")
-const proportionFormat = d3.format (".5p")
 
 export function get_attributes(results_json) {
     const tested_branch_count =  d3.median (_.chain (results_json.tested).map ().map((d)=>_.filter (_.map (d), (d)=>d=="test").length).value())

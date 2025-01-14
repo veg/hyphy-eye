@@ -5,7 +5,7 @@ import * as _ from "lodash-es";
 import * as d3 from "d3";
 import * as phylotree from "phylotree";
 
-const TABLE_COLORS = ({
+export const TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
     'Neutral' : '#444',
     'Purifying' : 'green',
@@ -49,6 +49,8 @@ export function get_plot_options(results_json, bsPositiveSelection) {
     return plot_options
 }
 
+// TODO: can this be in a utils file?
+// maybe w model as a param?
 export function get_tree_objects(results_json) {
     const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
         let T = new phylotree.phylotree (tree);
