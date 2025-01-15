@@ -2,6 +2,22 @@
 
 This repo is a WIP, all that follows should be considered subject to change.
 
+## Motivation
+Currently, Observable Notebooks are distributed via ObservableHQ and put directly into production on Datamonkey.org.
+This introduces a few potential pain points, which this project hopes to alleviate:
+1. collaborators must carefully coordinate as managing code conflicts and versioning is only weakly supported in Notebook
+2. there is no support for automated unit testing, which leaves code vulnerable to regressions
+3. there is a lack of flexibility in how Notebooks can be distributed (ObservableHQ only)
+4. there is a lack of flexibility in how Notebooks can be integrated into other contexts (requires Observable runtime)
+5. the development process usually involves forking an existing Notebook, which does not encourage well factored code
+6. code is distributed across multiple Notebooks and hidden behind cells you have to click, making quick parsing/ searching difficult
+
+The combination of the previously listed factors, and others I've probably not thought of or forgotten, creates a situation where maintenance, adding features and deployment to production are potentially cumbersome and likely to be error prone.
+
+**The more contributors there are to these Notebooks, the more we're likely to start noticing these pain points.**
+
+## Scope
+
 **The idea for this so far is that it may serve as a place where:**
 1. visualization components for hyphy-vision/ datamonkey can be built and tested
 2. some basic statistics and utility functions that those components rely on can live
@@ -12,10 +28,12 @@ This repo is a WIP, all that follows should be considered subject to change.
 
 
 **Importantly, though, I do NOT currently expect this project to:**
-1. see results summaries go directly from here to production. 
+1. see results summaries go directly from here to production
 2. publish any artifacts directly through observable hq
 
 If we want to put markdown pages from here into production that will require some additional thinking/ planning/ development.
+
+## Development
 
 This is an [Observable Framework](https://observablehq.com/framework/) app. To install the required dependencies, run:
 
@@ -33,6 +51,8 @@ Then visit <http://localhost:3000> to preview your app.
 
 For more, see <https://observablehq.com/framework/getting-started>.
 
+PRs are welcome!!
+
 ## Project structure
 
 Our Framework project looks something like this:
@@ -48,13 +68,16 @@ Our Framework project looks something like this:
 │  │  └─ phylotree-utils.js    # an importable module
 │  ├─ data
 │  │  └─ meme.json             # a static data file for testing
+│  ├─ meme
+│  │  └─ meme-utils.json       # utility functions that are specific to meme
 │  ├─ component-demo.md        # a page for testing a component
 │  ├─ meme.md                  # a page for comparison to a Notebook
 │  └─ index.md                 # the home page
 ├─ .gitignore
-├─ observablehq.config.js      # the app config file
+├─ observablehq.config.js      # the demo app config file
 ├─ package.json
-└─ README.md
+├─ README.md                   # the thing you're reading currently
+└─ rollup.config.js            # configuration for distribution
 ```
 
 **`src`** - This is the “source root” — where your source files live. Pages go here. Each page is a Markdown file. Observable Framework uses [file-based routing](https://observablehq.com/framework/project-structure#routing), which means that the name of the file controls where the page is served. You can create as many pages as you like. Use folders to organize your pages.
@@ -73,11 +96,14 @@ Our Framework project looks something like this:
 
 ## Command reference
 
-| Command           | Description                                              |
-| ----------------- | -------------------------------------------------------- |
-| `npm install`            | Install or reinstall dependencies                        |
+| Command              | Description                                              |
+| -------------------- | -------------------------------------------------------- |
+| `npm install`        | Install or reinstall dependencies                        |
 | `npm run dev`        | Start local preview server                               |
 | `npm run build`      | Build your static site, generating `./dist`              |
 | `npm run deploy`     | Deploy your app to Observable                            |
 | `npm run clean`      | Clear the local data loader cache                        |
 | `npm run observable` | Run commands like `observable help`                      |
+| `npm run bundle`     | Prepare javascript modules and types for distribution    |
+| `npm run clean-npm`  | Cleans `/dist` from previous `bundle` runs               |
+| `npm run build-npm`  | Runs `clean-npm` followed by `bundle`                   |
