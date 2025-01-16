@@ -4,7 +4,7 @@ const config = [
   {
     input: 'src/index.js',
     output: {
-      file: 'dist/hyphy-vision-components.js',
+      file: 'dist/hyphy-eye.js',
       format: 'es',
       sourcemap: true,
     },
@@ -13,7 +13,7 @@ const config = [
   {
     input: 'src/index.d.ts',
     output: {
-      file: 'dist/hyphy-vision-components.d.ts',
+      file: 'dist/hyphy-eye.d.ts',
       format: 'es',
     },
     plugins: [dts()]

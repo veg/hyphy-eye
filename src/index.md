@@ -1,4 +1,4 @@
-# hyphy-vision-components
+# hyphy-eye
 
 </br>
 
