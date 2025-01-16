@@ -1,4 +1,4 @@
-# hyphy-vision-components
+# hyphy-eye
 
 This repo is a WIP, all that follows should be considered subject to change.
 

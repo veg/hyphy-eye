@@ -1,14 +1,14 @@
 {
-  "name": "hyphy-framework-test",
+  "name": "hyphy-eye",
   "version": "0.1.1",
   "type": "module",
   "files": [
-    "dist/hyphy-vision-components.js",
-    "dist/hyphy-vision-components.js.map",
-    "dist/hyphy-vision-components.d.ts"
+    "dist/hyphy-eye.js",
+    "dist/hyphy-eye.js.map",
+    "dist/hyphy-eye.d.ts"
   ],
-  "main": "dist/hyphy-vision-components.js",
-  "types": "dist/hyphy-vision-components.d.ts",
+  "main": "dist/hyphy-eye.js",
+  "types": "dist/hyphy-eye.d.ts",
   "scripts": {
     "clean": "rimraf src/.observablehq/cache",
     "clean-npm": "rimraf dist/*",
