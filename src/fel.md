@@ -23,7 +23,7 @@ const results_json = await FileAttachment("./data/fel_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 ```
 
-Statistical significance is evaluated based on  ${results_json.simulated  ? "<tt>" + results_json.simulated + "</tt> site-level parametric bootstrap replicates"  : "the asymptotic chi-squared distribution"}. This analysis **${attrs.has_srv? "includes" : "does not include"}** site to site synonymous rate variation. ${attrs.has_ci ? "Profile approximate confidence intervals for site-level dN/dS ratios have been computed." : ""}
+Statistical significance is evaluated based on  ${results_json.simulated  ? "<tt>" + results_json.simulated + "</tt> site-level parametric bootstrap replicates"  : "the asymptotic chi-squared distribution"}. This analysis **${attrs.has_srv? "included" : "does not include"}** site to site synonymous rate variation. ${attrs.has_ci ? "Profile approximate confidence intervals for site-level dN/dS ratios have been computed." : ""}
 
 
 ```js
@@ -34,11 +34,9 @@ const pvalue_threshold = await view(Inputs.text({label: html`<b>p-value threshol
 const sites_table = utils.get_sites_table(results_json, pvalue_threshold);
 const siteTableData = _.filter (sites_table[1], (x)=>table_filter.indexOf (x.class)>=0);
 const tile_specs = utils.get_tile_specs(results_json, pvalue_threshold)
-const tile_table = document.createElement("div")
-tile_table.innerHTML = tt.tile_table(tile_specs)
 ```
 
-<div>${tile_table}</div>
+<div>${tt.tile_table(tile_specs)}</div>
 
 ```js
 const table_filter = view(Inputs.checkbox(
@@ -162,7 +160,5 @@ const figure2 = display_tree((-1) + (+tree_id.split (" ")[1])).show()
 <p><tt><small>${results_json.analysis["citation"]}</small></tt></p>
 
 ```js
-const floatFormat = d3.format ("2g")
-const floatFmt = d3.format (".2g")
 const svgSize = 700
 ```
