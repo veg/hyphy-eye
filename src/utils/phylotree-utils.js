@@ -211,3 +211,20 @@ export function totalTreeLength(tree) {
   });
   return L;
 }
+
+/**
+ * Extracts a list of sequence names (i.e., names of the tips) from a phylogenetic tree.
+ * 
+ * @param {Object} tree - A phylotree object which represents a phylogenetic tree.
+ * @return {Array<String>} An array containing the names of the tip sequences in the tree.
+ */
+
+export function seqNames(tree) {
+    let seq_names = [];
+    tree.traverse_and_compute (n=>{
+        if (n.children && n.children.length) return;
+        seq_names.push (n.data.name);
+    });
+    
+    return seq_names;
+};
