@@ -228,3 +228,20 @@ export function seqNames(tree) {
     
     return seq_names;
 };
+
+/**
+ * Extracts a set of names of the direct children of the root node in a phylogenetic tree.
+ * 
+ * @param {Object} tree - A phylotree object which represents a phylogenetic tree.
+ * @return {Set<String>} A set containing the names of the direct children of the root node.
+ */
+
+export function rootChildren(tree) {
+  let rt = new Set();
+  tree.traverse_and_compute ((n)=> {
+    if (n.parent && !n.parent.parent) {
+        rt.add (n.data.name);
+    }
+  });
+  return rt;
+}
