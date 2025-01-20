@@ -1,5 +1,5 @@
 ```js
-import * as tileTable from "./components/tile-table.js";
+import * as tt from "./components/tile-table/tile-table.js";
 import * as felUtils from "./fel/fel-utils.js";
 ```
 
@@ -26,12 +26,10 @@ const trivial_inputs = [
         "color": "midnight_blue"
     }
 ]
-
-const trivial_tile_table = tileTable.get_html(trivial_inputs);
 ```
 
 ```
-import * as tileTable from "./components/tile-table.js";
+import * as tt from "./components/tile-table/tile-table.js";
 
 const trivial_inputs = [
     {
@@ -48,33 +46,24 @@ const trivial_inputs = [
     }
 ]
 
-const trivial_tile_table = tileTable.get_html(trivial_inputs);
+<div>${tt.tile_table(trivial_inputs)}</div>;
 ```
 
-```js
-const ttDiv = document.createElement("div")
-ttDiv.innerHTML = trivial_tile_table
-```
-
-<div>${ttDiv}</div>
+<div>${tt.tile_table(trivial_inputs)}</div>
 </br>
 
 ```js
-// TODO: we need utils for grabbing out these values, or one util that returns an object w these props
-// TODO: also a util for making a TileTable spec from the results
 const results_json = await FileAttachment("./data/fel_test_data.json").json();
 const fel_attrs = felUtils.get_attributes(results_json);
 const pvalue_threshold = 0.1;
 const tile_specs = felUtils.get_tile_specs(results_json, pvalue_threshold);
 const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
-const fel_tile_table = document.createElement("div")
-fel_tile_table.innerHTML = tileTable.get_html(tile_specs);
 ```
 
 ## The FEL TileTable Component Test
 
 </br>
-<div>${fel_tile_table}</div>
+<div>${tt.tile_table(tile_specs)}</div>
 </br>
 
 

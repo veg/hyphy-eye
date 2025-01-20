@@ -1,5 +1,5 @@
-import * as phylotree from "npm:phylotree";
-import * as _ from "npm:lodash-es";
+import * as phylotree from "phylotree";
+import * as _ from "lodash-es";
 import * as colors from "../color-maps/custom.js";
 
 const DYN_RANGE_CAP = 10;
@@ -9,7 +9,15 @@ export const COLORS = {
       'Purifying' : colors.binary_with_gray[0],
     };
 
-export function get_options(has_pasmt) {
+/**
+ * Returns an array of arrays, where each sub-array contains a string description
+ * of a plot, and a function that takes a data object and returns a boolean
+ * indicating whether the plot should be shown for that data object.
+ *
+ * @param {boolean} has_pasmt - whether the data object has pasmt results
+ * @returns {Array.<Array.<string|function>>} The array of arrays described above
+ */
+export function get_plot_options(has_pasmt) {
   const options = [
     ["Site-level dN/dS estimates",(d)=>d["confidence interval"]],
     ["alpha/beta site-level estimates", (d)=>1], 
@@ -22,7 +30,16 @@ export function get_options(has_pasmt) {
   return options;
 }
 
-export function get_description(plot_type, pvalue_threshold) {
+/**
+ * Returns a human-readable description of the plot identified by the
+ * specified string. The description is a string that can be used as a
+ * tooltip for the plot.
+ *
+ * @param {string} plot_type - the type of plot to describe
+ * @param {number} pvalue_threshold - the threshold for significance
+ * @returns {string} the description of the plot
+ */
+export function get_plot_description(plot_type, pvalue_threshold) {
   const descriptions = {
     "Site-level dN/dS estimates" : "Maximum likelihood estimates of dN/dS at each site, together with estimated profile condifence intervals (if available). dN/dS = 1 (neutrality) is depicted as a horizontal gray line. Boundaries between partitions (if present) are shown as vertibal dashed lines.",
     "alpha/beta site-level estimates": "Maximum likelihood estimates of synonymous (α) and non-synonymous rates (β) at each site shown as bars. The line shows the estimates under the null model (α=β). Estimates above " + DYN_RANGE_CAP +" are censored at this value.",
@@ -75,6 +92,16 @@ export function totalTreeLength(tree) {
   return L;
 }
 
+/**
+ * Create a Vega-Lite specification for a stacked area chart of rate densities for
+ * alpha, beta and omega.
+ *
+ * @param {array} data - an array of objects, each with the following properties:
+ *   - `alpha` - a number representing the synonymous rate
+ *   - `beta` - a number representing the non-synonymous rate
+ *   - `dN/dS MLE` - the maximum likelihood estimate of the dN/dS ratio
+ * @returns {object} - a Vega-Lite specification for the chart
+ */
 export function rate_density(data) {
     let rate_options = [["alpha","α"],["beta","β"], ["omega", "dN/dS"]];
     
@@ -235,6 +262,20 @@ export function pv_plot(data, pvalue_threshold) {
     }
   }
   
+  /**
+   * Create a Vega-Lite specification for a plot of dN/dS ratio estimates
+   * with bootstrapped confidence intervals.
+   *
+   * @param {array} data - an array of objects, each with the following properties:
+   *   - `codon` - a string representing the codon number
+   *   - `dN/dS LB` - the lower bound of the bootstrapped confidence interval
+   *   - `dN/dS MLE` - the maximum likelihood estimate of the dN/dS ratio
+   *   - `dN/dS UB` - the upper bound of the bootstrapped confidence interval
+   *   - `class` - a string indicating the selection class (one of "Diversifying", "Neutral", "Purifying")
+   * @param {number} from - the first codon number to include in the plot
+   * @param {number} step - the number of codons to include in the plot
+   * @returns {object} - a Vega-Lite specification for the plot
+   */
   export function dNdS_with_ci(data, from, step) {
     let color_d = [];
     let color_r = [];
@@ -311,7 +352,20 @@ export function pv_plot(data, pvalue_threshold) {
     };
   }
   
-  export function alpha_beta_plot(data, from, step) {
+  /**
+   * Create a Vega-Lite specification for a plot of rate estimates
+   * @param {array} data - an array of objects, each with the following properties:
+   *   - `codon` - a string representing the codon number
+   *   - `alpha` - the maximum likelihood estimate of the alpha rate
+   *   - `beta` - the maximum likelihood estimate of the beta rate
+   *   - `alpha=beta` - the alpha=beta rate
+   *   - `class` - a string indicating the selection class (one of "Diversifying", "Neutral", "Purifying")
+   * @param {number} from - the first codon number to include in the plot
+   * @param {number} step - the number of codons to include in the plot
+   * @param {array} yrange - the range of the y-axis
+   * @returns {object} - a Vega-Lite specification for the plot
+   */
+  export function alpha_beta_plot(data, from, step, yrange) {
     let color_d = [];
     let color_r = [];
     _.each (COLORS, (v,c)=> {color_d.push (c); color_r.push (v);});
@@ -334,6 +388,9 @@ export function pv_plot(data, pvalue_threshold) {
             "field": "codon",
             "type" : "nominal",
             "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Codon"}
+          },
+          "y": {
+            "scale": {"domain": yrange}
           }
         },
         "layer": [
@@ -432,9 +489,30 @@ export function pv_plot(data, pvalue_threshold) {
     return _.map (qq, (d)=>({'bs' : 1-d.bs, 'c2' : 1-d.c2}));
 }
 
+function get_alpha_beta_yrange(fig1data) {
+  let min = _.chain (fig1data).map ("alpha").max ().value ();
+  let max = _.chain (fig1data).map ("beta").max ().value ();
 
+  // check if fig1data.alpha=beta exceeds either value
+  const maxAB = _.chain (fig1data).map ("alpha=beta").max ().value ();
+  if (maxAB > max) max = maxAB;
+  if (maxAB > min) min = maxAB;
 
-export function get_spec(plot_type, fig1data, pvalue_threshold, has_pasmt) {
+  // cap min and max at DYN_RANGE_CAP
+  if (min > DYN_RANGE_CAP) min = DYN_RANGE_CAP;
+  if (max > DYN_RANGE_CAP) max = DYN_RANGE_CAP;
+
+  // add some buffer
+  min = min * 1.1;
+  max = max * 1.1;
+
+  // alpha is negative
+  min = min * -1;
+
+  return [min, max];
+}
+
+export function get_plot_spec(plot_type, fig1data, pvalue_threshold, has_pasmt) {
   const plotSpecs = {
     "Site-level dN/dS estimates" : {
       "width": 800, "height": 200, 
@@ -444,7 +522,7 @@ export function get_spec(plot_type, fig1data, pvalue_threshold, has_pasmt) {
     "alpha/beta site-level estimates" : {
       "width": 800, "height": 200, 
       "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-        return alpha_beta_plot (fig1data, d, 70)
+        return alpha_beta_plot (fig1data, d, 70, get_alpha_beta_yrange (fig1data))
       })},
     "Bootstrap vs asymptotic p-value": pv_plot (fig1data, pvalue_threshold),
     "Rate density plots" : rate_density (fig1data),

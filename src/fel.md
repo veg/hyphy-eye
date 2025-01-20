@@ -1,14 +1,14 @@
 ```js
-import * as d3 from "npm:d3";
-import * as _ from "npm:lodash-es";
-import * as phylotree from "npm:phylotree";
+import * as d3 from "d3";
+import * as _ from "lodash-es";
+import * as phylotree from "phylotree";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
 import * as ss from "./stats/chi-squared.js";
 import * as utils from "./fel/fel-utils.js";
 import * as plots from "./fel/fel-plots.js";
-import * as tileTable from "./components/tile-table.js";
+import * as tt from "./components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
@@ -23,7 +23,7 @@ const results_json = await FileAttachment("./data/fel_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 ```
 
-Statistical significance is evaluated based on  ${results_json.simulated  ? "<tt>" + results_json.simulated + "</tt> site-level parametric bootstrap replicates"  : "the asymptotic chi-squared distribution"}. This analysis **${attrs.has_srv? "includes" : "does not include"}** site to site synonymous rate variation. ${attrs.has_ci ? "Profile approximate confidence intervals for site-level dN/dS ratios have been computed." : ""}
+Statistical significance is evaluated based on  ${results_json.simulated  ? "<tt>" + results_json.simulated + "</tt> site-level parametric bootstrap replicates"  : "the asymptotic chi-squared distribution"}. This analysis **${attrs.has_srv? "included" : "does not include"}** site to site synonymous rate variation. ${attrs.has_ci ? "Profile approximate confidence intervals for site-level dN/dS ratios have been computed." : ""}
 
 
 ```js
@@ -34,11 +34,9 @@ const pvalue_threshold = await view(Inputs.text({label: html`<b>p-value threshol
 const sites_table = utils.get_sites_table(results_json, pvalue_threshold);
 const siteTableData = _.filter (sites_table[1], (x)=>table_filter.indexOf (x.class)>=0);
 const tile_specs = utils.get_tile_specs(results_json, pvalue_threshold)
-const tile_table = document.createElement("div")
-tile_table.innerHTML = tileTable.get_html(tile_specs)
 ```
 
-<div>${tile_table}</div>
+<div>${tt.tile_table(tile_specs)}</div>
 
 ```js
 const table_filter = view(Inputs.checkbox(
@@ -60,12 +58,12 @@ const fig1data = get_fig1data();
 ```
 
 ```js
-const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_options(attrs.has_pasmt), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
+const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_plot_options(attrs.has_pasmt), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
 ```js
-const plot_description = plots.get_description(plot_type, pvalue_threshold)
-const plot_spec = plots.get_spec(plot_type, fig1data, pvalue_threshold, attrs.has_pasmt)
+const plot_description = plots.get_plot_description(plot_type, pvalue_threshold)
+const plot_spec = plots.get_plot_spec(plot_type, fig1data, pvalue_threshold, attrs.has_pasmt)
 const tree_objects = plots.get_tree_objects(results_json)
 ```
 
@@ -162,7 +160,5 @@ const figure2 = display_tree((-1) + (+tree_id.split (" ")[1])).show()
 <p><tt><small>${results_json.analysis["citation"]}</small></tt></p>
 
 ```js
-const floatFormat = d3.format ("2g")
-const floatFmt = d3.format (".2g")
 const svgSize = 700
 ```

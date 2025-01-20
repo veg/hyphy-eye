@@ -4,51 +4,61 @@
  * an icon and a description
  */
 
+// @ts-check
+
+/**
+ * @typedef {import('./tile-table').TileSpec} TileSpec
+ */
+
 /**
  * Creates a table of tiles with each tile showing a number, 
  * an icon and a description. The table will have a variable number of columns.
  * Icons support currently are from simple-line-icons.com and colors are
  * custom defined. See `supported_colors` for a list of recognized color names.
- * @param {Array} table_spec - An array of objects with properties number, description, icon and color
+ * @param {TileSpec[]} table_spec - An array of objects each with properties number, description, icon and color
  * @param {number} columns - The number of columns in the table, defaults to 3
- * @returns {string} - HTML string representing the table with the specified tiles
- */
-export function get_html(table_spec, columns = 3) {
+ * @returns {HTMLTableElement} - The table with the specified tiles
+ * */
+export function tile_table(table_spec, columns = 3) {
     const rows = calculate_rows(table_spec, columns);
-    let tableHTML = `<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.css">
-                     <style>${stati_styles}</style>
-                     <table>`;
-
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
     for (let i = 0; i < rows; i++) {
-        tableHTML += '<tr>';
+        const row = table.insertRow();
         for (let j = 0; j < columns; j++) {
             const index = i * columns + j;
             if (index < table_spec.length) {
-                const width = 100 / columns + '%';
-                tableHTML += build_tile_html(table_spec[index], width);
+                row.insertCell().innerHTML = build_tile_html(table_spec[index], 100 / columns + '%');
             }
         }
-        tableHTML += '</tr>';
     }
-    tableHTML += '</table>';
-
-    return tableHTML;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.css';
+    const style = document.createElement('style');
+    style.innerHTML = stati_styles;
+    const head = document.head || document.getElementsByTagName('head')[0];
+    head.appendChild(link);
+    head.appendChild(style);
+    return table;
 }
 
 /**
  * Creates a string with the HTML for a table cell with a tile,
  * containing a number, an icon, and a description.
- * @param {Object} tile_json - Object with properties number, description, icon and color
+ * @param {TileSpec} tile_spec - Object with properties number, description, icon and color
  * @param {string} width - The width of the table cell
  * @returns {string} - HTML string for the table cell
  */
-function build_tile_html(tile_json, width) {
-    const iconClasses = tile_json.icon.split(' ').join(' ');
+function build_tile_html(tile_spec, width) {
+    const iconClasses = tile_spec.icon.split(' ').join(' ');
     return `<td style="width: ${width};">
-                <div class="stati ${tile_json.color} left">
+                <div class="stati ${tile_spec.color} left">
                     <i class="${iconClasses}"></i>
                     <div>
-                        <b>${tile_json.number}</b><span>${tile_json.description}</span>
+                        <b>${tile_spec.number}</b><span>${tile_spec.description}</span>
                     </div>
                 </div>
             </td>`;
@@ -158,7 +168,8 @@ export const stati_styles = `
 
 /**
  * Calculates the number of rows needed for the table.
- * @param {Array} table_spec - An array of objects containing tile specifications.
+ * @param {TileSpec[]} table_spec - An array of objects containing tile specifications. 
+ * Each object should have properties number, description, icon and color.
  * @param {number} columns - The number of columns in the table.
  * @returns {number} The number of rows required to accommodate all tiles.
  */

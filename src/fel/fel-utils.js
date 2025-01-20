@@ -3,8 +3,8 @@
  * @description Utility functions for FEL visualization
  */
 
-import * as _ from "npm:lodash-es";
-import * as d3 from "npm:d3";
+import * as _ from "lodash-es";
+import * as d3 from "d3";
 
 /**
  * Extracts some summary attributes from FEL results that are used later in the

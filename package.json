@@ -1,21 +1,37 @@
 {
-  "name": "hyphy-framework-test",
-  "version": "0.0.900",
+  "name": "hyphy-eye",
+  "version": "0.1.1",
   "type": "module",
-  "private": true,
+  "files": [
+    "dist/hyphy-eye.js",
+    "dist/hyphy-eye.js.map",
+    "dist/hyphy-eye.d.ts"
+  ],
+  "main": "dist/hyphy-eye.js",
+  "types": "dist/hyphy-eye.d.ts",
   "scripts": {
     "clean": "rimraf src/.observablehq/cache",
+    "clean-npm": "rimraf dist/*",
+    "bundle": "rollup --config",
     "build": "observable build",
     "dev": "observable preview",
     "deploy": "observable deploy",
-    "observable": "observable"
+    "observable": "observable",
+    "build-npm": "run-s clean-npm bundle"
   },
   "dependencies": {
     "@observablehq/framework": "^1.13.0",
-    "fs": "^0.0.1-security"
+    "d3": "^7.9.0",
+    "lodash-es": "^4.17.21",
+    "parse-svg-path": "^0.1.2",
+    "phylotree": "^2.0.1"
   },
   "devDependencies": {
-    "rimraf": "^5.0.5"
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^5.0.10",
+    "rollup": "^4.28.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=18"

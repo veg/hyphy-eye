@@ -1,7 +1,7 @@
 // See https://observablehq.com/framework/config for documentation.
 export default {
   // The app’s title; used in the sidebar and webpage titles.
-  title: "hyphy-vision-components",
+  title: "hyphy-eye",
 
   // The pages and sections in the sidebar. If you don’t specify this option,
   // all pages will be listed in alphabetical order. Listing pages explicitly
@@ -35,12 +35,4 @@ export default {
   // typographer: false, // smart quotes and other typographic improvements
   // preserveExtension: false, // drop .html from URLs
   // preserveIndex: false, // drop /index from URLs
-
-  dynamicPaths: [
-    "/color-maps/custom.js",
-    "/color-maps/crameri.js",
-    "/color-maps/tol.js",
-    "/color-maps/utils.js",
-    "/components/tile-table.js"
-  ]
 };
