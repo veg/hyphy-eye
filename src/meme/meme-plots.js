@@ -41,16 +41,6 @@ export function get_plot_description(plot_type, has_resamples) {
     return plot_legends[plot_type];
 }
 
-export function get_tree_objects(results_json) {
-    const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
-        let T = new phylotree.phylotree (tree);
-        T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name]["Global MG94xREV"];
-        return T;
-    });
-
-    return tree_objects;
-}
-
 export function get_tree_color_options(results_json) {
   let options = ["Tested"];
   if (results_json.substitutions) {

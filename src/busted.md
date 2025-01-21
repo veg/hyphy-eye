@@ -49,7 +49,7 @@ const distributionTable = utils.getDistributionTable(results_json, ev_threshold)
 const contributing_sites = utils.get_contributing_sites(siteTableData);
 const test_omega = utils.test_omega(results_json, attrs.has_error_sink)
 const bsPositiveSelection = utils.getBSPositiveSelection(test_omega, attrs.has_error_sink);
-const tree_objects = plots.get_tree_objects(results_json);
+const tree_objects = phylotreeUtils.get_tree_objects(results_json);
 const bsErrorSink = utils.getBSErrorSink(results_json, tree_objects, attrs.has_error_sink_nt);
 const tile_specs = utils.get_tile_specs(results_json, ev_threshold, bsPositiveSelection, contributing_sites);
 

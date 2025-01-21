@@ -12,7 +12,7 @@ export const TABLE_COLORS = ({
     'Invariable' : '#CCC'
 })
 
-const DYN_RANGE_CAP = 10000
+const DYN_RANGE_CAP = 10000;
 const LABEL_COLOR_SCALE = d3.scaleOrdinal([], d3.schemeCategory10)
     
 export function get_plot_description(plot_type, srv_hmm) {
@@ -47,18 +47,6 @@ export function get_plot_options(results_json, bsPositiveSelection) {
     ]
 
     return plot_options
-}
-
-// TODO: can this be in a utils file?
-// maybe w model as a param?
-export function get_tree_objects(results_json) {
-    const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
-        let T = new phylotree.phylotree (tree);
-        T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name]["Global MG94xREV"];
-        return T;
-    });
-
-    return tree_objects;
 }
 
 export function get_plot_spec(

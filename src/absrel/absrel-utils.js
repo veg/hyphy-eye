@@ -5,7 +5,6 @@
 
 import * as _ from "lodash-es";
 import * as d3 from "d3";
-import * as phylotree from "phylotree";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as utils from "../utils/general-utils.js";
 import * as summaryStats from "../stats/summaries.js";
@@ -51,12 +50,7 @@ export function get_attributes(results_json) {
         'DH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 2 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value(),
         'TH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 3 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value()
     })
-    const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
-        let T = new phylotree.phylotree (tree);
-        T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name]["Global MG94xREV"];
-        return T;
-    });
-    const profileBranchSites = getProfileBranchSites(results_json, tree_objects);
+    
 
     return {
         "positive_results" : positive_results,
@@ -66,9 +60,7 @@ export function get_attributes(results_json) {
         "srv_rate_classes" : srv_rate_classes,
         "srv_distribution" : srv_distribution,
         "omega_rate_classes" : omega_rate_classes,
-        "mh_rates" : mh_rates,
-        "tree_objects" : tree_objects,
-        "profileBranchSites" : profileBranchSites
+        "mh_rates" : mh_rates
     }
 }
 
@@ -86,9 +78,9 @@ export function get_attributes(results_json) {
  *       - icon: {string} The CSS class for the icon associated with the number
  *       - color: {string} The color to use for the icon
  */
-export function get_tile_specs(results_json, ev_threshold) {
+export function get_tile_specs(results_json, ev_threshold, tree_objects) {
     const attrs = get_attributes(results_json)
-    const distributionTable = getDistributionTable(results_json, ev_threshold)
+    const distributionTable = getDistributionTable(results_json, ev_threshold, tree_objects)
 
     const median_DH = _.size(attrs.mh_rates['DH']) ? floatFormat (d3.median (_.map (attrs.mh_rates['DH']))) : "N/A"
     const median_TH = _.size(attrs.mh_rates['TH']) ? floatFormat (d3.median (_.map (attrs.mh_rates['TH']))) : "N/A"
@@ -175,11 +167,11 @@ export function get_tile_specs(results_json, ev_threshold) {
    *     1. An empty string
    *     2. The second element of the dist array
    */
-export function getDistributionTable(results_json, ev_threshold) {
+export function getDistributionTable(results_json, ev_threshold, tree_objects) {
   let table = [];
 
   const attrs = get_attributes(results_json);
-  let site_er = getPosteriorsPerBranchSite(results_json, true, ev_threshold, attrs.tree_objects);
+  let site_er = getPosteriorsPerBranchSite(results_json, true, ev_threshold, tree_objects);
   
   _.each (results_json["branch attributes"][0], (info, b)=> {
     let row = {'branch' : b};
@@ -405,13 +397,13 @@ export function test_pv(results_json, branch) {
     return _.get (results_json,["branch attributes","0",branch,"Corrected P-value"])
 }
 
-export function siteTableData(results_json, ev_threshold) {
+export function siteTableData(results_json, ev_threshold, profileBranchSites) {
     const attrs = get_attributes(results_json);
     const siteIndexPartitionCodon = getSiteIndexPartitionCodon(results_json);
 
   let site_info = [];
   let index = 0;
-  let bySite = _.groupBy (attrs.profileBranchSites, (d)=>d.site);
+  let bySite = _.groupBy (profileBranchSites, (d)=>d.site);
   _.each (results_json["data partitions"], (pinfo, partition)=> {
       _.each (pinfo["coverage"][0], (ignore, i)=> {
           

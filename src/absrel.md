@@ -8,6 +8,7 @@ import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
 import * as utils from "./absrel/absrel-utils.js";
 import * as plots from "./absrel/absrel-plots.js";
+import * as phylotreeUtils from "./utils/phylotree-utils.js";
 import * as statsSummary from "./stats/summaries.js";
 import * as omegaPlots from "./components/omega-plots.js";
 import * as tt from "./components/tile-table/tile-table.js";
@@ -36,12 +37,14 @@ const ev_threshold = view(Inputs.text({label: html`<b>Evidence ratio threshold</
 ```
 
 ```js
-const siteTableData = utils.siteTableData(results_json, ev_threshold);
+const tree_objects = phylotreeUtils.get_tree_objects(results_json);
+const distributionTable = utils.getDistributionTable(results_json, ev_threshold, tree_objects);
+const tile_specs = utils.get_tile_specs(results_json, ev_threshold, tree_objects);
+const profileBranchSites = utils.getProfileBranchSites(results_json, tree_objects);
+const siteTableData = utils.siteTableData(results_json, ev_threshold, profileBranchSites);
 const sites_table = [{}, siteTableData[0], siteTableData[1]];
-const distributionTable = utils.getDistributionTable(results_json, ev_threshold);
-const tile_specs = utils.get_tile_specs(results_json, ev_threshold);
 // NOTE: doesnt look like this actually uses ev_threshold if do_counts is false anyhow..
-const bsPositiveSelection = utils.getPosteriorsPerBranchSite(results_json, false, ev_threshold, attrs.tree_objects);
+const bsPositiveSelection = utils.getPosteriorsPerBranchSite(results_json, false, ev_threshold, tree_objects);
 ```
 
 <div>${tt.tile_table(tile_specs)}</div>
@@ -111,10 +114,10 @@ function getFigure2() {
       if (toDisplay[0] == "Codon") {  
           const codon_index = (+toDisplay[1]);
           let partition_id = utils.siteIndexPartitionCodon[codon_index-1][0]-1;
-          let TT = plots.display_tree_site (results_json, partition_id, attrs.tree_objects[0], codon_index, tree_options, ev_threshold, treeDim, treeLabels, branch_length, color_branches);
+          let TT = plots.display_tree_site (results_json, partition_id, tree_objects[0], codon_index, tree_options, ev_threshold, treeDim, treeLabels, branch_length, color_branches);
           return TT;
       } 
-      let TT = plots.display_tree(results_json, 0, attrs.tree_objects[0], tree_options, ev_threshold, treeDim, treeLabels, branch_length, color_branches);
+      let TT = plots.display_tree(results_json, 0, tree_objects[0], tree_options, ev_threshold, treeDim, treeLabels, branch_length, color_branches);
       return TT;
     }
     return null;
@@ -150,7 +153,7 @@ if (figure2 && figure2.color_scale) {
 **Figure 1**. ${plot_type ? plots.get_plot_description(plot_type) : "No plotting options available"}
 
 ```js
-const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_plot_options(attrs.srv_rate_classes, attrs.srv_distribution, bsPositiveSelection, attrs.profileBranchSites), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`, value : 'Evidence ratio alignment profile'}))
+const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_plot_options(attrs.srv_rate_classes, attrs.srv_distribution, bsPositiveSelection, profileBranchSites), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`, value : 'Evidence ratio alignment profile'}))
 ```
 
 ```js
@@ -172,7 +175,7 @@ const fig1data = getFig1data();
 ```js
 let plot_spec;
 if (plot_type) {
-  plot_spec = plots.get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, rate_table, attrs, fig1_controls)
+  plot_spec = plots.get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, rate_table, attrs, fig1_controls, tree_objects, profileBranchSites)
 }
 ```
 <div>${vl.render({"spec": plot_spec})}</div>
@@ -201,7 +204,7 @@ const which_branch = view(Inputs.select(
 
 ```js
 function get_table3_data() {
-  let rc = _.keyBy (_.filter (attrs.profileBranchSites, (d)=>which_branch.indexOf (d.branch)>=0), (d)=>d.Key);
+  let rc = _.keyBy (_.filter (profileBranchSites, (d)=>which_branch.indexOf (d.branch)>=0), (d)=>d.Key);
   _.each (bsPositiveSelection, (d)=> {
       if (d.Key in rc) {
           rc[d.Key].EBF = d.ER;

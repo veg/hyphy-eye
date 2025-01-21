@@ -146,7 +146,7 @@ function generateSubstitutionLists(T, labels, test_set) {
     return _.sortBy (_.toPairs (subs), d=>-d[1]);
 }
 
-export function siteTableData(results_json, table_options, pvalue_threshold, siteIndexPartitionCodon) {
+export function siteTableData(results_json, table_options, pvalue_threshold, siteIndexPartitionCodon, tree_objects) {
   let site_info = [];
   let index = 0;
   let show_distribution = table_options.indexOf ('Distribution plot') >= 0;

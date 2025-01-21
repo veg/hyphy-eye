@@ -1,4 +1,3 @@
-import * as phylotree from "phylotree";
 import * as _ from "lodash-es";
 import * as colors from "../color-maps/custom.js";
 
@@ -8,6 +7,7 @@ export const COLORS = {
       'Neutral' : colors.binary_with_gray[1],
       'Purifying' : colors.binary_with_gray[0],
     };
+
 
 /**
  * Returns an array of arrays, where each sub-array contains a string description
@@ -66,16 +66,6 @@ export function seqNames(tree) {
     });
     return seq_names;
 };
-
-export function get_tree_objects(results_json) {
-  const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
-    let T = new phylotree.phylotree (tree);
-    T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name]["Global MG94xREV"];
-    return T;
-  });
-  
-  return tree_objects;
-}
 
 /**
  * Compute the total length of a tree.

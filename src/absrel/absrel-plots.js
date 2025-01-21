@@ -58,7 +58,7 @@ export function get_plot_options(srv_rate_classes, srv_distribution, bsPositiveS
  * @param {array} profileBranchSites - profiles of branch sites
  * @returns {Object} The Vega-Lite spec for the specified plot type
  */
-export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, rate_table, attrs, fig1_controls) {
+export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, rate_table, attrs, fig1_controls, tree_objects, profileBranchSites) {
     const plot_specs = ({
         "Synonymous rates" : {
             "width": 800, "height": 150, 
@@ -67,16 +67,17 @@ export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelec
         })},
         "Support for positive selection" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], plotUtils.er_step_size(results_json)), (d)=> {
-            return BSPosteriorPlot (results_json, attrs.tree_objects, rate_table, attrs, fig1_controls, bsPositiveSelection, d, plotUtils.er_step_size(results_json))
+            return BSPosteriorPlot (results_json, tree_objects, rate_table, attrs, fig1_controls, bsPositiveSelection, d, plotUtils.er_step_size(results_json))
         })},
         "Evidence ratio alignment profile" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], plotUtils.er_step_size(results_json)), (d)=> {
-            return ERPosteriorPlot (results_json, attrs.tree_objects, rate_table, attrs, fig1_controls, attrs.profileBranchSites, d, plotUtils.er_step_size(results_json))
+            return ERPosteriorPlot (results_json, tree_objects, rate_table, attrs, fig1_controls, profileBranchSites, d, plotUtils.er_step_size(results_json))
         })}
     });
 
     return plot_specs[plot_type];
 }
+
 
 function SRVPlot(data, from, step, key, key2) {
   let spec = {

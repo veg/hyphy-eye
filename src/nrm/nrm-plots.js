@@ -2,17 +2,6 @@ import * as d3 from "d3";
 import * as _ from "lodash-es";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as d from "../stats/pairwise-distance.js";
-import * as phylotree from "phylotree";
-
-export function get_tree_objects(results_json, modelForTree) {
-    const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
-        let T = new phylotree.phylotree (tree);
-        T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name][modelForTree];
-        return T;
-    });
-
-    return tree_objects;
-}
 
 export function get_branch_lengths(results_json, model_summary, tree_objects) {
     const rootChildren = phylotreeUtils.rootChildren(tree_objects[0])
