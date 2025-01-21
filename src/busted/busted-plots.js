@@ -1,7 +1,7 @@
 import * as utils from "./busted-utils.js"
 import * as plotUtils from "../utils/plot-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js"
-import * as srv from "../components/srv-plot.js";
+import * as beads from "../components/bead-plot.js";
 import * as _ from "lodash-es";
 import * as d3 from "d3";
 
@@ -70,27 +70,48 @@ export function get_plot_spec(
         "Evidence ratio for ω>1 (constrained)" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return ERPlot (fig1data, d, 70, "ER (constrained)", ev_threshold)
+                return beads.BeadPlot(
+                  fig1data, 
+                  d, 
+                  70, 
+                  "ER (constrained)", 
+                  false,
+                  DYN_RANGE_CAP,
+                  null,
+                  ev_threshold
+                )
             })
         },
         "Evidence ratio for ω>1 (optimized)" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return ERPlot (fig1data, d, 70, "ER (optimized null)", ev_threshold)
+                return beads.BeadPlot(
+                  fig1data, 
+                  d, 
+                  70, 
+                  "ER (optimized null)", 
+                  false,
+                  DYN_RANGE_CAP,
+                  null,
+                  ev_threshold
+                )
             })
         },
         "Synonymous rates" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return srv.SRVPlot (
+                return beads.BeadPlot (
                   fig1data, 
                   d, 
                   70, 
                   "SRV posterior mean", 
+                  false,
+                  DYN_RANGE_CAP,
+                  null,
+                  null,
                   srv_hmm ? "SRV viterbi" : null, 
                   results_json["Evidence Ratios"]["constrained"], 
-                  "ER (constrained)",
-                  DYN_RANGE_CAP
+                  "ER (constrained)"
                 )
             })
         },
@@ -268,72 +289,6 @@ function cdsQuant(data, key1, title) {
       
     }
   }]}
-}
-
-
-
-
-function ERPlot(data, from, step, key, ev_threshold) {
-  let scale = d3.extent (data, (d)=>d[key]); 
-  scale[1] = Math.min (DYN_RANGE_CAP,Math.max (scale[1], ev_threshold));
-  scale = d3.nice (scale[0], scale[1], 10);
-  return {
-      "width": {"step": 12},
-      "data" : {"values" : _.map (
-        _.filter (data, (d,i)=>i+1 >= from && i< from + step - 1),
-      (d)=> {
-          let dd = _.clone (d);
-          _.each ([key], (f)=> {
-            dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
-          });
-          return dd;
-      })}, 
-      "encoding": {
-        "x": {
-          "field": "Codon",
-          "type" : "nominal",
-          "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Codon"}
-        }
-      },
-      "layer": [
-        {
-          "mark": {"stroke": "black", "type": "line", "size" : 2, "interpolate" : "step", "color" : "lightgrey", "opacity" : 0.5},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-                "scale" : {"type" : "symlog", "domain" : scale},
-                "axis" : {"grid" : false}
-            }
-          }
-        },
-        {
-          "mark": { "stroke": "black", "type": "point", "size" : 100, "filled" : true,  "color" : "lightgrey", "tooltip" : {"contents" : "data"}, "opacity" : 1.},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-                
-            },
-            "color" : {"condition": {"test": "datum['" + key + "'] > " + ev_threshold, "value": "firebrick"},
-                "value": "lightgrey"
-            }
-          }
-        },
-        {
-          "mark" : {"opacity": 0.5, "type": "line", "color": "steelblue"},
-          "encoding" : { "y": {
-                "datum": {"expr": "" + ev_threshold},
-                "type": "quantitative",
-                "scale" : {"domain" : scale}
-              },
-             
-            "size": {"value": 2},
-          }
-        }
-        
-      ]
-  };
 }
 
 function BSPosteriorPlot(results_json, tree_objects, data, from, step, tested_branch_count, fig1_controls) {

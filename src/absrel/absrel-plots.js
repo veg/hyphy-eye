@@ -1,7 +1,7 @@
 import * as utils from "./absrel-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as plotUtils from "../utils/plot-utils.js";
-import * as srv from "../components/srv-plot.js";
+import * as beads from "../components/bead-plot.js";
 import * as _ from "lodash-es";
 import * as d3 from "d3";
 
@@ -64,7 +64,14 @@ export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelec
         "Synonymous rates" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-            return srv.SRVPlot (fig1data, d, 70, "SRV posterior mean", null, null, null, DYN_RANGE_CAP)
+            return beads.BeadPlot(
+              fig1data, 
+              d, 
+              70, 
+              "SRV posterior mean", 
+              false,
+              DYN_RANGE_CAP
+            )
         })},
         "Support for positive selection" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], plotUtils.er_step_size(results_json)), (d)=> {
