@@ -1,9 +1,9 @@
 import * as utils from "./busted-utils.js"
 import * as plotUtils from "../utils/plot-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js"
+import * as srv from "../components/srv-plot.js";
 import * as _ from "lodash-es";
 import * as d3 from "d3";
-import * as phylotree from "phylotree";
 
 export const TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
@@ -82,7 +82,16 @@ export function get_plot_spec(
         "Synonymous rates" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return SRVPlot (results_json, fig1data, d, 70, "SRV posterior mean", srv_hmm ? "SRV viterbi" : null)
+                return srv.SRVPlot (
+                  fig1data, 
+                  d, 
+                  70, 
+                  "SRV posterior mean", 
+                  srv_hmm ? "SRV viterbi" : null, 
+                  results_json["Evidence Ratios"]["constrained"], 
+                  "ER (constrained)",
+                  DYN_RANGE_CAP
+                )
             })
         },
         "Support for positive selection" : {
@@ -326,67 +335,6 @@ function ERPlot(data, from, step, key, ev_threshold) {
       ]
   };
 }
-
-function SRVPlot(results_json, data, from, step, key, key2) {
-  let spec = {
-      "width": {"step": 12},
-      "data" : {"values" : _.map (
-        _.filter (data, (d,i)=>i+1 >= from && i<= from + step),
-      (d)=> {
-          let dd = _.clone (d);
-          _.each ([key], (f)=> {
-            dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
-          });
-          return dd;
-      })}, 
-      "encoding": {
-        "x": {
-          "field": "Codon",
-          "type" : "nominal",
-          "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Codon"}
-        }
-      },
-      "layer": [
-        {
-          "mark": {"type": "line", "size" : 2, "color" : "lightgrey", "opacity" : 0.5, "interpolate" : "step"},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-            }
-          }
-        },
-        {
-          "mark": {"stroke": null, "type": "point", "size" : 100, "filled" : true, "color" : "lightgrey", "tooltip" : {"contents" : "data"}, "opacity" : 1},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-                "scale" : {"type" : "symlog"},
-                "axis" : {"grid" : false}
-            },
-            "color" : results_json["Evidence Ratios"]["constrained"] ? {"field" : "ER (constrained)", "type" : "quantitative", "scale" : {"type" : "log", "scheme": "turbo"}, "legend" : {"orient" : "top"}} : null
-          }
-        }
-      ]
-  };
-  if (key2) {
-      spec.layer.push (
-        {
-          "mark": {"type": "line", "size" : 4, "color" : "lightgrey", "opacity" : 0.5, "interpolate" : "step", "color" : "firebrick"},
-          "encoding": {
-            "y": {
-               "field": key2,
-                "type" : "quantitative",
-            }
-          }
-        }
-      );
-  }
-  return spec;
-}
-
-
 
 function BSPosteriorPlot(results_json, tree_objects, data, from, step, tested_branch_count, fig1_controls) {
   const branch_order = phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0);

@@ -1,6 +1,7 @@
 import * as utils from "./absrel-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as plotUtils from "../utils/plot-utils.js";
+import * as srv from "../components/srv-plot.js";
 import * as _ from "lodash-es";
 import * as d3 from "d3";
 
@@ -63,7 +64,7 @@ export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelec
         "Synonymous rates" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-            return SRVPlot (fig1data, d, 70, "SRV posterior mean", null)
+            return srv.SRVPlot (fig1data, d, 70, "SRV posterior mean", null, null, null, DYN_RANGE_CAP)
         })},
         "Support for positive selection" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], plotUtils.er_step_size(results_json)), (d)=> {
@@ -77,67 +78,6 @@ export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelec
 
     return plot_specs[plot_type];
 }
-
-
-function SRVPlot(data, from, step, key, key2) {
-  let spec = {
-      "width": {"step": 12},
-      "data" : {"values" : _.map (
-        _.filter (data, (d,i)=>i+1 >= from && i<= from + step),
-      (d)=> {
-          let dd = _.clone (d);
-          _.each ([key], (f)=> {
-            dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
-          });
-          return dd;
-      })}, 
-      "encoding": {
-        "x": {
-          "field": "Codon",
-          "type" : "nominal",
-          "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Codon"}
-        }
-      },
-      "layer": [
-        {
-          "mark": {"type": "line", "size" : 2, "color" : "lightgrey", "opacity" : 0.5, "interpolate" : "step"},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-            }
-          }
-        },
-        {
-          "mark": {"stroke": null, "type": "point", "size" : 100, "filled" : true, "color" : "lightgrey", "tooltip" : {"contents" : "data"}, "opacity" : 1},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-                "scale" : {"type" : "symlog"},
-                "axis" : {"grid" : false}
-            }
-          }
-        }
-      ]
-  };
-  if (key2) {
-      spec.layer.push (
-        {
-          "mark": {"type": "line", "size" : 4, "color" : "lightgrey", "opacity" : 0.5, "interpolate" : "step", "color" : "firebrick"},
-          "encoding": {
-            "y": {
-               "field": key2,
-                "type" : "quantitative",
-            }
-          }
-        }
-      );
-  }
-  return spec;
-}
-
-
 
 function BSPosteriorPlot(results_json, tree_objects, rate_table, attrs, fig1_controls, data, from, step) {
   const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));

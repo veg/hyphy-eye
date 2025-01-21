@@ -30,7 +30,7 @@ const attrs = utils.get_attributes(results_json);
 ```
 
 <span style = 'font-size: 110%; color: firebrick;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${count_sites}** sites in this dataset (<tt>p≤${pvalue_threshold}</tt>).</span>
-${attrs.has_resamples > 0 ? "This analysis used parametric bootstrap with " + attrs.has_resamples + " replicates to test for signicance." : ""} ${+results_json.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
+${attrs.has_resamples > 0 ? "This analysis used parametric bootstrap with " + attrs.has_resamples + " replicates to test for significance." : ""} ${+results_json.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
 
 ```js
 const pvalue_threshold = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1", submit: "Update"}))
