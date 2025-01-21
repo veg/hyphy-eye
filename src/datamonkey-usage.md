@@ -1,7 +1,7 @@
 # Datamonkey Usage
 
-```js
-html`<style>
+```html
+<style>
   @keyframes spin {
     0% {
       transform: rotate(0deg);
@@ -10,7 +10,7 @@ html`<style>
       transform: rotate(360deg);
     }
   }
-</style>`;
+</style>
 ```
 
 ```js
