@@ -32,7 +32,7 @@ function qq(v) {
  * the data and a reference rule for visual guidance.
  * 
  * It specifically compares observed quantiles to theoretical quantiles given a
- * normal distribution.
+ * Chi-squared distribution.
  * 
  * @param {Object[]} data - An array of data points used to compute the quantiles.
  * @param {string} title - optional title of the plot. Defaults to 'Q-Q Plot'.
