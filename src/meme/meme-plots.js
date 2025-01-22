@@ -5,7 +5,8 @@ import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as beads from "../components/bead-plot.js";
 import * as heat from "../components/posteriors-heatmap.js";
 import * as qq from "../components/qq-plot.js";
-import * as rateDist from "../components/rate-densities/rate-densities.js";
+import * as rateDist from "../components/rate-summary-plots/rate-densities.js";
+import * as rates from "../components/rate-summary-plots/rate-bars.js";
 
 const TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
@@ -89,7 +90,6 @@ export function get_plot_spec(
 ) {
     const step_size = plotUtils.er_step_size(results_json)
     const branch_order = phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0);
-    console.log(fig1data)
 
     const plot_specs = ({
         "p-values for selection" : {
@@ -136,7 +136,19 @@ export function get_plot_spec(
           0,
           true
         ),
-        "Dense rate plot" : denser_plot(fig1data),
+        "Dense rate plot" : rates.RateBarPlots(
+          fig1data,
+          [
+            {data_key:"&alpha;",display_label:"α"},
+            {data_key:"&beta;<sup>1</sup>",display_label:"β-"},
+            {data_key:"p<sup>1</sup>",display_label:"p-"},
+            {data_key:"&beta;<sup>+</sup>",display_label:"β+"},
+            {data_key:"p<sup>+</sup>",display_label:"p+"},
+            {data_key:"p-value",display_label:"p-value"}
+          ],
+          "symlog",
+          DYN_RANGE_CAP
+        ),
         "Support for positive selection" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], step_size), (d)=> {
                 return heat.PosteriorsHeatmap(
@@ -261,42 +273,6 @@ function alpha_beta_plot(data, from, step) {
       ]
   };
 }
-
-
-
-function denser_plot(data) {
-  let columns = [["α","α"],["β-","β-"],["p-","p-"],["β+","β+"],["p+","p+"],["p-value", "p-value"]];
-  return {
-      "data" : {"values" : _.map (data,
-      (d)=> {
-          let dd = _.clone (d);
-          _.each (columns, (f)=> {
-            dd[f[0]] = Math.min (DYN_RANGE_CAP, dd[f[0]]);
-          });
-          return dd;
-      })}, 
-      
-      "vconcat" : _.map (columns, (cc,i)=> ({
-        "width" : 800,
-        "height" : 50,
-        "mark": {"type": "area", "color" : "lightblue", "stroke" : "black", "interpolate" : "step"},
-        "encoding": {
-          "x": {
-            "field": "Codon",
-            "type" : "quantitative",
-            "axis": {"grid" : false, "titleFontSize" : 14, "title" : i == columns.length -1 ? "Codon" : null}
-          },
-          "y": {
-                 "field": cc[0],
-                  "type" : "quantitative",
-                  "axis": {"grid" : false, "titleFontSize" : 14, "title" : cc[1]},
-                  "scale" : "symlog"
-              }
-        }}))
-  };
-}
-
-
 
 export function display_tree(results_json,i, treeDim, treeLabels, branch_length, color_branches, tree_objects) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;

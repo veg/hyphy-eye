@@ -3,15 +3,16 @@ import * as _ from "lodash-es";
 // @ts-check
 
 /**
- * @typedef {import('./rate-densities').RateDensitySpec} RateDensitySpec
+ * @typedef {import('./rate-data').RateDataSpec} RateDataSpec
  */
 
 /**
- * Create a Vega-Lite specification for a stacked area chart of rate densities for
- * alpha, beta and omega.
+ * Create a Vega-Lite specification for a collection of density plots. Each plot panel in the 
+ * collection represents a different rate as specified by the rate_labels parameter. The density
+ * plots represent the distribution of that rate across all sites.
  *
  * @param {array} data - an array of objects, with properties defined by the rate_labels parameter
- * @param {RateDensitySpec[]} rate_labels - an object defining what properties in `sata` to build
+ * @param {RateDataSpec[]} rate_labels - an object defining what properties in `data` to build
  * density plots for, and what labels to use for them in the plot panels.
  * @param {boolean} omega - optional boolean indicating whether to calculate dN/dS. If true, requires `data`
  * to have properties `alpha` and `beta`. Defaults to true.

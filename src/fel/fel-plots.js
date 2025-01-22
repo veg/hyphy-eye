@@ -1,7 +1,8 @@
 import * as _ from "lodash-es";
 import * as colors from "../color-maps/custom.js";
 import * as qq from "../components/qq-plot.js";
-import * as rateDist from "../components/rate-densities/rate-densities.js";
+import * as rateDist from "../components/rate-summary-plots/rate-densities.js";
+import * as rates from "../components/rate-summary-plots/rate-bars.js";
 
 const DYN_RANGE_CAP = 10;
 export const COLORS = {
@@ -282,37 +283,6 @@ export function pv_plot(data, pvalue_threshold) {
         ]
     };
   }
-  
-  export function denser_plot(data) {
-    let columns = [["alpha","α"],["beta","β"],["p-value", "p-value"]];
-    return {
-        "data" : {"values" : _.map (data,
-        (d)=> {
-            let dd = _.clone (d);
-            _.each (columns, (f)=> {
-              dd[f[0]] = Math.min (DYN_RANGE_CAP, dd[f[0]]);
-            });
-            return dd;
-        })}, 
-        
-        "vconcat" : _.map (columns, (cc,i)=> ({
-          "width" : 800,
-          "height" : 50,
-          "mark": {"type": "area", "color" : "lightblue", "stroke" : "black", "interpolate" : "step"},
-          "encoding": {
-            "x": {
-              "field": "codon",
-              "type" : "quantitative",
-              "axis": {"grid" : false, "titleFontSize" : 14, "title" : i == columns.length -1 ? "Codon" : null}
-            },
-            "y": {
-                   "field": cc[0],
-                    "type" : "quantitative",
-                    "axis": {"grid" : false, "titleFontSize" : 14, "title" : cc[1]}
-                }
-          }}))
-    };
-  }
 
 function get_alpha_beta_yrange(fig1data) {
   let min = _.chain (fig1data).map ("alpha").max ().value ();
@@ -358,7 +328,16 @@ export function get_plot_spec(plot_type, fig1data, pvalue_threshold, has_pasmt) 
         DYN_RANGE_CAP,
         0.2
       ),
-    "Dense rate plot" : denser_plot(fig1data),
+    "Dense rate plot" : rates.RateBarPlots(
+      fig1data,
+      [
+        {data_key: "alpha", display_label: "α"},
+        {data_key: "beta", display_label: "β"},
+        {data_key: "p-value", display_label: "p-value"}
+      ],
+      "linear",
+      DYN_RANGE_CAP
+    ),
     "Q-Q plots" : has_pasmt ? {
       "columns": 5,
       "hconcat": _.map (_.map (_.filter (table1, (d)=>d.class != "Invariable").slice (0,60), (d)=>[d.partition, d.codon]), (d)=>qq.QQPlot(_.map(results_json.MLE.LRT[d[0]-1][d[1]-1], (d)=>(d[0])), "Site "+d[1]))
