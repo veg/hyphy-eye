@@ -4,6 +4,7 @@ import * as plotUtils from "../utils/plot-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as beads from "../components/bead-plot.js";
 import * as heat from "../components/posteriors-heatmap.js";
+import * as qq from "../components/qq-plot.js";
 
 const TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
@@ -143,26 +144,13 @@ console.log("bsPos", bsPositiveSelection)
             "hconcat": 
                 _.map (
                     _.map (_.filter (table1, (d)=>d.class != "Invariable").slice (0,60), (d)=>[d.Partition, d.Codon]), 
-                    (d)=>qq_plot (qq(_.map (results_json.MLE.LRT[d[0]-1][d[1]-1], (d)=>(d[0]))), "Site "+d[1])
+                    (d)=>qq.QQPlot(_.map(results_json.MLE.LRT[d[0]-1][d[1]-1], (d)=>(d[0])), "Site "+d[1])
                 )
             }
         : null
     })
 
     return plot_specs[plot_type];
-}
-
-// TODO: saw this somewhere else, fel maybe?
-// should consolidate, add to stats utils?
-function qq(v) {
-  let vs = _.map (_.sortBy (v), (v)=> v <0 ? 0. : v);
-  let qq = [{'bs' : 0, 'c2' : 0}];
-  _.each (vs, (v, i)=> {
-      qq.push ({'bs' : (i+1)/vs.length, 'c2' : ss.cdf (v, 1)});
-  });
-  qq.push ([{'bs' : 1, 'c2' : 1}]);
-
-  return _.map (qq, (d)=>({'bs' : 1-d.bs, 'c2' : 1-d.c2}));
 }
 
 function rate_density(data) {
@@ -238,48 +226,6 @@ function rate_density(data) {
             
   }
 }
-
-
-
-function qq_plot(data, title) {
-  return {
-  "data": {"values": data},
-  "title" : title,
-  "layer" : [{
-        "mark": {"type" : "line", "color" : "firebrick", "clip" : true},
-        "width" : 100,
-        "height" : 100,
-        "encoding": {
-          "x": {
-            "field": "bs",
-            "type" : "quantitative",
-            "scale" : {"domain" : [0,0.25]},
-            "axis" : {"grid" : false, "title" : "Bootstrap p-value", "labelFontSize" : 12, "titleFontSize" : 14}
-          },
-          "y": {"field": "c2", "type" : "quantitative","axis" : {"grid" : false, "title" : "Asymptotic p-value", "labelFontSize" : 12, "titleFontSize" : 14}, "scale" : {"domain" : [0,0.25]}}
-        }},{
-  "mark": {
-    "type": "rule",
-    "color": "grey",
-    "strokeWidth": 1,
-    "opacity" : 0.5,
-    "clip" : true
-  },
-  "encoding": {
-    "x": {
-      "datum": {"expr": "0"},
-      "type": "quantitative",
-      
-    },
-    "y": {
-      "datum": {"expr": "0"},
-      "type": "quantitative",
-      
-    },
-    "x2": {"datum": {"expr": "1"}},
-    "y2": {"datum": {"expr": "1"}}
-  }}]
-}}
 
 function alpha_beta_plot(data, from, step) {
   let color_d = [];

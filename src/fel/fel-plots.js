@@ -1,5 +1,6 @@
 import * as _ from "lodash-es";
 import * as colors from "../color-maps/custom.js";
+import * as qq from "../components/qq-plot.js";
 
 const DYN_RANGE_CAP = 10;
 export const COLORS = {
@@ -50,36 +51,6 @@ export function get_plot_description(plot_type, pvalue_threshold) {
   };
 
   return descriptions[plot_type];
-}
-
-/**
- * Given a tree, return a list of sequence names (i.e. names of
- * tips in the tree).
- * @param {Object} tree - a tree object
- * @return {Array<String>}
- */
-export function seqNames(tree) {
-    let seq_names = [];
-    tree.traverse_and_compute (n=>{
-        if (n.children && n.children.length) return;
-        seq_names.push (n.data.name);
-    });
-    return seq_names;
-};
-
-/**
- * Compute the total length of a tree.
- * @param {Object} tree - a tree object
- * @return {Number} total length of the tree
- */
-export function totalTreeLength(tree) {
-  let L = 0;
-  tree.traverse_and_compute ( (n)=> {
-     if (tree.branch_length (n)) {
-      L += +tree.branch_length (n);
-     }
-  });
-  return L;
 }
 
 /**
@@ -159,44 +130,6 @@ export function rate_density(data) {
         )            
     }
 }
-export function qq_plot(data, title) {
-    return {
-    "data": {"values": data},
-    "title" : title,
-    "layer" : [{
-        "mark": {"type" : "line", "color" : "firebrick", "clip" : true},
-        "width" : 100,
-        "height" : 100,
-        "encoding": {
-            "x": {
-                "field": "bs",
-                "type" : "quantitative",
-                "scale" : {"domain" : [0,0.25]},
-                "axis" : {"grid" : false, "title" : "Bootstrap p-value", "labelFontSize" : 12, "titleFontSize" : 14}
-            },
-            "y": {"field": "c2", "type" : "quantitative","axis" : {"grid" : false, "title" : "Asymptotic p-value", "labelFontSize" : 12, "titleFontSize" : 14}, "scale" : {"domain" : [0,0.25]}}
-        }
-    },{
-        "mark": {
-            "type": "rule",
-            "color": "grey",
-            "strokeWidth": 1,
-            "opacity" : 0.5,
-            "clip" : true
-        },
-        "encoding": {
-            "x": {
-                "datum": {"expr": "0"},
-                "type": "quantitative",
-            },
-            "y": {
-                "datum": {"expr": "0"},
-                "type": "quantitative",
-            },
-            "x2": {"datum": {"expr": "1"}},
-            "y2": {"datum": {"expr": "1"}}
-    }}]
-}}
 
 export function pv_plot(data, pvalue_threshold) {
     let color_d = [];
@@ -315,15 +248,6 @@ export function pv_plot(data, pvalue_threshold) {
               "color" : {"field" : "class", "scale" : {"domain" : color_d, "range" : color_r}, "title" : "Selection class"}
             }
           },
-          /*{
-            "mark": {"stroke": "lightgrey", "type": "line", "size" : 1, "opacity" : 1.},
-            "encoding": {
-              "y": {
-                 "field": "dN/dS MLE",
-                  "type" : "quantitative",
-              },
-            }
-          }*/
           {
             "mark" : {"opacity": 0.5, "type": "line", "color": "gray"},
             "encoding" : { "y": {
@@ -467,18 +391,6 @@ export function pv_plot(data, pvalue_threshold) {
     };
   }
 
-  function qq(v) {
-    let vs = _.map (_.sortBy (v), (v)=> v <0 ? 0. : v);
-    let qq = [{'bs' : 0, 'c2' : 0}];
-
-    _.each (vs, (v, i)=> {
-        qq.push ({'bs' : (i+1)/vs.length, 'c2' : ss.cdf (v, 1)});
-    });
-    qq.push ([{'bs' : 1, 'c2' : 1}]);
-    
-    return _.map (qq, (d)=>({'bs' : 1-d.bs, 'c2' : 1-d.c2}));
-}
-
 function get_alpha_beta_yrange(fig1data) {
   let min = _.chain (fig1data).map ("alpha").max ().value ();
   let max = _.chain (fig1data).map ("beta").max ().value ();
@@ -519,7 +431,7 @@ export function get_plot_spec(plot_type, fig1data, pvalue_threshold, has_pasmt) 
     "Dense rate plot" : denser_plot(fig1data),
     "Q-Q plots" : has_pasmt ? {
       "columns": 5,
-      "hconcat": _.map (_.map (_.filter (table1, (d)=>d.class != "Invariable").slice (0,60), (d)=>[d.partition, d.codon]), (d)=>qq_plot (qq(_.map (results_json.MLE.LRT[d[0]-1][d[1]-1], (d)=>(d[0]))), "Site "+d[1]))
+      "hconcat": _.map (_.map (_.filter (table1, (d)=>d.class != "Invariable").slice (0,60), (d)=>[d.partition, d.codon]), (d)=>qq.QQPlot(_.map(results_json.MLE.LRT[d[0]-1][d[1]-1], (d)=>(d[0])), "Site "+d[1]))
     } : null
   }
 
