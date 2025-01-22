@@ -1,6 +1,7 @@
 import * as _ from "lodash-es";
 import * as colors from "../color-maps/custom.js";
 import * as qq from "../components/qq-plot.js";
+import * as rateDist from "../components/rate-densities/rate-densities.js";
 
 const DYN_RANGE_CAP = 10;
 export const COLORS = {
@@ -51,84 +52,6 @@ export function get_plot_description(plot_type, pvalue_threshold) {
   };
 
   return descriptions[plot_type];
-}
-
-/**
- * Create a Vega-Lite specification for a stacked area chart of rate densities for
- * alpha, beta and omega.
- *
- * @param {array} data - an array of objects, each with the following properties:
- *   - `alpha` - a number representing the synonymous rate
- *   - `beta` - a number representing the non-synonymous rate
- *   - `dN/dS MLE` - the maximum likelihood estimate of the dN/dS ratio
- * @returns {object} - a Vega-Lite specification for the chart
- */
-export function rate_density(data) {
-    let rate_options = [["alpha","α"],["beta","β"], ["omega", "dN/dS"]];
-    
-    return {
-        "data" : {"values" : _.map (data, 
-        (d)=> {
-            let dd = _.clone (d);
-            _.each (["alpha","beta","dN/dS MLE"], (f)=> {
-                dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
-            });
-            
-            return dd;
-        })}, 
-        "transform" : [{"calculate" : "min(" + DYN_RANGE_CAP + ",datum.alpha > 0 ? datum.beta/datum.alpha : datum.beta > 0 ? 10000 : 0)", "as" : "omega"}],
-        "vconcat" : _.map (rate_options, (rt)=>({"layer" : [{
-        "width": 800, "height": 100, 
-        "transform":[{
-            "density": rt[0],
-            "bandwidth": 0.2
-        }],
-        "mark": {type: "area", "opacity" : 0.5, tooltip : true, line : true},
-        "encoding": {
-            "x": {
-                "field": "value",
-                "grid" : null,
-                "title": rt[1],
-                "type": "quantitative",
-                "scale" : {"domain" : [0, DYN_RANGE_CAP]},
-                "axis": {"grid": false}
-            },
-            "y": {
-                "field": "density",
-                "type": "quantitative",
-                "title" : "",
-                "axis": {"grid": false}
-            },
-            "color" : {"value" : "grey"}
-        }},
-        {
-            "mark": "rule",
-            "encoding": {
-                "x": {"aggregate": "mean", "field": rt[0]},
-                "color": {"value": "firebrick"},
-                "size": {"value": 5},
-            }
-        },
-        {
-            "transform": [
-                {"aggregate": [{"op": "mean", "field": rt[0], "as": "rate_mean_" + rt[0]}]},
-                {"calculate": "format(datum['rate_mean_"+rt[0]+"'], '.2f')", "as": "fm1"}
-            ],
-            "mark": {
-                "type": "text",
-                "color": "gray",
-                "size" : 12,
-                "align": "left",
-                "y": -5,
-                "x": 2
-            },
-            "encoding": {
-                "x" : {"field" : "rate_mean_" + rt[0], "type": "quantitative"},
-                "text": {"type": "nominal", "field": "fm1"}
-            }
-        }]})
-        )            
-    }
 }
 
 export function pv_plot(data, pvalue_threshold) {
@@ -427,7 +350,14 @@ export function get_plot_spec(plot_type, fig1data, pvalue_threshold, has_pasmt) 
         return alpha_beta_plot (fig1data, d, 70, get_alpha_beta_yrange (fig1data))
       })},
     "Bootstrap vs asymptotic p-value": pv_plot (fig1data, pvalue_threshold),
-    "Rate density plots" : rate_density (fig1data),
+    "Rate density plots" : 
+      rateDist.RateDensities(
+        fig1data, 
+        [{data_key: "alpha", display_label: "α"},{data_key: "beta", display_label: "β"}],
+        true,
+        DYN_RANGE_CAP,
+        0.2
+      ),
     "Dense rate plot" : denser_plot(fig1data),
     "Q-Q plots" : has_pasmt ? {
       "columns": 5,

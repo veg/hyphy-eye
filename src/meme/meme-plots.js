@@ -5,6 +5,7 @@ import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as beads from "../components/bead-plot.js";
 import * as heat from "../components/posteriors-heatmap.js";
 import * as qq from "../components/qq-plot.js";
+import * as rateDist from "../components/rate-densities/rate-densities.js";
 
 const TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
@@ -88,7 +89,8 @@ export function get_plot_spec(
 ) {
     const step_size = plotUtils.er_step_size(results_json)
     const branch_order = phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0);
-console.log("bsPos", bsPositiveSelection)
+    console.log(fig1data)
+
     const plot_specs = ({
         "p-values for selection" : {
             "width": 800, "height": 150, 
@@ -124,7 +126,16 @@ console.log("bsPos", bsPositiveSelection)
                 return alpha_beta_plot (fig1data, d, 70)
             })
         },
-        "Rate density plots" : rate_density (fig1data),
+        "Rate density plots" : rateDist.RateDensities(
+          fig1data,
+          [{data_key:"&alpha;",display_label:"α"},
+            {data_key:"&beta;<sup>1</sup>",display_label:"β-"},
+            {data_key:"&beta;<sup>+</sup>",display_label:"β+"}],
+          false,
+          DYN_RANGE_CAP,
+          0,
+          true
+        ),
         "Dense rate plot" : denser_plot(fig1data),
         "Support for positive selection" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], step_size), (d)=> {
@@ -151,80 +162,6 @@ console.log("bsPos", bsPositiveSelection)
     })
 
     return plot_specs[plot_type];
-}
-
-function rate_density(data) {
-  let rate_options = [["α","α"],["β-","β-"],["β+","β+"]];
-  
-  return {
-    "data" : {"values" : _.map (data, 
-      (d)=> {
-          let dd = _.clone (d);
-          _.each (["α","β-","β+"], (f)=> {
-            dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
-          });
-          
-          return dd;
-      })}, 
-       "transform" : [{"calculate" : "min(" + DYN_RANGE_CAP + ",datum.alpha > 0 ? datum.beta/datum.alpha : datum.beta > 0 ? 10000 : 0)", "as" : "omega"}],
-    
-       "vconcat" : _.map (rate_options, (rt)=>({"layer" : [{
-         "width": 800, "height": 100, 
-         "transform":[{
-            "density": rt[0],
-           // "bandwidth": 0.2
-          }],
-          "mark": {type: "area", "opacity" : 0.5, tooltip : true, line : true},
-          "encoding": {
-            "x": {
-              "field": "value",
-              "grid" : null,
-              "title": rt[1],
-              "type": "quantitative",
-              //"scale" : {"domain" : [0, DYN_RANGE_CAP]},
-              "axis": {"grid": false}
-            },
-            "y": {
-              "field": "density",
-              "type": "quantitative",
-              "title" : "",
-              "axis": {"grid": false}
-            },
-            "color" : {"value" : "grey"}
-          }},
-      {
-        "mark": "rule",
-        "encoding": {
-          "x": {"aggregate": "mean", "field": rt[0]},
-          "color": {"value": "firebrick"},
-          "size": {"value": 5},
-          
-        }
-      },
-      {
-        "transform": [
-          {
-            "aggregate": [{"op": "mean", "field": rt[0], "as": "rate_mean_" + rt[0]}]
-          },
-          {"calculate": "format(datum['rate_mean_"+rt[0]+"'], '.2f')", "as": "fm1"}
-        ],
-        "mark": {
-          "type": "text",
-          "color": "gray",
-          "size" : 12,
-          "align": "left",
-          "y": -5,
-          "x": 2
-        },
-        "encoding": {
-          "x" : {"field" : "rate_mean_" + rt[0], "type": "quantitative"},
-          "text": {"type": "nominal", "field": "fm1"}
-        }
-      }]})
-      )
-          
-            
-  }
 }
 
 function alpha_beta_plot(data, from, step) {
