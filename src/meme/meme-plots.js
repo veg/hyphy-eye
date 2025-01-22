@@ -3,6 +3,7 @@ import * as _ from "lodash-es";
 import * as plotUtils from "../utils/plot-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as beads from "../components/bead-plot.js";
+import * as heat from "../components/posteriors-heatmap.js";
 
 const TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
@@ -85,7 +86,8 @@ export function get_plot_spec(
     tree_objects
 ) {
     const step_size = plotUtils.er_step_size(results_json)
-
+    const branch_order = phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0);
+console.log("bsPos", bsPositiveSelection)
     const plot_specs = ({
         "p-values for selection" : {
             "width": 800, "height": 150, 
@@ -94,12 +96,11 @@ export function get_plot_spec(
                   fig1data, 
                   d, 
                   70, 
-                  siteTableData[2][6][2],
-                  true,
-                  DYN_RANGE_CAP, 
+                  siteTableData[2][6][2], 
                   "p-value for selection", 
-                  pvalue_threshold
-                )
+                  true, 
+                  "log", 
+                  pvalue_threshold)
             })
         },
         "p-values for variability" : {
@@ -110,11 +111,10 @@ export function get_plot_spec(
                   d, 
                   70, 
                   has_site_LRT ? siteTableData[2][11][2] : [], 
-                  true,
-                  DYN_RANGE_CAP,
                   "p-value for variability", 
-                  pvalue_threshold
-                )
+                  true, 
+                  "log", 
+                  pvalue_threshold)
             })
         },
         "Site rates" : {
@@ -127,7 +127,15 @@ export function get_plot_spec(
         "Dense rate plot" : denser_plot(fig1data),
         "Support for positive selection" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], step_size), (d)=> {
-                return BSPosteriorPlot (results_json, tree_objects, bsPositiveSelection, d, step_size)
+                return heat.PosteriorsHeatmap(
+                  bsPositiveSelection, 
+                  d, 
+                  step_size,
+                  branch_order,
+                  null,
+                  "ER",
+                  "redblue"
+                )
             })
         },
         "Q-Q plots" : has_resamples ? {
@@ -272,6 +280,77 @@ function qq_plot(data, title) {
     "y2": {"datum": {"expr": "1"}}
   }}]
 }}
+
+
+function ERPlot(data, from, step, key, label, low, scale_type, pvalue_threshold) {
+  let scale = d3.extent (data, (d)=>d[key]); 
+  scale_type = scale_type || "linear";
+  scale[1] = Math.min (DYN_RANGE_CAP,Math.max (scale[1], pvalue_threshold));
+  if (scale_type == "log") scale[0] = Math.max (scale[0], 1e-20);
+  //scale = d3.nice (scale[0], scale[1], 10);
+  return {
+      "width": {"step": 12},
+      "data" : {"values" : _.map (
+        _.filter (data, (d,i)=> i >= from -1 && i < from + step -1), // -1 because 0 indexing && // remove "=" from the latter "<="
+      (d)=> {
+          let dd = _.clone (d);
+          _.each ([key], (f)=> {
+            dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
+            if (scale_type == "log") {
+              dd[f] = Math.max (1e-20, dd[f]);
+            }
+          });
+          return dd;
+      })}, 
+      "encoding": {
+        "x": {
+          "field": "Codon",
+          "type" : "nominal",
+          "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Codon"}
+        }
+      },
+      "layer": [
+        {
+          "mark": {"stroke": "black", "type": "line", "size" : 2, "interpolate" : "step", "color" : "lightgrey", "opacity" : 0.5},
+          "encoding": {
+            "y": {
+               "field": key,
+                "type" : "quantitative",
+                "scale" : {"type" : scale_type, "domain" : scale},
+                "axis" : {"grid" : false, "title" : label}
+            }
+          }
+        },
+        {
+          "mark": { "stroke": "black", "type": "point", "size" : 100, "filled" : true,  "color" : (low ? "lightgrey" : "firebrick"), "tooltip" : {"contents" : "data"}, "opacity" : 1.},
+          "encoding": {
+            "y": {
+               "field": key,
+                "type" : "quantitative",
+                
+            },
+            "color" : {"condition": {"test": "datum['" + key + "'] " + (low ? "<=" : ">=") + pvalue_threshold, "value": "firebrick"},
+                "value": "lightgrey"
+            }
+          }
+        },
+        {
+          "mark" : {"opacity": 0.5, "type": "line", "color": "steelblue"},
+          "encoding" : { "y": {
+                "datum": {"expr": "" + pvalue_threshold},
+                "type": "quantitative",
+                "scale" : {"domain" : scale}
+              },
+             
+            "size": {"value": 2},
+          }
+        }
+        
+      ]
+  };
+}
+
+
 
 function BSPosteriorPlot(results_json, tree_objects, data, from, step) {
     const branch_order = phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0);

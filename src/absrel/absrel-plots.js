@@ -2,6 +2,7 @@ import * as utils from "./absrel-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as plotUtils from "../utils/plot-utils.js";
 import * as beads from "../components/bead-plot.js";
+import * as heat from "../components/posteriors-heatmap.js";
 import * as _ from "lodash-es";
 import * as d3 from "d3";
 
@@ -60,7 +61,21 @@ export function get_plot_options(srv_rate_classes, srv_distribution, bsPositiveS
  * @returns {Object} The Vega-Lite spec for the specified plot type
  */
 export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, rate_table, attrs, fig1_controls, tree_objects, profileBranchSites) {
-    const plot_specs = ({
+  // TODO see if we can pass these in instead of recalculating them based on other params/ change params for this function
+  const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));
+  const branch_order = _.filter (phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0), (d)=>attrs.profilable_branches.has (d) && selected_branches.has (d));
+  // TODO: can we update the input to handle this?
+  var size_field = "subs";
+  switch (fig1_controls) {
+    case "Syn subs":
+      size_field = "syn_subs";
+      break;
+    case "Nonsyn subs":
+      size_field = "nonsyn_subs";
+      break;
+  }
+  
+  const plot_specs = ({
         "Synonymous rates" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
@@ -75,165 +90,28 @@ export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelec
         })},
         "Support for positive selection" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], plotUtils.er_step_size(results_json)), (d)=> {
-            return BSPosteriorPlot (results_json, tree_objects, rate_table, attrs, fig1_controls, bsPositiveSelection, d, plotUtils.er_step_size(results_json))
+            return heat.PosteriorsHeatmap(
+              bsPositiveSelection, 
+              d, 
+              plotUtils.er_step_size(results_json),
+              branch_order,
+              size_field,
+              "EBF"
+            )
         })},
         "Evidence ratio alignment profile" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], plotUtils.er_step_size(results_json)), (d)=> {
-            return ERPosteriorPlot (results_json, tree_objects, rate_table, attrs, fig1_controls, profileBranchSites, d, plotUtils.er_step_size(results_json))
+            return heat.PosteriorsHeatmap(
+              profileBranchSites, 
+              d, 
+              plotUtils.er_step_size(results_json),
+              branch_order,
+              size_field
+            )
         })}
     });
 
     return plot_specs[plot_type];
-}
-
-function BSPosteriorPlot(results_json, tree_objects, rate_table, attrs, fig1_controls, data, from, step) {
-  const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));
-  const branch_order = _.filter (phylotreeUtils.treeNodeOrdering (results_json, tree_objects, 0), (d)=>attrs.profilable_branches.has (d) && selected_branches.has (d));
-  let N = attrs.tested_branch_count;
-  let box_size = 10; 
-  let font_size = 8;
-  var size_field = "subs";
-  switch (fig1_controls) {
-    case "Syn subs":
-      size_field = "syn_subs";
-      break;
-    case "Nonsyn subs":
-      size_field = "nonsyn_subs";
-      break;
-  }
-  
-  if (N > 50) {
-      if (N <= 100) {box_size = 8; font_size = 6;}
-      else if (N <= 200) {box_size = 5; font_size = 5;}
-      else {box_size = 4; font_size = 0;}
-  }
-  let spec = {
-      "width": {"step": box_size}, "height" : {"step" : box_size},
-      "data" : {"values" : 
-        _.filter (data, (d)=>selected_branches.has (d.Key.split ("|")[0]))
-      }, 
-      "transform" : [
-        {"calculate" : "parseInt (split(datum.Key, '|')[1])", "as" : "Codon"},
-        {"calculate" : "split(datum.Key, '|')[0]", "as" : "Branch"},
-        {"filter" : {"field" : "Codon", "range" : [from, from+step-1]}}
-      ],
-      "encoding": {
-        "x": {
-          "field": "Codon",
-          "type" : "nominal",
-          "axis": font_size ? {"grid" : false, "titleFontSize" : 14, "title" : "Codon", "labelFontSize" : font_size} : null
-        },
-        "y": {
-          "field": "Branch",
-          "scale" : {"domain" : branch_order},
-          "type" : "nominal",
-          "axis": font_size ? {"grid" : false, "titleFontSize" : 14, "title" : "Branch", "labelFontSize" : font_size} : null
-        }
-      },
-      "layer": [
-        {
-          "mark": {"type": "rect", "size" : 2, "color" : "lightgrey", "opacity" : 1.0, "tooltip" : {"contents" : "data"}},
-          "encoding": {
-            "color": {
-               "field": "ER",
-                "type" : "quantitative",
-                "legend" : {"orient" : "top", "title" : "EBF"},
-                "sort": "descending",
-                "scale" : {"type" : "log", "scheme" : "redyellowblue", "domainMid" : 1}
-            }
-          }
-        },
-        {
-          "mark": {"type": "circle", "size" : 2, "stroke" : "black", "strokeWidth" : 0.5, "color" : null, "opacity" : 1.0},
-          "encoding": {
-            "color" : {"value" : null},
-            "size": {
-               "field": size_field,
-                "type" : "quantitative",
-                "legend" : {"orient" : "top", "title" : "# substitutions"}
-            }
-          }
-        }
-      ]
-  };
-  return spec;
-}
-
-
-
-function ERPosteriorPlot(results_json, tree_objects, rate_table, attrs, fig1_controls, data, from, step) {
-  
-  const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));
-  const branch_order = _.filter (phylotreeUtils.treeNodeOrdering (results_json, tree_objects, 0), (d)=>attrs.profilable_branches.has (d) && selected_branches.has (d));
-  let N = attrs.tested_branch_count;
-  let box_size = 10; 
-  let font_size = 8;
-
-  var size_field = "subs";
-  switch (fig1_controls) {
-    case "Syn subs":
-      size_field = "syn_subs";
-      break;
-    case "Nonsyn subs":
-      size_field = "nonsyn_subs";
-      break;
-  }
-  
-  if (N > 50) {
-      if (N <= 100) {box_size = 8; font_size = 6;}
-      else if (N <= 200) {box_size = 5; font_size = 5;}
-      else {box_size = 4; font_size = 0;}
-  }
-  let spec = {
-      "width": {"step": box_size}, "height" : {"step" : box_size},
-      "data" : {"values" : 
-        _.filter (data, (d)=>selected_branches.has (d.Key.split ("|")[0]))
-      }, 
-      "transform" : [
-        {"calculate" : "parseInt (split(datum.Key, '|')[1])", "as" : "Codon"},
-        {"calculate" : "split(datum.Key, '|')[0]", "as" : "Branch"},
-        {"filter" : {"field" : "Codon", "range" : [from, from+step-1]}},
-      ],
-      "encoding": {
-        "x": {
-          "field": "Codon",
-          "type" : "nominal",
-          "axis": font_size ? {"grid" : false, "titleFontSize" : 14, "title" : "Codon", "labelFontSize" : font_size} : null
-        },
-        "y": {
-          "field": "Branch",
-          "scale" : {"domain" : branch_order},
-          "type" : "nominal",
-          "axis": font_size ? {"grid" : false, "titleFontSize" : 14, "title" : "Branch", "labelFontSize" : font_size} : null
-        }
-      },
-      "layer": [
-        {
-          "mark": {"type": "rect", "size" : 2, "color" : "lightgrey", "opacity" : 0.8, "tooltip": {"content": "data"}},
-          "encoding": {
-            "color": {
-               "field": "ER",
-                "type" : "quantitative",
-                "legend" : {"orient" : "top"},
-                "sort": "descending",
-                "scale" : {"type" : "log", "scheme" : "redyellowblue", "domainMid" : 1}
-            }
-          }
-        },
-        {
-          "mark": {"type": "circle", "size" : 2, "stroke" : "black", "strokeWidth" : 0.5, "color" : null, "opacity" : 1.0},
-          "encoding": {
-            "color" : {"value" : null},
-            "size": {
-               "field": size_field,
-                "type" : "quantitative",
-                "legend" : {"orient" : "top", "title" : "# substitutions"}
-            }
-          }
-        }
-      ]
-  };
-  return spec;
 }
 
 /**

@@ -5,7 +5,8 @@ import * as _ from "lodash-es";
 import * as d3 from "d3";
 
 /**
- * Plot a bead plot of the given data, with an optional threshold marking.
+ * Plot a bead plot of the given data, with an optional threshold marking. 
+ * These are so named because they look like beads on a string.
  * 
  * @param {Array<Object>} data - data to plot
  * @param {Number} from - first data point to plot

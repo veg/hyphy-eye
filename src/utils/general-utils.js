@@ -51,6 +51,26 @@ export function subs_for_pair(from, to) {
     }
 }
 
+export const ambiguous_codes =  {
+      'A' : ['A'],
+      'C' : ['C'],
+      'G' : ['G'],
+      'T' : ['T'],
+      'U' : ['T'],
+      'R' : ['A','G'],
+      'Y' : ['C','T'],
+      'K' : ['G','T'],
+      'M' : ['A','C'],
+      'S' : ['C','G'],
+      'W' : ['A','T'],
+      'B' : ['C','G','T'],
+      'D' : ['A','G','T'],
+      'H' : ['A','C','T'],
+      'V' : ['A','C','T'],
+      'N' : ['A','C','G','T'],
+      '?' : ['A','C','G','T']
+};
+
 /**
  * Translate a codon to an amino acid, handling ambiguous codes.
  * 
