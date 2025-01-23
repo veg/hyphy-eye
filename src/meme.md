@@ -8,6 +8,7 @@ import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
 import * as utils from "./meme/meme-utils.js";
 import * as plots from "./meme/meme-plots.js";
+import * as phylotreeUtils from "./utils/phylotree-utils.js";
 import * as statsSummary from "./stats/summaries.js";
 import * as omegaPlots from "./components/omega-plots.js";
 import * as tt from "./components/tile-table/tile-table.js";
@@ -29,20 +30,20 @@ const attrs = utils.get_attributes(results_json);
 ```
 
 <span style = 'font-size: 110%; color: firebrick;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${count_sites}** sites in this dataset (<tt>p≤${pvalue_threshold}</tt>).</span>
-${attrs.has_resamples > 0 ? "This analysis used parametric bootstrap with " + attrs.has_resamples + " replicates to test for signicance." : ""} ${+results_json.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
+${attrs.has_resamples > 0 ? "This analysis used parametric bootstrap with " + attrs.has_resamples + " replicates to test for significance." : ""} ${+results_json.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
 
 ```js
 const pvalue_threshold = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1", submit: "Update"}))
 ```
 
 ```js
-const siteTableData = utils.siteTableData(results_json, table_options, pvalue_threshold, attrs.siteIndexPartitionCodon);
+const tree_objects = phylotreeUtils.get_tree_objects(results_json);
+const siteTableData = utils.siteTableData(results_json, table_options, pvalue_threshold, attrs.siteIndexPartitionCodon, tree_objects);
 const tile_specs = utils.get_tile_specs(results_json, pvalue_threshold);
 const bsPositiveSelection = utils.getPosteriorsPerBranchSite(results_json);
 const count_sites = utils.get_count_sites_by_pvalue(results_json, pvalue_threshold);
 const selected_branches_per_selected_site = utils.get_selected_branches_per_selected_site(results_json, pvalue_threshold);
 const test_omega = utils.getRateDistribution(results_json, ["fits","Unconstrained model","Rate Distributions","Test"])
-const tree_objects = plots.get_tree_objects(results_json);
 const treeViewOptions = plots.getTreeViewOptions(results_json, tree_objects)
 // TODO: clean this up
 const sites_table = [{

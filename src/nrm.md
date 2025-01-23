@@ -207,7 +207,7 @@ const distanceFunction = view(Inputs.select(availableDistances, {value: "Jensen 
 ```
 
 ```js
-const tree_objects = plots.get_tree_objects(results_json, modelForTree);
+const tree_objects = phylotreeUtils.get_tree_objects(results_json, modelForTree);
 const branch_lengths = plots.get_branch_lengths(results_json, attrs.model_summary, tree_objects);
 const figure2 = plots.display_tree(results_json, 0, treeDim, treeLabels, tree_objects, availableDistances, distanceFunction, modelForTree)
 // TODO: we do this a lot.. a helper function to produce standalone legends?

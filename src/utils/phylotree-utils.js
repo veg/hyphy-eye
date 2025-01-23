@@ -3,6 +3,7 @@
 import * as d3 from "d3";
 import * as _ from "lodash-es";
 import * as utils from "./general-utils.js";
+import * as phylotree from "phylotree";
 
 /**
  * Computes a set of labels for each node in a tree.
@@ -244,4 +245,27 @@ export function rootChildren(tree) {
     }
   });
   return rt;
+}
+
+/**
+ * Constructs an array of phylotree objects from the provided results JSON,
+ * each with a branch length accessor set according to the specified model.
+ *
+ * @param {Object} results_json - The JSON object containing input trees and
+ * branch attributes for each tree.
+ * @param {string} modelForTree - The model name used to access the branch
+ * length attributes for each tree. Defaults to "Global MG94xREV".
+ * 
+ * @returns {Array<phylotree.phylotree>} An array of phylotree objects with
+ * branch length accessors set.
+ */
+
+export function get_tree_objects(results_json, modelForTree = "Global MG94xREV") {
+    const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
+        let T = new phylotree.phylotree (tree);
+        T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name][modelForTree];
+        return T;
+    });
+
+    return tree_objects;
 }

@@ -8,6 +8,7 @@
 import * as _ from "lodash-es";
 import * as d3 from "d3";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as utils from "../utils/general-utils.js";
 
 const floatFmt = d3.format (".2g")
 const percentageFormat = d3.format (".2p")
@@ -293,11 +294,11 @@ export function getBSErrorSink(results_json, tree_objects, has_error_sink_nt) {
   return [];
 }
 
-export function getBSPositiveSelection(test_omega, has_error_sink) {
+export function getBSPositiveSelection(results_json, tree_objects, test_omega, has_error_sink) {
     let w =  test_omega[test_omega.length - 1].weight;
     
     if (w < 1) {
-        return posteriorsPerBranchSite (test_omega.length - 1 + (has_error_sink ? 1 :0),w / (1-w));
+        return posteriorsPerBranchSite (results_json, tree_objects, test_omega.length - 1 + (has_error_sink ? 1 :0),w / (1-w));
     }
 
     return [];
@@ -318,7 +319,7 @@ function posteriorsPerBranchSite(results_json, tree_objects, rate_class, prior_o
                 }
                 const info = subs_at_site[i][branch];
                 
-                const sub_count = subs_for_pair (info[2],info[0])
+                const sub_count = utils.subs_for_pair (info[2],info[0])
                 results.push ({
                     'Key' : branch + "|" + (i + offset + 1), 
                     'Posterior' : p, 

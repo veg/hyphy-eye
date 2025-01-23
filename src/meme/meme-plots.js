@@ -1,8 +1,12 @@
 import * as d3 from "d3";
 import * as _ from "lodash-es";
 import * as plotUtils from "../utils/plot-utils.js";
-import * as phylotreeUtils from "../utils/phylotree-utils.js"
-import * as phylotree from "phylotree";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as beads from "../components/bead-plot.js";
+import * as heat from "../components/posteriors-heatmap.js";
+import * as qq from "../components/qq-plot.js";
+import * as rateDist from "../components/rate-summary-plots/rate-densities.js";
+import * as rates from "../components/rate-summary-plots/rate-bars.js";
 
 const TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
@@ -39,16 +43,6 @@ export function get_plot_description(plot_type, has_resamples) {
     });
 
     return plot_legends[plot_type];
-}
-
-export function get_tree_objects(results_json) {
-    const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
-        let T = new phylotree.phylotree (tree);
-        T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name]["Global MG94xREV"];
-        return T;
-    });
-
-    return tree_objects;
 }
 
 export function get_tree_color_options(results_json) {
@@ -95,18 +89,35 @@ export function get_plot_spec(
     tree_objects
 ) {
     const step_size = plotUtils.er_step_size(results_json)
+    const branch_order = phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0);
 
     const plot_specs = ({
         "p-values for selection" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return ERPlot (fig1data, d, 70, siteTableData[2][6][2], "p-value for selection", true, "log", pvalue_threshold)
+                return beads.BeadPlot(
+                  fig1data, 
+                  d, 
+                  70, 
+                  siteTableData[2][6][2], 
+                  "p-value for selection", 
+                  true, 
+                  "log", 
+                  pvalue_threshold)
             })
         },
         "p-values for variability" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return ERPlot (fig1data, d, 70, has_site_LRT ? siteTableData[2][11][2] : [], "p-value for variability", true, "log", pvalue_threshold)
+                return beads.BeadPlot(
+                  fig1data, 
+                  d, 
+                  70, 
+                  has_site_LRT ? siteTableData[2][11][2] : [], 
+                  "p-value for variability", 
+                  true, 
+                  "log", 
+                  pvalue_threshold)
             })
         },
         "Site rates" : {
@@ -115,11 +126,40 @@ export function get_plot_spec(
                 return alpha_beta_plot (fig1data, d, 70)
             })
         },
-        "Rate density plots" : rate_density (fig1data),
-        "Dense rate plot" : denser_plot(fig1data),
+        "Rate density plots" : rateDist.RateDensities(
+          fig1data,
+          [{data_key:"&alpha;",display_label:"α"},
+            {data_key:"&beta;<sup>1</sup>",display_label:"β-"},
+            {data_key:"&beta;<sup>+</sup>",display_label:"β+"}],
+          false,
+          DYN_RANGE_CAP,
+          0,
+          true
+        ),
+        "Dense rate plot" : rates.RateBarPlots(
+          fig1data,
+          [
+            {data_key:"&alpha;",display_label:"α"},
+            {data_key:"&beta;<sup>1</sup>",display_label:"β-"},
+            {data_key:"p<sup>1</sup>",display_label:"p-"},
+            {data_key:"&beta;<sup>+</sup>",display_label:"β+"},
+            {data_key:"p<sup>+</sup>",display_label:"p+"},
+            {data_key:"p-value",display_label:"p-value"}
+          ],
+          "symlog",
+          DYN_RANGE_CAP
+        ),
         "Support for positive selection" : {
             "vconcat" : _.map (_.range (1, results_json.input["number of sites"], step_size), (d)=> {
-                return BSPosteriorPlot (results_json, tree_objects, bsPositiveSelection, d, step_size)
+                return heat.PosteriorsHeatmap(
+                  bsPositiveSelection, 
+                  d, 
+                  step_size,
+                  branch_order,
+                  null,
+                  "ER",
+                  "redblue"
+                )
             })
         },
         "Q-Q plots" : has_resamples ? {
@@ -127,7 +167,7 @@ export function get_plot_spec(
             "hconcat": 
                 _.map (
                     _.map (_.filter (table1, (d)=>d.class != "Invariable").slice (0,60), (d)=>[d.Partition, d.Codon]), 
-                    (d)=>qq_plot (qq(_.map (results_json.MLE.LRT[d[0]-1][d[1]-1], (d)=>(d[0]))), "Site "+d[1])
+                    (d)=>qq.QQPlot(_.map(results_json.MLE.LRT[d[0]-1][d[1]-1], (d)=>(d[0])), "Site "+d[1])
                 )
             }
         : null
@@ -135,256 +175,6 @@ export function get_plot_spec(
 
     return plot_specs[plot_type];
 }
-
-// TODO: saw this somewhere else, fel maybe?
-// should consolidate, add to stats utils?
-function qq(v) {
-  let vs = _.map (_.sortBy (v), (v)=> v <0 ? 0. : v);
-  let qq = [{'bs' : 0, 'c2' : 0}];
-  _.each (vs, (v, i)=> {
-      qq.push ({'bs' : (i+1)/vs.length, 'c2' : ss.cdf (v, 1)});
-  });
-  qq.push ([{'bs' : 1, 'c2' : 1}]);
-
-  return _.map (qq, (d)=>({'bs' : 1-d.bs, 'c2' : 1-d.c2}));
-}
-
-function rate_density(data) {
-  let rate_options = [["α","α"],["β-","β-"],["β+","β+"]];
-  
-  return {
-    "data" : {"values" : _.map (data, 
-      (d)=> {
-          let dd = _.clone (d);
-          _.each (["α","β-","β+"], (f)=> {
-            dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
-          });
-          
-          return dd;
-      })}, 
-       "transform" : [{"calculate" : "min(" + DYN_RANGE_CAP + ",datum.alpha > 0 ? datum.beta/datum.alpha : datum.beta > 0 ? 10000 : 0)", "as" : "omega"}],
-    
-       "vconcat" : _.map (rate_options, (rt)=>({"layer" : [{
-         "width": 800, "height": 100, 
-         "transform":[{
-            "density": rt[0],
-           // "bandwidth": 0.2
-          }],
-          "mark": {type: "area", "opacity" : 0.5, tooltip : true, line : true},
-          "encoding": {
-            "x": {
-              "field": "value",
-              "grid" : null,
-              "title": rt[1],
-              "type": "quantitative",
-              //"scale" : {"domain" : [0, DYN_RANGE_CAP]},
-              "axis": {"grid": false}
-            },
-            "y": {
-              "field": "density",
-              "type": "quantitative",
-              "title" : "",
-              "axis": {"grid": false}
-            },
-            "color" : {"value" : "grey"}
-          }},
-      {
-        "mark": "rule",
-        "encoding": {
-          "x": {"aggregate": "mean", "field": rt[0]},
-          "color": {"value": "firebrick"},
-          "size": {"value": 5},
-          
-        }
-      },
-      {
-        "transform": [
-          {
-            "aggregate": [{"op": "mean", "field": rt[0], "as": "rate_mean_" + rt[0]}]
-          },
-          {"calculate": "format(datum['rate_mean_"+rt[0]+"'], '.2f')", "as": "fm1"}
-        ],
-        "mark": {
-          "type": "text",
-          "color": "gray",
-          "size" : 12,
-          "align": "left",
-          "y": -5,
-          "x": 2
-        },
-        "encoding": {
-          "x" : {"field" : "rate_mean_" + rt[0], "type": "quantitative"},
-          "text": {"type": "nominal", "field": "fm1"}
-        }
-      }]})
-      )
-          
-            
-  }
-}
-
-
-
-function qq_plot(data, title) {
-  return {
-  "data": {"values": data},
-  "title" : title,
-  "layer" : [{
-        "mark": {"type" : "line", "color" : "firebrick", "clip" : true},
-        "width" : 100,
-        "height" : 100,
-        "encoding": {
-          "x": {
-            "field": "bs",
-            "type" : "quantitative",
-            "scale" : {"domain" : [0,0.25]},
-            "axis" : {"grid" : false, "title" : "Bootstrap p-value", "labelFontSize" : 12, "titleFontSize" : 14}
-          },
-          "y": {"field": "c2", "type" : "quantitative","axis" : {"grid" : false, "title" : "Asymptotic p-value", "labelFontSize" : 12, "titleFontSize" : 14}, "scale" : {"domain" : [0,0.25]}}
-        }},{
-  "mark": {
-    "type": "rule",
-    "color": "grey",
-    "strokeWidth": 1,
-    "opacity" : 0.5,
-    "clip" : true
-  },
-  "encoding": {
-    "x": {
-      "datum": {"expr": "0"},
-      "type": "quantitative",
-      
-    },
-    "y": {
-      "datum": {"expr": "0"},
-      "type": "quantitative",
-      
-    },
-    "x2": {"datum": {"expr": "1"}},
-    "y2": {"datum": {"expr": "1"}}
-  }}]
-}}
-
-
-function ERPlot(data, from, step, key, label, low, scale_type, pvalue_threshold) {
-  let scale = d3.extent (data, (d)=>d[key]); 
-  scale_type = scale_type || "linear";
-  scale[1] = Math.min (DYN_RANGE_CAP,Math.max (scale[1], pvalue_threshold));
-  if (scale_type == "log") scale[0] = Math.max (scale[0], 1e-20);
-  //scale = d3.nice (scale[0], scale[1], 10);
-  return {
-      "width": {"step": 12},
-      "data" : {"values" : _.map (
-        _.filter (data, (d,i)=> i >= from -1 && i < from + step -1), // -1 because 0 indexing && // remove "=" from the latter "<="
-      (d)=> {
-          let dd = _.clone (d);
-          _.each ([key], (f)=> {
-            dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
-            if (scale_type == "log") {
-              dd[f] = Math.max (1e-20, dd[f]);
-            }
-          });
-          return dd;
-      })}, 
-      "encoding": {
-        "x": {
-          "field": "Codon",
-          "type" : "nominal",
-          "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Codon"}
-        }
-      },
-      "layer": [
-        {
-          "mark": {"stroke": "black", "type": "line", "size" : 2, "interpolate" : "step", "color" : "lightgrey", "opacity" : 0.5},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-                "scale" : {"type" : scale_type, "domain" : scale},
-                "axis" : {"grid" : false, "title" : label}
-            }
-          }
-        },
-        {
-          "mark": { "stroke": "black", "type": "point", "size" : 100, "filled" : true,  "color" : (low ? "lightgrey" : "firebrick"), "tooltip" : {"contents" : "data"}, "opacity" : 1.},
-          "encoding": {
-            "y": {
-               "field": key,
-                "type" : "quantitative",
-                
-            },
-            "color" : {"condition": {"test": "datum['" + key + "'] " + (low ? "<=" : ">=") + pvalue_threshold, "value": "firebrick"},
-                "value": "lightgrey"
-            }
-          }
-        },
-        {
-          "mark" : {"opacity": 0.5, "type": "line", "color": "steelblue"},
-          "encoding" : { "y": {
-                "datum": {"expr": "" + pvalue_threshold},
-                "type": "quantitative",
-                "scale" : {"domain" : scale}
-              },
-             
-            "size": {"value": 2},
-          }
-        }
-        
-      ]
-  };
-}
-
-
-
-function BSPosteriorPlot(results_json, tree_objects, data, from, step) {
-    const branch_order = phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0);
-    let N = results_json.input["number of sequences"];
-    let box_size = 10; 
-    let font_size = 8;
-
-    if (N > 50) {
-        if (N <= 100) {box_size = 8; font_size = 6;}
-        else if (N <= 200) {box_size = 5; font_size = 5;}
-        else {box_size = 2; font_size = 0;}
-    }
-  
-    let spec = {
-      "width": {"step": box_size}, "height" : {"step" : box_size},
-      "data" : {"values" : 
-        _.filter (data, (d,i)=> d.Codon >= from && d.Codon < from + step), // remove "=" from the latter "<="
-      }, 
-      "encoding": {
-        "x": {
-          "field": "Codon",
-          "type" : "nominal",
-          "axis": font_size ? {"grid" : false, "titleFontSize" : 14, "title" : "Codon", "labelFontSize" : font_size} : null
-        },
-        "y": {
-          "field": "Branch",
-          "scale" : {"domain" : branch_order},
-          "type" : "nominal",
-          "axis": font_size ? {"grid" : false, "titleFontSize" : 14, "title" : "Branch", "labelFontSize" : font_size} : null
-        }
-      },
-      "layer": [
-        {
-          "mark": {"type": "rect", "size" : 2, "color" : "lightgrey", "opacity" : 1.0, "tooltip" : true},
-          "encoding": {
-            "color": {
-               "field": "ER",
-                "type" : "quantitative",
-                "legend" : {"orient" : "top"},
-                "sort": "descending",
-                "scale" : {"type" : "log", "scheme" : "redblue", "domainMid" : 1}
-            }
-          }
-        }
-      ]
-  };
-  return spec;
-}
-
-
 
 function alpha_beta_plot(data, from, step) {
   let color_d = [];
@@ -483,42 +273,6 @@ function alpha_beta_plot(data, from, step) {
       ]
   };
 }
-
-
-
-function denser_plot(data) {
-  let columns = [["α","α"],["β-","β-"],["p-","p-"],["β+","β+"],["p+","p+"],["p-value", "p-value"]];
-  return {
-      "data" : {"values" : _.map (data,
-      (d)=> {
-          let dd = _.clone (d);
-          _.each (columns, (f)=> {
-            dd[f[0]] = Math.min (DYN_RANGE_CAP, dd[f[0]]);
-          });
-          return dd;
-      })}, 
-      
-      "vconcat" : _.map (columns, (cc,i)=> ({
-        "width" : 800,
-        "height" : 50,
-        "mark": {"type": "area", "color" : "lightblue", "stroke" : "black", "interpolate" : "step"},
-        "encoding": {
-          "x": {
-            "field": "Codon",
-            "type" : "quantitative",
-            "axis": {"grid" : false, "titleFontSize" : 14, "title" : i == columns.length -1 ? "Codon" : null}
-          },
-          "y": {
-                 "field": cc[0],
-                  "type" : "quantitative",
-                  "axis": {"grid" : false, "titleFontSize" : 14, "title" : cc[1]},
-                  "scale" : "symlog"
-              }
-        }}))
-  };
-}
-
-
 
 export function display_tree(results_json,i, treeDim, treeLabels, branch_length, color_branches, tree_objects) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;

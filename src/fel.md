@@ -5,9 +5,9 @@ import * as phylotree from "phylotree";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as ss from "./stats/chi-squared.js";
 import * as utils from "./fel/fel-utils.js";
 import * as plots from "./fel/fel-plots.js";
+import * as phylotreeUtils from "./utils/phylotree-utils.js";
 import * as tt from "./components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
@@ -64,7 +64,7 @@ const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_plot_options(at
 ```js
 const plot_description = plots.get_plot_description(plot_type, pvalue_threshold)
 const plot_spec = plots.get_plot_spec(plot_type, fig1data, pvalue_threshold, attrs.has_pasmt)
-const tree_objects = plots.get_tree_objects(results_json)
+const tree_objects = phylotreeUtils.get_tree_objects(results_json)
 ```
 
 **Figure 1**. <small>${plot_description}</small>
