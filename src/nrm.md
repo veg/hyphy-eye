@@ -230,4 +230,5 @@ schemeElement2.appendChild(legend)
 schemeElement2.appendChild(document.createElement("br"))
 ```
 <div>${schemeElement2}</div>
+<link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2.show()}</div>

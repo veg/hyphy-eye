@@ -119,5 +119,5 @@ const trees_html = plots.makeTreeDivs(tree_objects, displayed_trees)
 const trees_container = document.createElement("div")
 trees_container.innerHTML = trees_html;
 ```
-
+<link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div>${trees_container}</div>

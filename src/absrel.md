@@ -148,6 +148,7 @@ if (figure2 && figure2.color_scale) {
 }
 ```
 <div>${schemeElement}</div>
+<link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2.show()}</div>
 
 **Figure 1**. ${plot_type ? plots.get_plot_description(plot_type) : "No plotting options available"}
