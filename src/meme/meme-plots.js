@@ -183,13 +183,12 @@ function alpha_beta_plot(data, from, step) {
   return {
       "width": {"step": 12},
       "data" : {"values" : _.map (
-        _.filter (data, (d,i)=>i >= from -1 && i< from + step -1), // -1 because 0 indexing && // remove "=" from the latter "<="
+        _.filter (data, (d,i)=>i >= from -1 && i< from + step -1), 
       (d)=> {
           let dd = _.clone (d);
-          _.each (["α","β-", "β+"], (f)=> {
+          _.each (["&alpha;","&beta;<sup>1</sup>", "&beta;<sup>+</sup>"], (f)=> {
             dd[f] = Math.min (DYN_RANGE_CAP, dd[f]);
           });
-          //dd.alpha = -dd.alpha;
           return dd;
       })}, 
       "transform" :[{"calculate": 'max (1,-datum["p-"]*100)', "as": "w-"},
@@ -219,11 +218,10 @@ function alpha_beta_plot(data, from, step) {
           "mark": {"type": "tick", "filled" : true, "tooltip" : true, thickness : 4, "fill" : "black"},
           "encoding": {
             "y": {
-               "field": "α",
+               "field": "&alpha;",
                 "type" : "quantitative",
                 "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Rate MLE"},
                 "scale" : {"type" : "symlog"}
-                  //"labelExpr": "datum.label > 0 ? 'β = ' + datum.label: (toNumber(datum.label) == '0' ? '0' : 'α = ' + replace (datum.label, /[^0-9\.]/,''))"}
             },
           }
         },
@@ -231,13 +229,13 @@ function alpha_beta_plot(data, from, step) {
           "mark": {"type": "point", "filled" : true,  "tooltip" : true},
           "encoding": {
             "y": {
-               "field": "β-",
+               "field": "&beta;<sup>1</sup>",
                 "type" : "quantitative",
                 "axis": {"grid" : false, "titleFontSize" : 14, "title" : "Rate MLE"},
                 "scale" : {"type" : "symlog"},
               
             },
-            "size" : {"field" : "p-","type" : "quantitative", "title" : "weight"},
+            "size" : {"field" : "p<sup>1</sup>","type" : "quantitative", "title" : "weight"},
             "fill" : {"field" : "class", "scale" : {"domain" : color_d, "range" : color_r}, "title" : "Selection class"}
           }
         },
@@ -245,11 +243,11 @@ function alpha_beta_plot(data, from, step) {
           "mark": {"type": "point", "filled" : true,  "tooltip" : true},
           "encoding": {
             "y": {
-               "field": "β+",
+               "field": "&beta;<sup>+</sup>",
                 "type" : "quantitative",
               
             },
-            "size" : {"field" : "p+","type" : "quantitative"},
+            "size" : {"field" : "p<sup>+</sup>","type" : "quantitative"},
             "fill" : {"field" : "class", "scale" : {"domain" : color_d, "range" : color_r}, "title" : "Selection class"}
           }
         },
@@ -257,12 +255,12 @@ function alpha_beta_plot(data, from, step) {
           "mark": {"type": "rule", "tooltip" : true},
           "encoding": {
             "y": {
-               "field": "β-",
+               "field": "&beta;<sup>1</sup>",
                 "type" : "quantitative",
               
             },
             "y2": {
-               "field": "β+",
+               "field": "&beta;<sup>+</sup>",
                "type" : "quantitative",
               
             },
