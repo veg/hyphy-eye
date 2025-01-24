@@ -10,7 +10,7 @@ export function jensenShannonDistance(dist1, dist2) {
     return entropy (smoothed) - 0.5 * (entropy (dist1) + entropy (dist2));
 }
 
-export function distance(d1, d2, method) {  
+export function distance(d1, d2, method, i) {  
     if (method == "Jensen Shannon") return jensenShannonDistance (d1,d2); 
     return Math.abs (d1[i-1]-d2[i-1]);
 }

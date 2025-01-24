@@ -59,7 +59,7 @@ export function display_tree(results_json, i, treeDim, treeLabels, tree_objects,
       let js_max = 0;
 
       _.each (T.getTips(), (n)=> {
-              let js = d.distance (results_json["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0],results_json["branch attributes"]["0"][n.parent.data.name][modelForTree + " frequencies"][0], distanceFunction);
+              let js = d.distance (results_json["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0],results_json["branch attributes"]["0"][n.parent.data.name][modelForTree + " frequencies"][0], distanceFunction, distanceIndex);
                js_max = js > js_max ? js : js_max;
                //console.log (n);
           
