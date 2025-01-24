@@ -309,7 +309,7 @@ export function display_tree(results_json, index, T, options, ev_threshold, tree
    * @param {string} color_branches - option to color branches by
    * @return {object} - the rendered tree
    */
-export function display_tree_site(results_json, index, T,s,options, ev_threshold, treeDim, treeLabels, branch_length, color_branches) {
+export function display_tree_site(results_json, index, T,s,options, ev_threshold, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
     const attrs = utils.get_attributes(results_json, ev_threshold);
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     

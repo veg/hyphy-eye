@@ -113,8 +113,9 @@ function getFigure2() {
       
       if (toDisplay[0] == "Codon") {  
           const codon_index = (+toDisplay[1]);
-          let partition_id = utils.siteIndexPartitionCodon[codon_index-1][0]-1;
-          let TT = plots.display_tree_site (results_json, partition_id, tree_objects[0], codon_index, tree_options, ev_threshold, treeDim, treeLabels, branch_length, color_branches);
+          let partition_id = siteIndexPartitionCodon[codon_index-1][0]-1;
+          console.log("partition", partition_id)
+          let TT = plots.display_tree_site (results_json, partition_id, tree_objects[0], codon_index, tree_options, ev_threshold, treeDim, treeLabels, branch_length, color_branches, attrs.partition_sizes);
           return TT;
       } 
       let TT = plots.display_tree(results_json, 0, tree_objects[0], tree_options, ev_threshold, treeDim, treeLabels, branch_length, color_branches);

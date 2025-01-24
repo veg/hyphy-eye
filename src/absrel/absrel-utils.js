@@ -50,7 +50,7 @@ export function get_attributes(results_json) {
         'DH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 2 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value(),
         'TH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 3 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value()
     })
-    
+    const partition_sizes = _.chain (results_json['data partitions']).map ((d,k)=>(d['coverage'][0].length)).value();
 
     return {
         "positive_results" : positive_results,
@@ -60,7 +60,8 @@ export function get_attributes(results_json) {
         "srv_rate_classes" : srv_rate_classes,
         "srv_distribution" : srv_distribution,
         "omega_rate_classes" : omega_rate_classes,
-        "mh_rates" : mh_rates
+        "mh_rates" : mh_rates,
+        "partition_sizes" : partition_sizes
     }
 }
 
