@@ -2,7 +2,6 @@
 import * as d3 from "d3";
 import * as Plot from "npm:@observablehq/plot";
 import * as _ from "lodash-es";
-import * as parse_svg from "parse-svg-path";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";

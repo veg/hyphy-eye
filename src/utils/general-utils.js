@@ -163,3 +163,21 @@ export function get_translation_table() {
   
   return mapped_code;
 }
+
+var count = 0;
+
+/**
+ * Generates a unique identifier string by appending an incrementing number
+ * to the provided name.
+ *
+ * @param {string} name - The base name for the unique identifier. If null or
+ *   undefined, an empty string is used.
+ *
+ * @returns {string} A unique identifier string in the format "name-count",
+ *   where "count" is a globally incrementing number.
+ */
+
+export function uid(name) {
+  name = name == null ? "" : name;
+  return name + "-" + ++count;
+}
