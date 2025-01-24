@@ -12,6 +12,7 @@ import * as statsSummary from "./stats/summaries.js";
 import * as omegaPlots from "./components/omega-plots.js";
 import * as tt from "./components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
+import {html} from "htl";
 ```
 
 ```js
@@ -54,14 +55,14 @@ const bsPositiveSelection = utils.getPosteriorsPerBranchSite(results_json, false
 const rate_table = view(Inputs.table (distributionTable, {
   header : {'LogL' : "Log (L)", "AICc" : "AIC-c", "p" : "<abbr title=\"Number of estimated parameters\">Params.</abbr>", "dist" : "ω distribution", "plot" : "ω plot"},
   format : {
-    'branch' : (d)=>!_.isUndefined (results_json["branch attributes"][0][d]["Corrected P-value"]) && results_json["branch attributes"][0][d]["Corrected P-value"]<=0.05 ? "<b>" + d+ "</b>" : d,
+    'branch' : (d)=>!_.isUndefined (results_json["branch attributes"][0][d]["Corrected P-value"]) && results_json["branch attributes"][0][d]["Corrected P-value"]<=0.05 ? html`<b>${d}</b>` : d,
     'LogL' : d3.format ("2g"),
     'AICc' : d3.format ("2g"),
     'dist' : (d)=>{
-        return "<tt>" +
-            _.map ( d[1], (c,i)=> floatFormat(c.value) + " (" + proportionFormat (c.weight) + ") ") +
-            "<br>Mean = <b>" + floatFormat (statsSummary.distMean (d[1])) + "</b>," +
-            " CoV = <b>" + floatFormat (Math.sqrt (statsSummary.distVar (d[1]))/statsSummary.distMean (d[1])) + "</b></tt>"},
+        return html`<tt>
+            ${_.map (d[1], (c,i)=> floatFormat(c.value) + " (" + proportionFormat(c.weight) + ") ")}
+            <br>Mean = <b>${floatFormat (statsSummary.distMean (d[1]))}</b>, 
+            CoV = <b>${floatFormat(Math.sqrt(statsSummary.distVar (d[1]))/statsSummary.distMean (d[1]))}</b></tt>`},
      'plot' : (d)=>d[1].length > 1 ? omegaPlots.renderDiscreteDistribution (d[1],{"height" : 40, "width" : 150, "ticks" : 2, "scale" : "log", "ref" : [1]}) : ''
   },
   layout: "auto",
@@ -71,7 +72,7 @@ const rate_table = view(Inputs.table (distributionTable, {
 ```
 
 ```js
-const distComparisonPlot = rate_table.length == 2 ? omegaPlots.renderTwoDiscreteDistributions (rate_table[0].dist[1],rate_table[1].dist[1],{"label" : {"chart" : rate_table[0].plot[0], "series" : [rate_table[0].dist[3],rate_table[1].dist[3]]}, "width" : 700, "height" : 120, "scale" : "sqrt", "margin" : {top: 5, right: 250, bottom: 30, left: 20}}) : "<small>Select exactly two distributions to plot a side-by-side comparison</small>"
+const distComparisonPlot = rate_table.length == 2 ? omegaPlots.renderTwoDiscreteDistributions (rate_table[0].dist[1],rate_table[1].dist[1],{"label" : {"chart" : rate_table[0].plot[0], "series" : [rate_table[0].dist[3],rate_table[1].dist[3]]}, "width" : 700, "height" : 120, "scale" : "sqrt", "margin" : {top: 5, right: 250, bottom: 30, left: 20}}) : html`<small>Select exactly two distributions to plot a side-by-side comparison</small>`
 ```
 <div>${distComparisonPlot}</div>
 

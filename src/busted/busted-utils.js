@@ -9,6 +9,7 @@ import * as _ from "lodash-es";
 import * as d3 from "d3";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as utils from "../utils/general-utils.js";
+import {html} from "htl";
 
 const floatFmt = d3.format (".2g")
 const percentageFormat = d3.format (".2p")
@@ -226,14 +227,14 @@ export function siteTableData(results_json) {
         
       });
     return [site_info, {
-      'Partition' : '<abbr title = "Partition">Part.</abbr>',
-      'Codon' : '<abbr title = "Site">Codon</abbr>',
-      'ER (constrained)' : '<abbr title = "Evidence ratio for positive selection (constrained null)">ER (ω>1, constr.)</abbr>',
-      'ER (optimized null)' : '<abbr title = "Evidence ratio for positive selection (optimized null)">ER (ω>1, optim.)</abbr>',
-      'SRV posterior mean' : '<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>',
-      'SRV viterbi' : '<abbr title = "Most likely rate value for the synonymous rate α (Viterbi path)">α</abbr>',
-      'logL' : '<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>',
-      'LR' : '<abbr title = "Site log-likelihood ratio contribution">LR</abbr>'
+      'Partition' : html`<abbr title = "Partition">Part.</abbr>`,
+      'Codon' : html`<abbr title = "Site">Codon</abbr>`,
+      'ER (constrained)' : html`<abbr title = "Evidence ratio for positive selection (constrained null)">ER (ω>1, constr.)</abbr>`,
+      'ER (optimized null)' : html`<abbr title = "Evidence ratio for positive selection (optimized null)">ER (ω>1, optim.)</abbr>`,
+      'SRV posterior mean' : html`<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>`,
+      'SRV viterbi' : html`<abbr title = "Most likely rate value for the synonymous rate α (Viterbi path)">α</abbr>`,
+      'logL' : html`<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>`,
+      'LR' : html`<abbr title = "Site log-likelihood ratio contribution">LR</abbr>`
     }];
 }
 

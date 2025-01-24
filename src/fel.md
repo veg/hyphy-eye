@@ -82,7 +82,7 @@ const table1 = view(Inputs.table (siteTableData, {
 <details>
   <summary><b>Table column definitions</b></small></summary>
   <small><dl>
-    ${_.map (sites_table[2], (d)=>"<dt><tt>"+d[0]+"</tt></dt><dd>" + d[1] + "</dd>")}
+    ${_.map (sites_table[2], (d)=>html`<dt><tt>${d[0]}</tt></dt><dd>${d[1]}</dd>`)}
   </dl></small>
 </details>
 

@@ -5,6 +5,15 @@
 
 import * as _ from "lodash-es";
 import * as d3 from "d3";
+import {html} from "htl";
+import * as colors from "../color-maps/custom.js";
+
+// TODO: this is duplicated in fel-plots.js
+const COLORS = {
+      'Diversifying' : colors.binary_with_gray[2],
+      'Neutral' : colors.binary_with_gray[1],
+      'Purifying' : colors.binary_with_gray[0],
+    };
 
 /**
  * Extracts some summary attributes from FEL results that are used later in the
@@ -93,13 +102,13 @@ export function get_sites_table(results_json, pvalue_threshold) {
     format [headers[1][0]]  = (d)=>d.toFixed (3);
     format [headers[2][0]]  = (d)=>d.toFixed (3);
     format [headers[3][0]]  = (d)=>d.toFixed (3);
-    format [headers[4][0]]  = (d)=>d <= pvalue_threshold ? '<b>${d.toFixed (4)}</b>' : d.toFixed (4);
+    format [headers[4][0]]  = (d)=>d <= pvalue_threshold ? html`<b>${d.toFixed (4)}</b>` : d.toFixed (4);
     if (fel_attrs.has_pasmt) {
         format[headers[headers.length-1][0]] = format [headers[4][0]];
     }
     format [headers[5][0]]  = (d)=>d.toFixed (3);
     headers.push (["class","Site classification at p<=" + pvalue_threshold]); 
-    format["class"] = (d)=>'<span style = "color:${COLORS[d]}">${d}</span>';
+    format["class"] = (d)=>html`<span style = "color:${COLORS[d]}">${d}</span>`;
   
     _.each (results_json.MLE.content, (data, part)=> {
         const site_lookup = results_json["data partitions"][part].coverage[0];

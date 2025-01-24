@@ -161,8 +161,6 @@ if (figure2 && figure2.color_scale) {
             domain: figure2.color_scale.domain(),
             range: figure2.color_scale.range(),
             ticks: 5
-            //ticks: figure2.color_scale.ticks(),
-            //tickFormat: figure2.color_scale.tickFormat()
         },
         width: 200
     })

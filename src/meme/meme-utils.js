@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import * as _ from "lodash-es";
 import * as utils from "../utils/general-utils.js";
+import {html} from "htl";
 
 export function get_attributes(results_json) {
     const tested_branch_count = d3.median (_.chain (results_json.tested).map ().map((d)=>_.filter (_.map (d), (d)=>d=="test").length).value());
@@ -213,18 +214,18 @@ export function siteTableData(results_json, table_options, pvalue_threshold, sit
      
   
     let options = {
-      'Partition' : '<abbr title = "Partition">Part.</abbr>',
-      'Codon' : '<abbr title = "Site">Codon</abbr>',
-      'class' :  '<abbr title = "Site classification">Class</abbr>',
-      'dN/dS' :  '<abbr title = "dN/dS distribution at this site">dN/dS</abbr>'
+      'Partition' : html`<abbr title = "Partition">Part.</abbr>`,
+      'Codon' : html`<abbr title = "Site">Codon</abbr>`,
+      'class' :  html`<abbr title = "Site classification">Class</abbr>`,
+      'dN/dS' :  html`<abbr title = "dN/dS distribution at this site">dN/dS</abbr>`
     };
 
     _.each (mle_headers, (info, idx)=> {
         if (idx == 0) {
-          options[info[2]] = '<abbr title = "' + info[1] + '">' + info[0] + '</abbr>';
+          options[info[2]] = html`<abbr title = "${html`info[1]`}">${info[0]}</abbr>`;
         } else 
           if (idx != 8) {
-            options[info[2]] = '<abbr title = "' + info[1] + '">' + info[0] + '</abbr>';
+            options[info[2]] = html`<abbr title = "${info[1]}">${info[0]}</abbr>`;
           }
     });
 

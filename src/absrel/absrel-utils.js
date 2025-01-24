@@ -8,6 +8,7 @@ import * as d3 from "d3";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as utils from "../utils/general-utils.js";
 import * as summaryStats from "../stats/summaries.js";
+import {html} from "htl";
 
 const floatFormat = d3.format (".2g")
 
@@ -433,10 +434,10 @@ export function siteTableData(results_json, ev_threshold, profileBranchSites) {
         
       });
     return [site_info, {
-      'Codon' : "<abbr title = \"Site\">Codon</abbr>",
-      'SRV posterior mean' : "<abbr title = \"Posterior mean of the synonymous rate, α;\">E<sub>post</sub>[α]</abbr>",
-      'LogL' : "<abbr title = \"Site log-likelihood under the unconstrained model\">log(L)</abbr>",
-      'Subs' : "<abbr title = \"Total # of substitutions (s+ns)\">Subs</abbr>",
-      'ER' : "<abbr title = \"Total # branches with evidence ratio > ${ev_threshold}\">ER Branch</abbr>",
+      'Codon' : html`<abbr title = "Site">Codon</abbr>`,
+      'SRV posterior mean' : html`<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>`,
+      'LogL' : html`<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>`,
+      'Subs' : html`<abbr title = "Total # of substitutions (s+ns)">Subs</abbr>`,
+      'ER' : html`<abbr title = "Total # branches with evidence ratio > ${ev_threshold}">ER Branch</abbr>`,
     }];
 }
