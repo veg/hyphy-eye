@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import * as _ from "lodash-es";
 
 /**
  * Renders a discrete distribution plot using D3.js.

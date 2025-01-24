@@ -13,6 +13,7 @@ import * as statsSummary from "./stats/summaries.js";
 import * as omegaPlots from "./components/omega-plots.js";
 import * as tt from "./components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
+import {html} from "htl";
 ```
 
 ```js
@@ -47,11 +48,8 @@ const test_omega = utils.getRateDistribution(results_json, ["fits","Unconstraine
 const treeViewOptions = plots.getTreeViewOptions(results_json, tree_objects)
 // TODO: clean this up
 const sites_table = [{
-    'class' : (d)=>'<span style = "color:' + plots.TABLE_COLORS[d] + '>' + d + '</span>', 
-    'Substitutions' : (
-      d)=>d.length == 0 ? 
-      "-" : 
-      '<ul style="margin: 0px; padding: 0px; font-family: monospace; list-style-type: none;"><li>' + _.map (d, (c)=>"<b>"+c[1]+"</b> " + c[0]).join ("</li><li>") + '</li></ul>',
+    'class' : (d)=>html`<span style = "color:${plots.TABLE_COLORS[d]}">${d}</span>`, 
+    'Substitutions' : (d)=>d.length == 0 ? "-" : _.map (d, (c)=>c[1] + " " + c[0]).join('   ,   '),
     'dN/dS' : (d)=>omegaPlots.renderNDiscreteDistributions ([d],{"height" : 20, "width" : 200, "scale" : "sqrt"})
     }, 
     _.filter (siteTableData[0], (x)=>table_filter.indexOf(x.class)>=0), siteTableData[1]
@@ -97,7 +95,7 @@ const table_options = view(Inputs.checkbox(["Distribution plot","Show q-values",
 ```js
 const table1 = view(Inputs.table (sites_table[1], {
   rows : 20,
-  //format: sites_table[0],
+  format: sites_table[0],
   layout: "auto",
   header: sites_table[2]
 }))

@@ -111,7 +111,7 @@ function generateSubstitutionLists(T, labels, test_set) {
     let subs = {};
     T.traverse_and_compute (function (n) {
         if (n.data.name in labels) {
-            L[n.data.name] = [labels[n.data.name], translate_ambiguous_codon (labels[n.data.name]),'',0];
+            L[n.data.name] = [labels[n.data.name], utils.translate_ambiguous_codon (labels[n.data.name]),'',0];
             if (n.parent) {
               L[n.data.name][2] = L[n.parent.data.name][0];             
               _.each (L[n.data.name][0], (c,i)=> {
@@ -169,7 +169,7 @@ export function siteTableData(results_json, table_options, pvalue_threshold, sit
               };
 
               if (show_distribution) {
-                   site_record['dN/dS'] = omega_plot (mle_data[i]);
+                   site_record['dN/dS'] = omega_plot(mle_data[i]);
               }
               
               _.each (mle_headers, (info, idx)=> {
@@ -222,7 +222,7 @@ export function siteTableData(results_json, table_options, pvalue_threshold, sit
 
     _.each (mle_headers, (info, idx)=> {
         if (idx == 0) {
-          options[info[2]] = html`<abbr title = "${html`info[1]`}">${info[0]}</abbr>`;
+          options[info[2]] = html`<abbr title = "${info[1]}">${info[0]}</abbr>`;
         } else 
           if (idx != 8) {
             options[info[2]] = html`<abbr title = "${info[1]}">${info[0]}</abbr>`;

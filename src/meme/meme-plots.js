@@ -8,7 +8,7 @@ import * as qq from "../components/qq-plot.js";
 import * as rateDist from "../components/rate-summary-plots/rate-densities.js";
 import * as rates from "../components/rate-summary-plots/rate-bars.js";
 
-const TABLE_COLORS = ({
+export const TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
     'Neutral' : '#444',
     'Invariable' : '#CCC'
