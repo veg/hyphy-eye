@@ -406,7 +406,7 @@ export function display_tree(results_json, ev_threshold, index, T, options, tree
              }
           });
         } else if (color_branches == "Substitutions") {
-            let labels = subs_by_branch (index);
+            let labels = phylotreeUtils.subs_by_branch(results_json, index);
             let color_scale = d3.scaleSequential(d3.extent (_.map (labels, d=>d)), d3.interpolateTurbo);
             t.color_scale = color_scale;
             t.color_scale_title = "Min # of nucleotide substitutions";
