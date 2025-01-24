@@ -136,13 +136,14 @@ export function display_tree_handle_neighbors(index, s, node_labels, T, options,
  * Computes the number of substitutions for each branch, excluding the root,
  * based on the substitutions data for a given index.
  *
+ * @param {Object} results_json - hyphy results json 
  * @param {number} i - The index of the substitutions data in the results JSON.
  * 
  * @returns {Object} An object where keys are branch names and values are the
  * count of substitutions for each branch.
  */
 
-export function subs_by_branch(i) {
+export function subs_by_branch(results_json, i) {
     let counts = {};
     _.each (results_json.substitutions[i], (states, site)=> {
         _.each (states, (state, branch)=> {

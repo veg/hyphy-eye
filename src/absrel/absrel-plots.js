@@ -254,7 +254,7 @@ export function display_tree(results_json, index, T, options, ev_threshold, tree
             let labels;
             switch (color_branches) {
               case "Substitutions" : {  
-                labels = phylotreeUtils.subs_by_branch (index);
+                labels = phylotreeUtils.subs_by_branch(results_json, index);
                  t.color_scale_title = "Min # of nucleotide substitutions";
                 } 
                 break;
