@@ -73,7 +73,7 @@ export function add_branch_label(e, text, font_size, container) {
   if (where2 && (text.length || _.isNumber (text))) {
       let my_id = e.attr ("id");
       if (!e.attr ("id")) {
-          my_id = utils.uid("absrel_tree").id;
+          my_id = utils.uid("absrel_tree");
           e.attr ("id", my_id);
       }
       let branch_label = container.selectAll ("text[label-for='" + my_id + "']").data ([text]).join ("text").attr ("label-for", my_id).text ((d)=>d).classed ("absrel-branch-labels",true).attr ("x", where2[1]).attr ("y", where2[2]).attr ("font-size", font_size * 0.8).attr ("dx","0.5em").attr ("dy", "-0.4em").style ("font-family", "ui-monospace");
