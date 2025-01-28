@@ -4,9 +4,9 @@ import * as _ from "lodash-es";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as utils from "./multihit/multihit-utils.js";
-import * as plots from "./multihit/multihit-plots.js";
-import * as tt from "./components/tile-table/tile-table.js";
+import * as utils from "../multihit/multihit-utils.js";
+import * as plots from "../multihit/multihit-plots.js";
+import * as tt from "../components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
@@ -20,7 +20,7 @@ const proportionFormat = d3.format(".5p")
 # MULTI-HIT result summary
 
 ```js
-const results_json = await FileAttachment("./data/multihit_test_data.json").json();
+const results_json = await FileAttachment("../data/multihit_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 const tile_specs = utils.get_tile_specs(results_json);
 ```

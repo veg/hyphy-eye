@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import * as _ from "lodash-es";
 import * as utils from "../utils/general-utils.js";
+import {html} from "htl";
 
 export function get_attributes(results_json) {
     const tested_branch_count = d3.median (_.chain (results_json.tested).map ().map((d)=>_.filter (_.map (d), (d)=>d=="test").length).value());
@@ -73,19 +74,19 @@ export function get_tile_specs(results_json, pvalue_threshold) {
         },
         {
             number: attrs.tested_branch_count, 
-            color: "midnight_blue", 
+            color: "asbestos", 
             description: "median branches/partition used for testing", 
             icon: "icon-share icons"
         },
         {
             number: attrs.has_resamples || "N/A", 
-            color: "midnight_blue", 
+            color: "asbestos", 
             description: "parametric bootstrap replicates", 
             icon: "icon-layers icons"
         },
         {
             number: count_sites, 
-            color: "pomegranate", 
+            color: "midnight_blue", 
             description: "sites subject to episodic diversifying selection", 
             icon: "icon-plus icons"
         },
@@ -110,7 +111,7 @@ function generateSubstitutionLists(T, labels, test_set) {
     let subs = {};
     T.traverse_and_compute (function (n) {
         if (n.data.name in labels) {
-            L[n.data.name] = [labels[n.data.name], translate_ambiguous_codon (labels[n.data.name]),'',0];
+            L[n.data.name] = [labels[n.data.name], utils.translate_ambiguous_codon (labels[n.data.name]),'',0];
             if (n.parent) {
               L[n.data.name][2] = L[n.parent.data.name][0];             
               _.each (L[n.data.name][0], (c,i)=> {
@@ -168,7 +169,7 @@ export function siteTableData(results_json, table_options, pvalue_threshold, sit
               };
 
               if (show_distribution) {
-                   site_record['dN/dS'] = omega_plot (mle_data[i]);
+                   site_record['dN/dS'] = omega_plot(mle_data[i]);
               }
               
               _.each (mle_headers, (info, idx)=> {
@@ -213,18 +214,18 @@ export function siteTableData(results_json, table_options, pvalue_threshold, sit
      
   
     let options = {
-      'Partition' : '<abbr title = "Partition">Part.</abbr>',
-      'Codon' : '<abbr title = "Site">Codon</abbr>',
-      'class' :  '<abbr title = "Site classification">Class</abbr>',
-      'dN/dS' :  '<abbr title = "dN/dS distribution at this site">dN/dS</abbr>'
+      'Partition' : html`<abbr title = "Partition">Part.</abbr>`,
+      'Codon' : html`<abbr title = "Site">Codon</abbr>`,
+      'class' :  html`<abbr title = "Site classification">Class</abbr>`,
+      'dN/dS' :  html`<abbr title = "dN/dS distribution at this site">dN/dS</abbr>`
     };
 
     _.each (mle_headers, (info, idx)=> {
         if (idx == 0) {
-          options[info[2]] = '<abbr title = "' + info[1] + '">' + info[0] + '</abbr>';
+          options[info[2]] = html`<abbr title = "${info[1]}">${info[0]}</abbr>`;
         } else 
           if (idx != 8) {
-            options[info[2]] = '<abbr title = "' + info[1] + '">' + info[0] + '</abbr>';
+            options[info[2]] = html`<abbr title = "${info[1]}">${info[0]}</abbr>`;
           }
     });
 

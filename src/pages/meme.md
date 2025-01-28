@@ -6,13 +6,14 @@ import * as parse_svg from "parse-svg-path";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as utils from "./meme/meme-utils.js";
-import * as plots from "./meme/meme-plots.js";
-import * as phylotreeUtils from "./utils/phylotree-utils.js";
-import * as statsSummary from "./stats/summaries.js";
-import * as omegaPlots from "./components/omega-plots.js";
-import * as tt from "./components/tile-table/tile-table.js";
+import * as utils from "../meme/meme-utils.js";
+import * as plots from "../meme/meme-plots.js";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as statsSummary from "../stats/summaries.js";
+import * as omegaPlots from "../components/omega-plots.js";
+import * as tt from "../components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
+import {html} from "htl";
 ```
 
 ```js
@@ -25,11 +26,11 @@ const proportionFormat = d3.format (".5p")
 # MEME result summary
 
 ```js
-const results_json = await FileAttachment("./data/meme_test_data.json").json();
+const results_json = await FileAttachment("../data/meme_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 ```
 
-<span style = 'font-size: 110%; color: firebrick;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${count_sites}** sites in this dataset (<tt>p≤${pvalue_threshold}</tt>).</span>
+<span style = 'font-size: 110%; color;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${count_sites}** sites in this dataset (<tt>p≤${pvalue_threshold}</tt>).</span>
 ${attrs.has_resamples > 0 ? "This analysis used parametric bootstrap with " + attrs.has_resamples + " replicates to test for significance." : ""} ${+results_json.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
 
 ```js
@@ -47,11 +48,8 @@ const test_omega = utils.getRateDistribution(results_json, ["fits","Unconstraine
 const treeViewOptions = plots.getTreeViewOptions(results_json, tree_objects)
 // TODO: clean this up
 const sites_table = [{
-    'class' : (d)=>'<span style = "color:' + plots.TABLE_COLORS[d] + '>' + d + '</span>', 
-    'Substitutions' : (
-      d)=>d.length == 0 ? 
-      "-" : 
-      '<ul style="margin: 0px; padding: 0px; font-family: monospace; list-style-type: none;"><li>' + _.map (d, (c)=>"<b>"+c[1]+"</b> " + c[0]).join ("</li><li>") + '</li></ul>',
+    'class' : (d)=>html`<span style = "color:${plots.TABLE_COLORS[d]}">${d}</span>`, 
+    'Substitutions' : (d)=>d.length == 0 ? "-" : _.map (d, (c)=>c[1] + " " + c[0]).join('   ,   '),
     'dN/dS' : (d)=>omegaPlots.renderNDiscreteDistributions ([d],{"height" : 20, "width" : 200, "scale" : "sqrt"})
     }, 
     _.filter (siteTableData[0], (x)=>table_filter.indexOf(x.class)>=0), siteTableData[1]
@@ -97,7 +95,7 @@ const table_options = view(Inputs.checkbox(["Distribution plot","Show q-values",
 ```js
 const table1 = view(Inputs.table (sites_table[1], {
   rows : 20,
-  //format: sites_table[0],
+  format: sites_table[0],
   layout: "auto",
   header: sites_table[2]
 }))
@@ -161,8 +159,6 @@ if (figure2 && figure2.color_scale) {
             domain: figure2.color_scale.domain(),
             range: figure2.color_scale.range(),
             ticks: 5
-            //ticks: figure2.color_scale.ticks(),
-            //tickFormat: figure2.color_scale.tickFormat()
         },
         width: 200
     })
@@ -171,6 +167,7 @@ if (figure2 && figure2.color_scale) {
 }
 ```
 <div>${schemeElement}</div>
+<link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2.show()}</div>
 
 **Citation**

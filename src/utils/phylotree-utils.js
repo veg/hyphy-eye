@@ -2,6 +2,7 @@
 
 import * as d3 from "d3";
 import * as _ from "lodash-es";
+import * as parse_svg from "parse-svg-path";
 import * as utils from "./general-utils.js";
 import * as phylotree from "phylotree";
 
@@ -67,13 +68,12 @@ export function add_svg_defs(svg) {
  * @param {number} font_size - The base font size for the label text.
  * @param {d3.selection} container - The SVG container where the label will be added.
  */
-
 export function add_branch_label(e, text, font_size, container) {
   const where2 = _.get (parse_svg.default(e.attr("d")),["1"]);
   if (where2 && (text.length || _.isNumber (text))) {
       let my_id = e.attr ("id");
       if (!e.attr ("id")) {
-          my_id = DOM.uid ("absrel_tree").id;
+          my_id = utils.uid("absrel_tree");
           e.attr ("id", my_id);
       }
       let branch_label = container.selectAll ("text[label-for='" + my_id + "']").data ([text]).join ("text").attr ("label-for", my_id).text ((d)=>d).classed ("absrel-branch-labels",true).attr ("x", where2[1]).attr ("y", where2[2]).attr ("font-size", font_size * 0.8).attr ("dx","0.5em").attr ("dy", "-0.4em").style ("font-family", "ui-monospace");
@@ -136,13 +136,14 @@ export function display_tree_handle_neighbors(index, s, node_labels, T, options,
  * Computes the number of substitutions for each branch, excluding the root,
  * based on the substitutions data for a given index.
  *
+ * @param {Object} results_json - hyphy results json 
  * @param {number} i - The index of the substitutions data in the results JSON.
  * 
  * @returns {Object} An object where keys are branch names and values are the
  * count of substitutions for each branch.
  */
 
-export function subs_by_branch(i) {
+export function subs_by_branch(results_json, i) {
     let counts = {};
     _.each (results_json.substitutions[i], (states, site)=> {
         _.each (states, (state, branch)=> {

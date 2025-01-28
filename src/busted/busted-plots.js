@@ -406,7 +406,7 @@ export function display_tree(results_json, ev_threshold, index, T, options, tree
              }
           });
         } else if (color_branches == "Substitutions") {
-            let labels = subs_by_branch (index);
+            let labels = phylotreeUtils.subs_by_branch(results_json, index);
             let color_scale = d3.scaleSequential(d3.extent (_.map (labels, d=>d)), d3.interpolateTurbo);
             t.color_scale = color_scale;
             t.color_scale_title = "Min # of nucleotide substitutions";
@@ -458,7 +458,7 @@ function site_support_by_branch(results_json, i, key, er) {
 }
 
 
-export function display_tree_site(results_json, index,T,s,options, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
+export function display_tree_site(results_json, index,T,s,options, treeDim, treeLabels, branch_length, color_branches, partition_sizes, test_omega, has_error_sink) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     T.branch_length_accessor = (n)=>results_json["branch attributes"][index][n.data.name][branch_length] || 0;  
     let node_labels = phylotreeUtils.generateNodeLabels (T, results_json["substitutions"][index][(+s)-1]);

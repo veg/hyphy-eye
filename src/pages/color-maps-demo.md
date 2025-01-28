@@ -7,10 +7,10 @@
 <br/>
 
 ```js
-import * as continuous_schemes from "./color-maps/crameri.js";
-import * as categorical_schemes from "./color-maps/tol.js";
-import * as custom_schemes from "./color-maps/custom.js";
-import * as utils from "./color-maps/utils.js";
+import * as continuous_schemes from "../color-maps/crameri.js";
+import * as categorical_schemes from "../color-maps/tol.js";
+import * as custom_schemes from "../color-maps/custom.js";
+import * as utils from "../color-maps/utils.js";
 import * as Plot from "npm:@observablehq/plot";
 
 console.log(continuous_schemes)

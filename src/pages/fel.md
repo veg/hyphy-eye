@@ -5,10 +5,10 @@ import * as phylotree from "phylotree";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as utils from "./fel/fel-utils.js";
-import * as plots from "./fel/fel-plots.js";
-import * as phylotreeUtils from "./utils/phylotree-utils.js";
-import * as tt from "./components/tile-table/tile-table.js";
+import * as utils from "../fel/fel-utils.js";
+import * as plots from "../fel/fel-plots.js";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as tt from "../components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
@@ -19,7 +19,7 @@ const vl = vegaLiteApi.register(vega, vegaLite);
 # FEL results summary
 
 ```js
-const results_json = await FileAttachment("./data/fel_test_data.json").json();
+const results_json = await FileAttachment("../data/fel_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 ```
 
@@ -82,7 +82,7 @@ const table1 = view(Inputs.table (siteTableData, {
 <details>
   <summary><b>Table column definitions</b></small></summary>
   <small><dl>
-    ${_.map (sites_table[2], (d)=>"<dt><tt>"+d[0]+"</tt></dt><dd>" + d[1] + "</dd>")}
+    ${_.map (sites_table[2], (d)=>html`<dt><tt>${d[0]}</tt></dt><dd>${d[1]}</dd>`)}
   </dl></small>
 </details>
 
@@ -152,7 +152,7 @@ function display_tree(i) {
 
 const figure2 = display_tree((-1) + (+tree_id.split (" ")[1])).show()
 ```
-
+<link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2}</div>
 
 **Citation**

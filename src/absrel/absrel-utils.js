@@ -8,6 +8,7 @@ import * as d3 from "d3";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as utils from "../utils/general-utils.js";
 import * as summaryStats from "../stats/summaries.js";
+import {html} from "htl";
 
 const floatFormat = d3.format (".2g")
 
@@ -50,7 +51,7 @@ export function get_attributes(results_json) {
         'DH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 2 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value(),
         'TH' : _.chain(_.map (results_json["branch attributes"][0], (d,k) => [k,_.get (d, ['rate at which 3 nucleotides are changed instantly within a single codon'])])).filter (d=>!_.isUndefined(d[1])).fromPairs().value()
     })
-    
+    const partition_sizes = _.chain (results_json['data partitions']).map ((d,k)=>(d['coverage'][0].length)).value();
 
     return {
         "positive_results" : positive_results,
@@ -60,7 +61,8 @@ export function get_attributes(results_json) {
         "srv_rate_classes" : srv_rate_classes,
         "srv_distribution" : srv_distribution,
         "omega_rate_classes" : omega_rate_classes,
-        "mh_rates" : mh_rates
+        "mh_rates" : mh_rates,
+        "partition_sizes" : partition_sizes
     }
 }
 
@@ -78,9 +80,8 @@ export function get_attributes(results_json) {
  *       - icon: {string} The CSS class for the icon associated with the number
  *       - color: {string} The color to use for the icon
  */
-export function get_tile_specs(results_json, ev_threshold, tree_objects) {
+export function get_tile_specs(results_json, ev_threshold, distributionTable) {
     const attrs = get_attributes(results_json)
-    const distributionTable = getDistributionTable(results_json, ev_threshold, tree_objects)
 
     const median_DH = _.size(attrs.mh_rates['DH']) ? floatFormat (d3.median (_.map (attrs.mh_rates['DH']))) : "N/A"
     const median_TH = _.size(attrs.mh_rates['TH']) ? floatFormat (d3.median (_.map (attrs.mh_rates['TH']))) : "N/A"
@@ -432,10 +433,10 @@ export function siteTableData(results_json, ev_threshold, profileBranchSites) {
         
       });
     return [site_info, {
-      'Codon' : "<abbr title = \"Site\">Codon</abbr>",
-      'SRV posterior mean' : "<abbr title = \"Posterior mean of the synonymous rate, α;\">E<sub>post</sub>[α]</abbr>",
-      'LogL' : "<abbr title = \"Site log-likelihood under the unconstrained model\">log(L)</abbr>",
-      'Subs' : "<abbr title = \"Total # of substitutions (s+ns)\">Subs</abbr>",
-      'ER' : "<abbr title = \"Total # branches with evidence ratio > ${ev_threshold}\">ER Branch</abbr>",
+      'Codon' : html`<abbr title = "Site">Codon</abbr>`,
+      'SRV posterior mean' : html`<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>`,
+      'LogL' : html`<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>`,
+      'Subs' : html`<abbr title = "Total # of substitutions (s+ns)">Subs</abbr>`,
+      'ER' : html`<abbr title = "Total # branches with evidence ratio > ${ev_threshold}">ER Branch</abbr>`,
     }];
 }

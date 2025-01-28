@@ -24,6 +24,7 @@ import * as d3 from "d3";
  * provided, this is required.
  * @param {String} color_label - optional label for color scale (i.e. the name of the data attribute). If color_data 
  * is provided, this is required.
+ * @param {Boolean} rev_threshold_color - swap the way points are colored based on the threshold value. Default false.
  * 
  * @returns {Object} Vega-Lite spec
  */
@@ -39,7 +40,8 @@ export function BeadPlot(
     key2,
     color_data, 
     color_label,
-    string_color
+    string_color,
+    rev_threshold_color = false
 ) {
     const false_zero = 1e-20;
 
@@ -70,6 +72,7 @@ export function BeadPlot(
         }
     }
 
+    // TODO: no longer remember why we need the color_data here.. isnt this in the main data param?
     if (color_data && color_label) {
         color_spec = {"field" : color_label, "type" : "quantitative", "scale" : {"type" : "log", "scheme": "turbo"}, "legend" : {"orient" : "top"}}
     } else if (color_data) {
@@ -78,9 +81,13 @@ export function BeadPlot(
         // TODO: an error?
     } else {
         if (threshold) {
+            let threshold_operation = '>'
+            if (rev_threshold_color) {
+                threshold_operation = '<'
+            }
             string_color = string_color || "black";
             color_spec = {
-                "condition": {"test": "datum['" + key + "'] > " + threshold, "value": "firebrick"},
+                "condition": {"test": "datum['" + key + "'] "+ threshold_operation + threshold, "value": "firebrick"},
                 "value": "lightgrey"
                 }
         }

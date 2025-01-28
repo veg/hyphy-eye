@@ -5,11 +5,11 @@ import * as phylotree from "phylotree";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as utils from "./busted/busted-utils.js";
-import * as plots from "./busted/busted-plots.js";
-import * as phylotreeUtils from "./utils/phylotree-utils.js";
-import * as omegaPlots from "./components/omega-plots.js";
-import * as tt from "./components/tile-table/tile-table.js";
+import * as utils from "../busted/busted-utils.js";
+import * as plots from "../busted/busted-plots.js";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as omegaPlots from "../components/omega-plots.js";
+import * as tt from "../components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
@@ -23,11 +23,11 @@ const proportionFormat = d3.format (".5p")
 # BUSTED results summary
 
 ```js
-const results_json = await FileAttachment("./data/busted_test_data.json").json();
+const results_json = await FileAttachment("../data/busted_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 ```
 
-<span style = 'font-size: 110%; color: firebrick;'>Based on the likelihood ratio test, there **is ${results_json["test results"]["p-value"]>0.05 ? "no" : ""}** evidence of _episodic diversifying selection_ in this dataset (<tt>p=${floatFormat(results_json["test results"]["p-value"])}</tt>).
+<span style = 'font-size: 110%;'>Based on the likelihood ratio test, there **is ${results_json["test results"]["p-value"]>0.05 ? "no" : ""}** evidence of _episodic diversifying selection_ in this dataset (<tt>p=${floatFormat(results_json["test results"]["p-value"])}</tt>).
 </span>This analysis **${attrs.srv_rate_classes > 0 ? "included" : "did not include"}** site-to-site synonymous rate variation${attrs.srv_hmm?" with linear autocorrelation (HMM)" : ""}. ${_.isUndefined (attrs.mh_rates['DH']) ? "" : (_.isUndefined (attrs.mh_rates['TH']) ? "Double nucleotide substitutions were included in the model." : "Double and triple nucleotide substitutions were included in the model.")}
 ${results_json.analysis.version < 4.0 ? "<small><b>Some of the visualizations are not available for BUSTED analyses before v4.0</b>" : ""} 
 
@@ -165,7 +165,7 @@ function getFigure2() {
           let codon_index = (+toDisplay[1]);
           let partition_id = utils.getSiteIndexPartitionCodon(results_json)[codon_index-1][0]-1;
           codon_index -= d3.sum (attrs.partition_sizes.slice (0,partition_id));
-          let TT = plots.display_tree_site(results_json, partition_id, tree_objects[partition_id], codon_index, tree_options, treeDim, treeLabels, branch_length, color_branches, attrs.partition_sizes);
+          let TT = plots.display_tree_site(results_json, partition_id, tree_objects[partition_id], codon_index, tree_options, treeDim, treeLabels, branch_length, color_branches, attrs.partition_sizes, test_omega, attrs.has_error_sink);
           return TT;
       } 
       let pi = (-1) + (+toDisplay[1]);
@@ -198,90 +198,8 @@ if (figure2 && figure2.color_scale) {
 }
 ```
 <div>${schemeElement}</div>
+<link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2.show()}</div>
-
-**Figure 3**.
-
-```js
-const aliview_start = view(Inputs.range([1, sites_table[1].length], {label: "Start position", value : 1, step: 1}))
-```
-
-```js
-const window_span = view(Inputs.range([10, 50], {label: "Window width", value : 30, step: 1}))
-```
-
-```js
-const ali_type = view(Inputs.radio (["Codon", "Amino-acid", "Both"], {label : "Plot type", "value" : "Codon"}))
-```
-
-```js
-function get_ali_color_options() {
-  const options = [];
-  if (bsPositiveSelection.length) options.push ("Support for EDS");
-  if (bsErrorSink.length) options.push ("Error Annotation");
-  return options;
-}
-const ali_color_options = get_ali_color_options()
-```
-
-```js
-const color_by = view(Inputs.radio (['Aminoacid'].concat (ali_color_options), {label : ali_color_options.length ? "Color By" : "", "value" : "Support for EDS"}))
-```
-
-```js
-  const lookup = null;
-  if (color_by == 'Error Annotation') lookup = bsErrorSink;
-  if (color_by == 'Support for EDS') lookup = bsPositiveSelection;
-  
-  const ctest = plots.codonComposition((results_json, tree_objects, site,partition)=>site >= aliview_start-1 && site < aliview_start + window_span-1, 0);
-  let letters = _.groupBy (ctest, (d)=>d.Key);
-  const aa_cut = (d)=>d.aa.length > 1 ? "#" : d.aa;
-  if (lookup) {
-      _.each (lookup, (d)=> {
-            const c = letters[d.Key];
-            if (c) {
-                c[0].ER = d.ER;
-                c[0].sequence = d.Key.split ("|")[0];
-                c[0].site = d.Key.split ("|")[1];
-            }
-      });
-  } else {
-      _.each (letters, (d)=>{d[0].ER = aa_cut(d[0]); d[0].sequence = d[0].Key.split ("|")[0];
-                d[0].site = d[0].Key.split ("|")[1];});
-  }
-
-  
-  letters = _.flatten (_.map (letters));
-  const sites = _.sortBy (_.uniq (_.map (ctest, (d)=>d.site)), (d)=>+d);
-  const text_label = ali_type == "Codon" ? "value" : (ali_type == "Both" ? (d)=>d.value + "/" + aa_cut(d) : aa_cut);
-  const text_spacing = ali_type == "Codon" ? 3 : (ali_type == "Both" ? 5 : 2.0);
-  const branches = phylotreeUtils.treeNodeOrdering (results_json, tree_objects, 0, false, 1);
-  const label_width = 8*d3.max (branches, (d)=>Math.min (15,d.length));
-  const plot = Plot.plot({
-      marginLeft : 20 + label_width,
-      width : (8*text_spacing) * sites.length + 20 + label_width,
-      height : 14 * branches.length + 60,
-      padding: 0,
-      x : {"domain" : sites, "label" : null, tickRotate : 45},
-      y : {"domain" : branches, "label" : null, tickSize: 0,  tickFormat: (d) => (d.length <= 16 ? d : d.substr (0,15) + "...")},
-      color : lookup ? {scheme: "BuYlRd", "legend" : true, label: color_by, "type" : "diverging-log", "reverse" : false, symmetric: false, pivot : 1} : {"legend" : true, label: color_by, "type" : "categorical"},
-      //y: {tickFormat: Plot.formatMonth("en", "short")},
-      marks: [
-        Plot.cell(letters, {
-          y: "sequence",
-          x: "site",
-          fill: "ER",
-          inset: 0.5,
-          opacity : 0.4,
-          tip : true
-        }),
-        
-        Plot.text(letters, 
-          {y: "sequence", x: "site", "text" : text_label, "fill" : "black", "fontFamily" : "monospace", "fontWeight" : 400})
-      ]
-    });
-```
-<div>${plot}</div>
 
 **Citation**
 

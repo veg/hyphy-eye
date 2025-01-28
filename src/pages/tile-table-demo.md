@@ -1,6 +1,6 @@
 ```js
-import * as tt from "./components/tile-table/tile-table.js";
-import * as felUtils from "./fel/fel-utils.js";
+import * as tt from "../components/tile-table/tile-table.js";
+import * as felUtils from "../fel/fel-utils.js";
 ```
 
 # TileTable Component Examples
@@ -53,7 +53,7 @@ const trivial_inputs = [
 </br>
 
 ```js
-const results_json = await FileAttachment("./data/fel_test_data.json").json();
+const results_json = await FileAttachment("../data/fel_test_data.json").json();
 const fel_attrs = felUtils.get_attributes(results_json);
 const pvalue_threshold = 0.1;
 const tile_specs = felUtils.get_tile_specs(results_json, pvalue_threshold);

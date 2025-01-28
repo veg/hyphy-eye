@@ -6,10 +6,10 @@ import * as parse_svg from "parse-svg-path";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as utils from "./nrm/nrm-utils.js";
-import * as plots from "./nrm/nrm-plots.js";
-import * as tt from "./components/tile-table/tile-table.js";
-import * as phylotreeUtils from "./utils/phylotree-utils.js";
+import * as utils from "../nrm/nrm-utils.js";
+import * as plots from "../nrm/nrm-plots.js";
+import * as tt from "../components/tile-table/tile-table.js";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
@@ -23,7 +23,7 @@ const proportionFormat = d3.format(".5p")
 # NRM (non-reversible model) result summary
 
 ```js
-const results_json = await FileAttachment("./data/nrm_test_data.json").json();
+const results_json = await FileAttachment("../data/nrm_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 const tile_specs = utils.get_tile_specs(results_json);
 ```
@@ -230,4 +230,5 @@ schemeElement2.appendChild(legend)
 schemeElement2.appendChild(document.createElement("br"))
 ```
 <div>${schemeElement2}</div>
+<link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2.show()}</div>

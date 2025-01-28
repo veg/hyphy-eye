@@ -58,12 +58,19 @@ export function get_plot_options(srv_rate_classes, srv_distribution, bsPositiveS
  * @param {array} fig1data - The data object containing the site-level results of interest
  * @param {array} bsPositiveSelection - a thing
  * @param {array} profileBranchSites - profiles of branch sites
+ * @param {array<string>} branch_order - display order of branches in tree
+ * @param {string} fig1_controls - user input for what figure 1 should display
  * @returns {Object} The Vega-Lite spec for the specified plot type
  */
-export function get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, rate_table, attrs, fig1_controls, tree_objects, profileBranchSites) {
-  // TODO see if we can pass these in instead of recalculating them based on other params/ change params for this function
-  const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));
-  const branch_order = _.filter (phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0), (d)=>attrs.profilable_branches.has (d) && selected_branches.has (d));
+export function get_plot_spec(
+  plot_type, 
+  results_json, 
+  fig1data, 
+  bsPositiveSelection, 
+  profileBranchSites,
+  branch_order,
+  fig1_controls
+) { 
   // TODO: can we update the input to handle this?
   var size_field = "subs";
   switch (fig1_controls) {
@@ -254,7 +261,7 @@ export function display_tree(results_json, index, T, options, ev_threshold, tree
             let labels;
             switch (color_branches) {
               case "Substitutions" : {  
-                labels = phylotreeUtils.subs_by_branch (index);
+                labels = phylotreeUtils.subs_by_branch(results_json, index);
                  t.color_scale_title = "Min # of nucleotide substitutions";
                 } 
                 break;
@@ -309,7 +316,7 @@ export function display_tree(results_json, index, T, options, ev_threshold, tree
    * @param {string} color_branches - option to color branches by
    * @return {object} - the rendered tree
    */
-export function display_tree_site(results_json, index, T,s,options, ev_threshold, treeDim, treeLabels, branch_length, color_branches) {
+export function display_tree_site(results_json, index, T,s,options, ev_threshold, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
     const attrs = utils.get_attributes(results_json, ev_threshold);
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     

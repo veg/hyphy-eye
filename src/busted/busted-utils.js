@@ -9,6 +9,7 @@ import * as _ from "lodash-es";
 import * as d3 from "d3";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as utils from "../utils/general-utils.js";
+import {html} from "htl";
 
 const floatFmt = d3.format (".2g")
 const percentageFormat = d3.format (".2p")
@@ -130,6 +131,23 @@ export function get_tile_specs(results_json, ev_threshold, bsPositiveSelection, 
     return tile_table_inputs;
 }
 
+/**
+ * Retrieves and sorts rate distribution data from the results JSON.
+ *
+ * @param {Object} results_json - The JSON object containing the results
+ * @param {boolean} has_error_sink - A flag indicating if the error sink should be
+ *   considered.
+ * @param {Array} keys - The keys used to access the rate distribution data
+ *   within the results JSON.
+ * @param {Array} [tags=["omega", "proportion"]] - Optional tags to specify
+ *   the fields for rate value and weight in the rate distribution data.
+ *
+ * @returns {Array|null} A sorted array of objects, each containing:
+ *   - value: The rate value as specified by the first tag.
+ *   - weight: The corresponding weight as specified by the second tag.
+ *   The array is sorted by rate value. Returns null if no rate information
+ *   is found.
+ */
 function getRateDistribution(results_json, has_error_sink, keys, tags) {
     tags = tags || ["omega", "proportion"];
     const rate_info = _.get(results_json, keys);
@@ -143,6 +161,18 @@ function getRateDistribution(results_json, has_error_sink, keys, tags) {
     }
     return null;
 }
+
+/**
+ * Retrieves the rate distribution for the unconstrained model test from the results JSON.
+ *
+ * @param {Object} results_json - The JSON object containing the BUSTED analysis results.
+ * @param {boolean} has_error_sink - A flag indicating if the error sink should be considered.
+ *
+ * @returns {Array|null} A sorted array of objects, each containing:
+ *   - value: The rate value as specified by the first tag.
+ *   - weight: The corresponding weight as specified by the second tag.
+ *   The array is sorted by rate value. Returns null if no rate information is found.
+ */
 
 export function test_omega(results_json, has_error_sink) {
     return getRateDistribution (results_json, has_error_sink, ["fits","Unconstrained model","Rate Distributions","Test"])
@@ -226,14 +256,14 @@ export function siteTableData(results_json) {
         
       });
     return [site_info, {
-      'Partition' : '<abbr title = "Partition">Part.</abbr>',
-      'Codon' : '<abbr title = "Site">Codon</abbr>',
-      'ER (constrained)' : '<abbr title = "Evidence ratio for positive selection (constrained null)">ER (ω>1, constr.)</abbr>',
-      'ER (optimized null)' : '<abbr title = "Evidence ratio for positive selection (optimized null)">ER (ω>1, optim.)</abbr>',
-      'SRV posterior mean' : '<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>',
-      'SRV viterbi' : '<abbr title = "Most likely rate value for the synonymous rate α (Viterbi path)">α</abbr>',
-      'logL' : '<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>',
-      'LR' : '<abbr title = "Site log-likelihood ratio contribution">LR</abbr>'
+      'Partition' : html`<abbr title = "Partition">Part.</abbr>`,
+      'Codon' : html`<abbr title = "Site">Codon</abbr>`,
+      'ER (constrained)' : html`<abbr title = "Evidence ratio for positive selection (constrained null)">ER (ω>1, constr.)</abbr>`,
+      'ER (optimized null)' : html`<abbr title = "Evidence ratio for positive selection (optimized null)">ER (ω>1, optim.)</abbr>`,
+      'SRV posterior mean' : html`<abbr title = "Posterior mean of the synonymous rate, α;">E<sub>post</sub>[α]</abbr>`,
+      'SRV viterbi' : html`<abbr title = "Most likely rate value for the synonymous rate α (Viterbi path)">α</abbr>`,
+      'logL' : html`<abbr title = "Site log-likelihood under the unconstrained model">log(L)</abbr>`,
+      'LR' : html`<abbr title = "Site log-likelihood ratio contribution">LR</abbr>`
     }];
 }
 
@@ -294,6 +324,24 @@ export function getBSErrorSink(results_json, tree_objects, has_error_sink_nt) {
   return [];
 }
 
+/**
+ * Computes the branch-site positive selection sites for a set of results.
+ *
+ * This function takes the results of a Busted analysis, and returns an array
+ * of objects each containing the branch name, site number, posterior probability
+ * and evidence ratio for each site that was detected as showing positive selection.
+ *
+ * @param {Object} results_json - The JSON object containing the Busted results
+ * @param {Array<phylotree.phylotree>} tree_objects - An array of phylotree objects
+ *   for each partition
+ * @param {Array<Object>} test_omega - The rate distribution for the tested
+ *   branches
+ * @param {bool} has_error_sink - Whether the error sink class was used
+ *
+ * @returns {Array<Object>} An array of objects each containing the branch name,
+ *   site number, posterior probability and evidence ratio for each site that
+ *   was detected as showing positive selection
+ */
 export function getBSPositiveSelection(results_json, tree_objects, test_omega, has_error_sink) {
     let w =  test_omega[test_omega.length - 1].weight;
     
@@ -304,6 +352,28 @@ export function getBSPositiveSelection(results_json, tree_objects, test_omega, h
     return [];
 }
 
+/**
+ * Computes posterior probabilities for each branch-site combination and returns
+ * detailed information for each site.
+ *
+ * @param {Object} results_json - The JSON object containing the results of the
+ * analysis, including branch attributes and substitution information.
+ * @param {Array<phylotree.phylotree>} tree_objects - An array of phylotree objects
+ *   for each partition
+ * @param {number} rate_class - The index of the rate distribution to use for
+ *   computing posteriors
+ * @param {number} prior_odds - The prior odds for the tested rate distribution
+ *
+ * @returns {Array<Object>} An array of objects, each containing:
+ *   - Key: A string combining the branch name and site index
+ *   - Posterior: The posterior probability for the site
+ *   - ER: The evidence ratio for the site
+ *   - subs: Substitution information
+ *   - from: The originating state of the substitution
+ *   - to: The resulting state of the substitution
+ *   - syn_subs: The count of synonymous substitutions
+ *   - nonsyn_subs: The count of non-synonymous substitutions
+ */
 function posteriorsPerBranchSite(results_json, tree_objects, rate_class, prior_odds) {
   let results = [];
   let offset = 0;
