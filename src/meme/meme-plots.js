@@ -103,7 +103,12 @@ export function get_plot_spec(
                   "p-value for selection", 
                   true, 
                   "log", 
-                  pvalue_threshold)
+                  pvalue_threshold,
+                  null,
+                  null,
+                  null,
+                  'black',
+                  true)
             })
         },
         "p-values for variability" : {
@@ -117,7 +122,12 @@ export function get_plot_spec(
                   "p-value for variability", 
                   true, 
                   "log", 
-                  pvalue_threshold)
+                  pvalue_threshold,
+                  null,
+                  null,
+                  null,
+                  'black',
+                  true)
             })
         },
         "Site rates" : {
