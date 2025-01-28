@@ -30,7 +30,7 @@ const results_json = await FileAttachment("../data/meme_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 ```
 
-<span style = 'font-size: 110%; color: firebrick;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${count_sites}** sites in this dataset (<tt>p≤${pvalue_threshold}</tt>).</span>
+<span style = 'font-size: 110%; color;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${count_sites}** sites in this dataset (<tt>p≤${pvalue_threshold}</tt>).</span>
 ${attrs.has_resamples > 0 ? "This analysis used parametric bootstrap with " + attrs.has_resamples + " replicates to test for significance." : ""} ${+results_json.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
 
 ```js

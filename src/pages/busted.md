@@ -27,7 +27,7 @@ const results_json = await FileAttachment("../data/busted_test_data.json").json(
 const attrs = utils.get_attributes(results_json);
 ```
 
-<span style = 'font-size: 110%; color: firebrick;'>Based on the likelihood ratio test, there **is ${results_json["test results"]["p-value"]>0.05 ? "no" : ""}** evidence of _episodic diversifying selection_ in this dataset (<tt>p=${floatFormat(results_json["test results"]["p-value"])}</tt>).
+<span style = 'font-size: 110%;'>Based on the likelihood ratio test, there **is ${results_json["test results"]["p-value"]>0.05 ? "no" : ""}** evidence of _episodic diversifying selection_ in this dataset (<tt>p=${floatFormat(results_json["test results"]["p-value"])}</tt>).
 </span>This analysis **${attrs.srv_rate_classes > 0 ? "included" : "did not include"}** site-to-site synonymous rate variation${attrs.srv_hmm?" with linear autocorrelation (HMM)" : ""}. ${_.isUndefined (attrs.mh_rates['DH']) ? "" : (_.isUndefined (attrs.mh_rates['TH']) ? "Double nucleotide substitutions were included in the model." : "Double and triple nucleotide substitutions were included in the model.")}
 ${results_json.analysis.version < 4.0 ? "<small><b>Some of the visualizations are not available for BUSTED analyses before v4.0</b>" : ""} 
 

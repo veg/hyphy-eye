@@ -74,19 +74,19 @@ export function get_tile_specs(results_json, pvalue_threshold) {
         },
         {
             number: attrs.tested_branch_count, 
-            color: "midnight_blue", 
+            color: "asbestos", 
             description: "median branches/partition used for testing", 
             icon: "icon-share icons"
         },
         {
             number: attrs.has_resamples || "N/A", 
-            color: "midnight_blue", 
+            color: "asbestos", 
             description: "parametric bootstrap replicates", 
             icon: "icon-layers icons"
         },
         {
             number: count_sites, 
-            color: "pomegranate", 
+            color: "midnight_blue", 
             description: "sites subject to episodic diversifying selection", 
             icon: "icon-plus icons"
         },
