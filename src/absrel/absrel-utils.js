@@ -80,9 +80,8 @@ export function get_attributes(results_json) {
  *       - icon: {string} The CSS class for the icon associated with the number
  *       - color: {string} The color to use for the icon
  */
-export function get_tile_specs(results_json, ev_threshold, tree_objects) {
+export function get_tile_specs(results_json, ev_threshold, distributionTable) {
     const attrs = get_attributes(results_json)
-    const distributionTable = getDistributionTable(results_json, ev_threshold, tree_objects)
 
     const median_DH = _.size(attrs.mh_rates['DH']) ? floatFormat (d3.median (_.map (attrs.mh_rates['DH']))) : "N/A"
     const median_TH = _.size(attrs.mh_rates['TH']) ? floatFormat (d3.median (_.map (attrs.mh_rates['TH']))) : "N/A"

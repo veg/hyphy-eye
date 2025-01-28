@@ -39,7 +39,7 @@ const ev_threshold = view(Inputs.text({label: html`<b>Evidence ratio threshold</
 ```js
 const tree_objects = phylotreeUtils.get_tree_objects(results_json);
 const distributionTable = utils.getDistributionTable(results_json, ev_threshold, tree_objects);
-const tile_specs = utils.get_tile_specs(results_json, ev_threshold, tree_objects);
+const tile_specs = utils.get_tile_specs(results_json, ev_threshold, distributionTable);
 const profileBranchSites = utils.getProfileBranchSites(results_json, tree_objects);
 const siteTableData = utils.siteTableData(results_json, ev_threshold, profileBranchSites);
 const sites_table = [{}, siteTableData[0], siteTableData[1]];
@@ -172,12 +172,14 @@ function getFig1data() {
    return _.filter (siteTableData[0], (x)=>in_set.has (x.Codon));
 }
 const fig1data = getFig1data();
+const selected_branches = new Set (_.map (rate_table, (d)=>d.branch));
+const branch_order = _.filter (phylotreeUtils.treeNodeOrdering(results_json, tree_objects, 0), (d)=>attrs.profilable_branches.has (d) && selected_branches.has (d));
 ```
 
 ```js
 let plot_spec;
 if (plot_type) {
-  plot_spec = plots.get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, rate_table, attrs, fig1_controls, tree_objects, profileBranchSites)
+  plot_spec = plots.get_plot_spec(plot_type, results_json, fig1data, bsPositiveSelection, profileBranchSites, branch_order, fig1_controls)
 }
 ```
 <div>${vl.render({"spec": plot_spec})}</div>
