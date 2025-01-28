@@ -5,10 +5,10 @@ import * as phylotree from "phylotree";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as utils from "./fel/fel-utils.js";
-import * as plots from "./fel/fel-plots.js";
-import * as phylotreeUtils from "./utils/phylotree-utils.js";
-import * as tt from "./components/tile-table/tile-table.js";
+import * as utils from "../fel/fel-utils.js";
+import * as plots from "../fel/fel-plots.js";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as tt from "../components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
@@ -19,7 +19,7 @@ const vl = vegaLiteApi.register(vega, vegaLite);
 # FEL results summary
 
 ```js
-const results_json = await FileAttachment("./data/fel_test_data.json").json();
+const results_json = await FileAttachment("../data/fel_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 ```
 

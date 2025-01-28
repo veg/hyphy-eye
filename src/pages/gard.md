@@ -6,12 +6,12 @@ import * as parse_svg from "parse-svg-path";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as utils from "./gard/gard-utils.js";
-import * as plots from "./gard/gard-plots.js";
-import * as statsSummary from "./stats/summaries.js";
-import * as omegaPlots from "./components/omega-plots.js";
-import * as tt from "./components/tile-table/tile-table.js";
-import * as phylotreeUtils from "./utils/phylotree-utils.js"
+import * as utils from "../gard/gard-utils.js";
+import * as plots from "../gard/gard-plots.js";
+import * as statsSummary from "../stats/summaries.js";
+import * as omegaPlots from "../components/omega-plots.js";
+import * as tt from "../components/tile-table/tile-table.js";
+import * as phylotreeUtils from "../utils/phylotree-utils.js"
 import {FileAttachment} from "observablehq:stdlib";
 ```
 
@@ -25,7 +25,7 @@ const proportionFormat = d3.format(".5p")
 # GARD result summary
 
 ```js
-const results_json = await FileAttachment("./data/gard_test_data.json").json();
+const results_json = await FileAttachment("../data/gard_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 const tile_specs = utils.get_tile_specs(results_json);
 const tree_objects = plots.get_tree_objects(results_json);

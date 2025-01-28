@@ -5,12 +5,12 @@ import * as _ from "lodash-es";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as utils from "./absrel/absrel-utils.js";
-import * as plots from "./absrel/absrel-plots.js";
-import * as phylotreeUtils from "./utils/phylotree-utils.js";
-import * as statsSummary from "./stats/summaries.js";
-import * as omegaPlots from "./components/omega-plots.js";
-import * as tt from "./components/tile-table/tile-table.js";
+import * as utils from "../absrel/absrel-utils.js";
+import * as plots from "../absrel/absrel-plots.js";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as statsSummary from "../stats/summaries.js";
+import * as omegaPlots from "../components/omega-plots.js";
+import * as tt from "../components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 import {html} from "htl";
 ```
@@ -25,7 +25,7 @@ const proportionFormat = d3.format (".5p")
 # aBSREL results summary
 
 ```js
-const results_json = await FileAttachment("./data/absrel_test_data.json").json();
+const results_json = await FileAttachment("../data/absrel_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 ```
 

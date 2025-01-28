@@ -6,12 +6,12 @@ import * as parse_svg from "parse-svg-path";
 import * as vega from "npm:vega";
 import * as vegaLite from "npm:vega-lite";
 import * as vegaLiteApi from "npm:vega-lite-api";
-import * as utils from "./meme/meme-utils.js";
-import * as plots from "./meme/meme-plots.js";
-import * as phylotreeUtils from "./utils/phylotree-utils.js";
-import * as statsSummary from "./stats/summaries.js";
-import * as omegaPlots from "./components/omega-plots.js";
-import * as tt from "./components/tile-table/tile-table.js";
+import * as utils from "../meme/meme-utils.js";
+import * as plots from "../meme/meme-plots.js";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as statsSummary from "../stats/summaries.js";
+import * as omegaPlots from "../components/omega-plots.js";
+import * as tt from "../components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
 import {html} from "htl";
 ```
@@ -26,7 +26,7 @@ const proportionFormat = d3.format (".5p")
 # MEME result summary
 
 ```js
-const results_json = await FileAttachment("./data/meme_test_data.json").json();
+const results_json = await FileAttachment("../data/meme_test_data.json").json();
 const attrs = utils.get_attributes(results_json);
 ```
 

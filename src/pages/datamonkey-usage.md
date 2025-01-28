@@ -16,7 +16,7 @@
 ```js
 import * as Plot from "npm:@observablehq/plot";
 import * as d3 from "npm:d3";
-import { weeklyPlot, sitesAndSequences } from "./components/usage.js";
+import { weeklyPlot, sitesAndSequences } from "../components/usage.js";
 import { html } from "npm:htl";
 
 // A list of methods

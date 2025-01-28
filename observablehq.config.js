@@ -3,24 +3,43 @@ export default {
   // The app’s title; used in the sidebar and webpage titles.
   title: "hyphy-eye",
 
-  // The pages and sections in the sidebar. If you don’t specify this option,
-  // all pages will be listed in alphabetical order. Listing pages explicitly
-  // lets you organize them into sections and have unlisted pages.
-  // pages: [
-  //   {
-  //     name: "Examples",
-  //     pages: [
-  //       {name: "Dashboard", path: "/example-dashboard"},
-  //       {name: "Report", path: "/example-report"}
-  //     ]
-  //   }
-  // ],
-
   // Content to add to the head of the page, e.g. for a favicon:
   head: '<link rel="icon" href="observable.png" type="image/png" sizes="32x32">',
 
   // The path to the source root.
   root: "src",
+
+  pages: [
+    {
+      name: "Legacy Results Summaries",
+      open: true,
+      pages: [
+        {name: "aBSREL", path: "/pages/absrel"},
+        {name: "BUSTED", path: "/pages/busted"},
+        {name: "FEL", path: "pages/fel"},
+        {name: "GARD", path: "pages/gard"},
+        {name: "MEME", path: "pages/meme"},
+        {name: "MULTI-HIT", path: "pages/multihit"},
+        {name: "NRM", path: "pages/nrm"}
+      ]
+    },
+    {
+      name: "Components",
+      open: false,
+      pages: [
+        {name: "Bipartite Network", path: "/pages/busted-network"},
+        {name: "Color Maps", path: "/pages/color-maps-demo"},
+        {name: "Tile Table", path: "pages/tile-table-demo"}
+      ]
+    },
+    {
+      name: "Usage",
+      open: false,
+      pages: [
+        {name: "Datamonkey Usage", path: "pages/datamonkey-usage"}
+      ]
+    }
+  ]
 
   // Some additional configuration options and their defaults:
   // theme: "default", // try "light", "dark", "slate", etc.
