@@ -33,12 +33,12 @@ export function render(x, el, width = 1000, height = 1000) {
       var nodes = x.column1NodeIds.map((node, i) => {
         return {
           id: node,
-          group: 1
+          group: 2
         };
       }).concat(x.column2NodeIds.map((node, i) => {
         return {
           id: node,
-          group: 2
+          group: 1
         };
       }));
 

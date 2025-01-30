@@ -49,7 +49,7 @@ const bpnet_svg = bpnet.render(filtered_data, document.createElement("div"));
 
 ## Force directed bipartite network
 
-same idea as the other.. different layout. codons are larger circles, branches smaller.
+same idea as the other.. different layout. codons are smaller circles, branches larger.
 
 pros: pretty obvious when a branch doesnt have much going on (bc its off in space), 
 or is doing something different to other branches (bc its connected but still kinda off in space lol).
@@ -60,8 +60,8 @@ but they might be differentiated by shape or some other form of highlighting upo
 maybe there would be an independently scrolling phylotree to left that a user could choose clades from?
 also, the only real opportunity for codon info here is in tooltips or similar.
 
-my 2c, i dont currently think this is a primary result summary viz, but could be a complimentary one.
-something offered after we get the primary thing sorted.
+my 2c, i dont currently think this is a primary result summary viz, but could be a complimentary,
+more exploratory one. it does seem fun though, something offered after we get the primary thing sorted.
 
 ```js
 const force_net = forcenet.render(filtered_data, document.createElement("div"));
