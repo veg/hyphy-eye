@@ -1,3 +1,11 @@
+---
+sidebar: false
+header: false
+footer: false
+pager: false
+theme: air
+---
+
 ```js
 import * as d3 from "d3";
 import * as _ from "lodash-es";
