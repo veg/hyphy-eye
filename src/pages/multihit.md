@@ -1,3 +1,10 @@
+---
+sidebar: false
+header: false
+footer: false
+pager: false
+---
+
 ```js
 import * as d3 from "d3";
 import * as _ from "lodash-es";
@@ -17,10 +24,35 @@ const percentageFormat = d3.format(".2p")
 const proportionFormat = d3.format(".5p")
 ```
 
-# MULTI-HIT result summary
+# MULTI-HIT
+<br>
+
+## Results file
 
 ```js
-const results_json = await FileAttachment("../data/multihit_test_data.json").json();
+const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+```
+
+```js
+const results_json = Mutable(results_file.json());
+```
+
+```js
+window.addEventListener(
+  "message",
+  (event) => {
+    if (event.data.data.MLE) {
+      results_json.value = event.data.data; // Update the mutable value
+    }
+  },
+  false,
+);
+```
+<hr>
+
+## Results summary
+
+```js
 const attrs = utils.get_attributes(results_json);
 const tile_specs = utils.get_tile_specs(results_json);
 ```
@@ -84,3 +116,11 @@ const fig3={
 }
 ```
 <div>${vl.render({"spec": fig3})}</div>
+
+<hr>
+
+## hyphy-eye
+
+<br>
+
+View _more_ results at [hyphy-eye](/)!!

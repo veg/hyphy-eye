@@ -11,21 +11,8 @@ export default {
 
   pages: [
     {
-      name: "Legacy Results Summaries",
-      open: true,
-      pages: [
-        {name: "aBSREL", path: "/pages/absrel"},
-        {name: "BUSTED", path: "/pages/busted"},
-        {name: "FEL", path: "pages/fel"},
-        {name: "GARD", path: "pages/gard"},
-        {name: "MEME", path: "pages/meme"},
-        {name: "MULTI-HIT", path: "pages/multihit"},
-        {name: "NRM", path: "pages/nrm"}
-      ]
-    },
-    {
       name: "Components",
-      open: false,
+      open: true,
       pages: [
         {name: "Bipartite Network", path: "/pages/busted-network"},
         {name: "Color Maps", path: "/pages/color-maps-demo"},
@@ -34,7 +21,7 @@ export default {
     },
     {
       name: "Usage",
-      open: false,
+      open: true,
       pages: [
         {name: "Datamonkey Usage", path: "pages/datamonkey-usage"}
       ]

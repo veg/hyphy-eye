@@ -1,3 +1,10 @@
+---
+sidebar: false
+header: false
+footer: false
+pager: false
+---
+
 ```js
 import * as d3 from "d3";
 import * as Plot from "npm:@observablehq/plot";
@@ -23,10 +30,35 @@ const percentageFormat = d3.format (".2p")
 const proportionFormat = d3.format (".5p")
 ```
 
-# MEME result summary
+# MEME
+<br>
+
+## Results file
 
 ```js
-const results_json = await FileAttachment("../data/meme_test_data.json").json();
+const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+```
+
+```js
+const results_json = Mutable(results_file.json());
+```
+
+```js
+window.addEventListener(
+  "message",
+  (event) => {
+    if (event.data.data.MLE) {
+      results_json.value = event.data.data; // Update the mutable value
+    }
+  },
+  false,
+);
+```
+<hr>
+
+## Results summary
+
+```js
 const attrs = utils.get_attributes(results_json);
 ```
 
@@ -170,6 +202,17 @@ if (figure2 && figure2.color_scale) {
 <link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2.show()}</div>
 
-**Citation**
+<hr>
 
-<p><tt><small>${results_json.analysis["citation"]}</small></tt></p>
+## Suggested Citation
+
+<br>
+<p><tt>${results_json.analysis["citation"]}</tt></p>
+
+<hr>
+
+## hyphy-eye
+
+<br>
+
+View _more_ results at [hyphy-eye](/)!!
