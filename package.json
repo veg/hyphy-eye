@@ -19,7 +19,7 @@
     "observable": "observable",
     "build-npm": "run-s clean-npm bundle",
     "pages:build": "npm run build",
-    "pages:deploy": "wrangler pages deploy dist"
+    "pages:deploy": "wrangler pages deploy dist --project-name=hyphy-eye"
   },
   "dependencies": {
     "@observablehq/framework": "^1.13.0",

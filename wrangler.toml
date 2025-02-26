@@ -2,11 +2,6 @@
 name = "hyphy-eye"
 compatibility_date = "2023-11-17"
 
-# Build command
-[build]
-command = "npm run pages:build"
-output_directory = "dist"
-
-# Content settings
+# Static site configuration
 [site]
 bucket = "./dist"
