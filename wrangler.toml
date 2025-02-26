@@ -1,12 +1,3 @@
 # Cloudflare Pages configuration
 name = "hyphy-eye"
-type = "webpack"
-account_id = ""
-workers_dev = true
-route = ""
-zone_id = ""
 compatibility_date = "2023-11-17"
-
-[site]
-bucket = "./dist"
-entry-point = "./workers-site"
