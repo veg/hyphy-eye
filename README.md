@@ -1,10 +1,14 @@
 # hyphy-eye
 
+TEST
+
 This repo is a WIP, all that follows should be considered subject to change.
 
 ## Motivation
+
 Currently, Observable Notebooks are distributed via ObservableHQ and put directly into production on Datamonkey.org.
 This introduces a few potential pain points, which this project hopes to alleviate:
+
 1. collaborators must carefully coordinate as managing code conflicts and versioning is only weakly supported in Notebook
 2. there is no support for automated unit testing, which leaves code vulnerable to regressions
 3. there is a lack of flexibility in how Notebooks can be distributed (ObservableHQ only)
@@ -19,15 +23,16 @@ The combination of the previously listed factors, and others I've probably not t
 ## Scope
 
 **The idea for this so far is that it may serve as a place where:**
+
 1. visualization components for hyphy-vision/ datamonkey can be built and tested
 2. some basic statistics and utility functions that those components rely on can live
 3. we can build various demo pages for individual components, which are automatically deployed on commit to main, to try to protect them from regressions
-4. we can convert existing Observable Notebooks. These will also get demo pages, to compare to the original Notebook. 
+4. we can convert existing Observable Notebooks. These will also get demo pages, to compare to the original Notebook.
 5. new results summaries for HyPhy methods might be prototyped, or new features for existing ones. (If people prefer prototyping in Notebook and converting, also ok!)
 6. components and utility functions get bundled into an npm package that get be used in production
 
-
 **Importantly, though, I do NOT currently expect this project to:**
+
 1. see results summaries go directly from here to production
 2. publish any artifacts directly through observable hq
 
@@ -96,14 +101,14 @@ Our Framework project looks something like this:
 
 ## Command reference
 
-| Command              | Description                                              |
-| -------------------- | -------------------------------------------------------- |
-| `npm install`        | Install or reinstall dependencies                        |
-| `npm run dev`        | Start local preview server                               |
-| `npm run build`      | Build your static site, generating `./dist`              |
-| `npm run deploy`     | Deploy your app to Observable                            |
-| `npm run clean`      | Clear the local data loader cache                        |
-| `npm run observable` | Run commands like `observable help`                      |
-| `npm run bundle`     | Prepare javascript modules and types for distribution    |
-| `npm run clean-npm`  | Cleans `/dist` from previous `bundle` runs               |
-| `npm run build-npm`  | Runs `clean-npm` followed by `bundle`                   |
+| Command              | Description                                           |
+| -------------------- | ----------------------------------------------------- |
+| `npm install`        | Install or reinstall dependencies                     |
+| `npm run dev`        | Start local preview server                            |
+| `npm run build`      | Build your static site, generating `./dist`           |
+| `npm run deploy`     | Deploy your app to Observable                         |
+| `npm run clean`      | Clear the local data loader cache                     |
+| `npm run observable` | Run commands like `observable help`                   |
+| `npm run bundle`     | Prepare javascript modules and types for distribution |
+| `npm run clean-npm`  | Cleans `/dist` from previous `bundle` runs            |
+| `npm run build-npm`  | Runs `clean-npm` followed by `bundle`                 |
