@@ -17,7 +17,7 @@ const label_color_scale = d3.scaleOrdinal([], d3.schemeCategory10);
 const DYN_RANGE_CAP = 10000;
 const OMEGA_RATE_CLASSES = 2;
 
-export function get_plot_options(has_site_LRT, has_resamples, bsPositiveSelection) {
+export function getPlotOptions(has_site_LRT, has_resamples, bsPositiveSelection) {
     const plot_options = [
         ["p-values for selection", (d)=>true],
         ["p-values for variability", (d)=>has_site_LRT], 
@@ -31,7 +31,7 @@ export function get_plot_options(has_site_LRT, has_resamples, bsPositiveSelectio
     return plot_options;
 }
 
-export function get_plot_description(plot_type, has_resamples) {
+export function getPlotDescription(plot_type, has_resamples) {
     const plot_legends = ({
         "p-values for selection" : "P-values derived from the " + (has_resamples ? "parametric bootstrap" : "asymptotic mixture &Chi;<sup>2</sup> ")  + " test statistic for likelihood ratio tests for episodic diversifying selection. Solid line = user selected significance threshold.",
         "p-values for variability" : "P-values derived from the asymptotic mixture &Chi;<sup>2</sup><sub>2</sub> test statistic for likelihood ratio tests for variable &omega; at this site. Solid line = user selected significance threshold.",
@@ -45,7 +45,7 @@ export function get_plot_description(plot_type, has_resamples) {
     return plot_legends[plot_type];
 }
 
-export function get_tree_color_options(results_json) {
+export function getTreeColorOptions(results_json) {
   let options = ["Tested"];
   if (results_json.substitutions) {
     options.push ("Support for selection");
@@ -77,7 +77,7 @@ export function getTreeViewOptions(results_json, tree_objects) {
   return [opts,codonIdxToPartIdx];
 }
 
-export function get_plot_spec(
+export function getPlotSpec(
     results_json, 
     plot_type, 
     bsPositiveSelection, 
@@ -133,7 +133,7 @@ export function get_plot_spec(
         "Site rates" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return alpha_beta_plot (fig1data, d, 70)
+                return alphaBetaPlot (fig1data, d, 70)
             })
         },
         "Rate density plots" : rateDist.RateDensities(
@@ -186,7 +186,7 @@ export function get_plot_spec(
     return plot_specs[plot_type];
 }
 
-function alpha_beta_plot(data, from, step) {
+function alphaBetaPlot(data, from, step) {
   let color_d = [];
   let color_r = [];
   _.each (TABLE_COLORS, (v,c)=> {color_d.push (c); color_r.push (v);});
@@ -282,7 +282,7 @@ function alpha_beta_plot(data, from, step) {
   };
 }
 
-export function display_tree(results_json,i, treeDim, treeLabels, branch_length, color_branches, tree_objects) {
+export function displayTree(results_json,i, treeDim, treeLabels, branch_length, color_branches, tree_objects) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
       let T = tree_objects[i];
       T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name][branch_length] || 0;  
@@ -373,13 +373,13 @@ export function display_tree(results_json,i, treeDim, treeLabels, branch_length,
     }
 
 
-function get_prior_odds(results_json, part, site) {
+function getPriorOdds(results_json, part, site) {
     const pp = results_json["MLE"]["content"][part][site][4];
     if (pp < 1) return pp/(1-pp);
     return Infinity;
 }
 
-export function display_tree_site(results_json, i,s, treeDim, treeLabels, branch_length, color_branches, shade_branches, tree_objects, treeViewOptions) {
+export function displayTreeSite(results_json, i,s, treeDim, treeLabels, branch_length, color_branches, shade_branches, tree_objects, treeViewOptions) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     let T = tree_objects[i];
     T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name][branch_length] || 0;  
@@ -504,7 +504,7 @@ export function display_tree_site(results_json, i,s, treeDim, treeLabels, branch
           });
         } else if (color_branches == "Support for selection") {
             let branch_values = {};
-            let prior = get_prior_odds(results_json, i, s-1);
+            let prior = getPriorOdds(results_json, i, s-1);
             
             T.traverse_and_compute ( (n)=> {
                 let posteriors = results_json["branch attributes"][i][n.data.name];

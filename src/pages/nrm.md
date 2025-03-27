@@ -57,20 +57,20 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.get_attributes(results_json);
-const tile_specs = utils.get_tile_specs(results_json);
+const attrs = utils.getAttributes(results_json);
+const tileSpecs = utils.getTileSpecs(results_json);
 ```
 
-<div>${tt.tile_table(tile_specs)}</div>
+<div>${tt.tileTable(tileSpecs)}</div>
 
-The best-fitting model (based on AIC-c) is **${attrs.best_model}**. 
+The best-fitting model (based on AIC-c) is **${attrs.bestModel}**. 
 
-Based on the comparison of the general reversible (GTR) and non-reversible models (NREV12), there ${utils.report_result(utils.getTestResult(results_json, "GTR","NREV12"))} for the <b>non-reversibility of the evolutionary process</b>.
+Based on the comparison of the general reversible (GTR) and non-reversible models (NREV12), there ${utils.reportResult(utils.getTestResult(results_json, "GTR","NREV12"))} for the <b>non-reversibility of the evolutionary process</b>.
 
-Based on the comparison of the non-reversible model which estimate root character frequencies (NREV12+F) and the model which assumes that these equal empirical frequencies (NREV12), there ${utils.report_result(utils.getTestResult(results_json, "NREV12","NREV12+F"))} for the <b>difference in root character frequencies from the distribution implied by the sequences</b>.
+Based on the comparison of the non-reversible model which estimate root character frequencies (NREV12+F) and the model which assumes that these equal empirical frequencies (NREV12), there ${utils.reportResult(utils.getTestResult(results_json, "NREV12","NREV12+F"))} for the <b>difference in root character frequencies from the distribution implied by the sequences</b>.
 
 ```js
-const table1 = view(Inputs.table (attrs.model_table_data, {
+const table1 = view(Inputs.table (attrs.modelTableData, {
   sort: "AIC-c",
   rows : 4,
 }))
@@ -79,12 +79,12 @@ const table1 = view(Inputs.table (attrs.model_table_data, {
 **Table 1**. Summary of model fit, overall tree lengths (subs/site), and corresponding equilibrium frequencies (EF) for each model. Note that the GTR model has the same EF as the base composition of the underlying dataset (empirical frequencies).
 
 ```js
-const modelForQ = view(Inputs.select(_.map (attrs.model_summary, (d)=>d[0]), {value: "NREV12", label: "Substitution model"}))
+const modelForQ = view(Inputs.select(_.map (attrs.modelSummary, (d)=>d[0]), {value: "NREV12", label: "Substitution model"}))
 ```
 
 ```js
 // TODO: we do this a lot.. a helper function to produce standalone legends?
-const qMaxRate = utils.get_q_max_rate(results_json, modelForQ)
+const qMaxRate = utils.getQMaxRate(results_json, modelForQ)
 const schemeElement = document.createElement("div")
 const label = document.createElement("text")
 label.textContent = "Relative rate"
@@ -118,7 +118,7 @@ function sparkbar(max) {
     justify-content: end;">${x.toLocaleString("en")}`
 }
 
-const qMatrixTableData = utils.get_q_matrix_table(results_json, modelForQ)
+const qMatrixTableData = utils.getQMatrixTable(results_json, modelForQ)
 ```
 
 ```js
@@ -136,18 +136,18 @@ const table2 = view(Inputs.table (qMatrixTableData, {
 **Table 2**. Rate matrix (**Q**) for the substitution model <tt>${modelForQ}</tt>. The A&lrarr;G rate is used as the reference (=1.0) for identifiability.
 
 ```js
-const fig1x = view(Inputs.select(_.map (attrs.model_summary, (d)=>d[0]), {value: attrs.best_model, label: "x"}))
+const fig1x = view(Inputs.select(_.map (attrs.modelSummary, (d)=>d[0]), {value: attrs.bestModel, label: "x"}))
 ```
 
 ```js
-const fig1y = view(Inputs.select(_.filter (_.map (attrs.model_summary, (d)=>d[0]), (d)=>d!=fig1x), {value: "GTR", label: "y"}))
+const fig1y = view(Inputs.select(_.filter (_.map (attrs.modelSummary, (d)=>d[0]), (d)=>d!=fig1x), {value: "GTR", label: "y"}))
 ```
 
 **Figure 1**. Compare branch length estimates by model (note that because GTR is not able to properly estimate the relative branch lengths of root descendants, the plot excludes those two branches)
 
 ```js
 const fig1 = {
-  "data": {"values": branch_lengths},
+  "data": {"values": branchLengths},
   "width" : 400,
   "height" : 400,
   "layer" : [{
@@ -231,7 +231,7 @@ const treeLabels = view(Inputs.checkbox(
 ```
 
 ```js
-const modelForTree = view(Inputs.select(_.map (attrs.model_summary, (d)=>d[0]), {value: attrs.best_model, label: "Substitution model"}))
+const modelForTree = view(Inputs.select(_.map (attrs.modelSummary, (d)=>d[0]), {value: attrs.bestModel, label: "Substitution model"}))
 ```
 
 ```js
@@ -240,9 +240,9 @@ const distanceFunction = view(Inputs.select(availableDistances, {value: "Jensen 
 ```
 
 ```js
-const tree_objects = phylotreeUtils.get_tree_objects(results_json, modelForTree);
-const branch_lengths = plots.get_branch_lengths(results_json, attrs.model_summary, tree_objects);
-const figure2 = plots.display_tree(results_json, 0, treeDim, treeLabels, tree_objects, availableDistances, distanceFunction, modelForTree)
+const treeObjects = phylotreeUtils.getTreeObjects(results_json, modelForTree);
+const branchLengths = plots.getBranchLengths(results_json, attrs.modelSummary, treeObjects);
+const figure2 = plots.displayTree(results_json, 0, treeDim, treeLabels, treeObjects, availableDistances, distanceFunction, modelForTree)
 // TODO: we do this a lot.. a helper function to produce standalone legends?
 const schemeElement2 = document.createElement("div")
 const label = document.createElement("text")
@@ -251,9 +251,9 @@ schemeElement2.append(label)
 const legend = Plot.legend({
   color: {
     type: "linear",
-    interpolate: figure2.color_scale.interpolate,
-    domain: figure2.color_scale.domain(),
-    range: figure2.color_scale.range(),
+    interpolate: figure2.colorScale.interpolate,
+    domain: figure2.colorScale.domain(),
+    range: figure2.colorScale.range(),
     ticks: 5,
     tickFormat: "g"
   },

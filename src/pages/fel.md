@@ -29,11 +29,11 @@ const vl = vegaLiteApi.register(vega, vegaLite);
 ## Results file
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+const resultsFile = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
 ```
 
 ```js
-const results_json = Mutable(results_file.json());
+const resultsJson = Mutable(resultsFile.json());
 ```
 
 ```js
@@ -41,7 +41,7 @@ window.addEventListener(
   "message",
   (event) => {
     if (event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+      resultsJson.value = event.data.data; // Update the mutable value
     }
   },
   false,
@@ -52,26 +52,26 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.get_attributes(results_json);
+const attributes = utils.getAttributes(resultsJson);
 ```
 
-Statistical significance is evaluated based on  ${results_json.simulated  ? "<tt>" + results_json.simulated + "</tt> site-level parametric bootstrap replicates"  : "the asymptotic chi-squared distribution"}. This analysis **${attrs.has_srv? "included" : "does not include"}** site to site synonymous rate variation. ${attrs.has_ci ? "Profile approximate confidence intervals for site-level dN/dS ratios have been computed." : ""}
+Statistical significance is evaluated based on  ${resultsJson.simulated  ? "<tt>" + resultsJson.simulated + "</tt> site-level parametric bootstrap replicates"  : "the asymptotic chi-squared distribution"}. This analysis **${attributes.hasBackground? "included" : "does not include"}** site to site synonymous rate variation. ${attributes.hasCi ? "Profile approximate confidence intervals for site-level dN/dS ratios have been computed." : ""}
 
 
 ```js
-const pvalue_threshold = await view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1", submit: "Update"}));
+const pvalueThreshold = await view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1", submit: "Update"}));
 ```
 
 ```js
-const sites_table = utils.get_sites_table(results_json, pvalue_threshold);
-const siteTableData = _.filter (sites_table[1], (x)=>table_filter.indexOf (x.class)>=0);
-const tile_specs = utils.get_tile_specs(results_json, pvalue_threshold)
+const sitesTable = utils.getSitesTable(resultsJson, pvalueThreshold);
+const siteTableData = _.filter(sitesTable[1], (x) => tableFilter.indexOf(x.class) >= 0);
+const tileSpecs = utils.getTileSpecs(resultsJson, pvalueThreshold)
 ```
 
-<div>${tt.tile_table(tile_specs)}</div>
+<div>${tt.tileTable(tileSpecs)}</div>
 
 ```js
-const table_filter = view(Inputs.checkbox(
+const tableFilter = view(Inputs.checkbox(
   ["Diversifying", "Purifying", "Neutral","Invariable"], 
   {
     value: ["Diversifying", "Purifying", "Neutral", "Invariable"], 
@@ -82,44 +82,44 @@ const table_filter = view(Inputs.checkbox(
 ```
 
 ```js
-function get_fig1data() {
-   let in_set = new Set (_.map (table1, (d)=>d.codon));
-   return _.filter (siteTableData, (x)=>in_set.has (x.codon));
+function getFig1Data() {
+   let inSet = new Set (_.map (table1, (d)=>d.codon));
+   return _.filter (siteTableData, (x)=>inSet.has (x.codon));
 }
-const fig1data = get_fig1data();
+const fig1Data = getFig1Data();
 ```
 
 ```js
-const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_plot_options(attrs.has_pasmt), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
+const plotType =  view(Inputs.select(_.map (_.filter (plots.getPlotOptions(attributes.hasPasmt), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
 ```js
-const plot_description = plots.get_plot_description(plot_type, pvalue_threshold)
-const plot_spec = plots.get_plot_spec(plot_type, fig1data, pvalue_threshold, attrs.has_pasmt)
-const tree_objects = phylotreeUtils.get_tree_objects(results_json)
+const plotDescription = plots.getPlotDescription(plotType, pvalueThreshold)
+const plotSpec = plots.getPlotSpec(plotType, fig1Data, pvalueThreshold, attributes.hasPasmt)
+const treeObjects = phylotreeUtils.getTreeObjects(resultsJson)
 ```
 
-**Figure 1**. <small>${plot_description}</small>
-<div>${vl.render({"spec": plot_spec})}</div>
+**Figure 1**. <small>${plotDescription}</small>
+<div>${vl.render({"spec": plotSpec})}</div>
 
 **Table 1**. <small>Detailed site-by-site results from the FEL analysis</small>
 
 ```js
 const table1 = view(Inputs.table (siteTableData, {
   rows : 15,
-  format: sites_table[0]
+  format: sitesTable[0]
 }));
 ```
 
 <details>
   <summary><b>Table column definitions</b></small></summary>
   <small><dl>
-    ${_.map (sites_table[2], (d)=>html`<dt><tt>${d[0]}</tt></dt><dd>${d[1]}</dd>`)}
+    ${_.map (sitesTable[2], (d)=>html`<dt><tt>${d[0]}</tt></dt><dd>${d[1]}</dd>`)}
   </dl></small>
 </details>
 
 ```js
- const tree_id =  view(Inputs.select(_.map (_.range (1,tree_objects.length+1), (d)=>"Partition " + d),{label: html`<b>View tree for </b>`}))
+ const treeId =  view(Inputs.select(_.map (_.range (1,treeObjects.length+1), (d)=>"Partition " + d),{label: html`<b>View tree for </b>`}))
 ```
 
 ```js
@@ -129,11 +129,11 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", description: "Tree
 <small>Branches that are shown in <span style = 'color: redbrick'>red color</span> are those that were included in testing for selection</small>
 
 ```js
-function display_tree(i) {
-    return plots.display_tree(results_json, i, treeDim, tree_objects);
+function displayTree(i) {
+    return plots.displayTree(resultsJson, i, treeDim, treeObjects);
 }
 
-const figure2 = display_tree((-1) + (+tree_id.split (" ")[1])).show()
+const figure2 = displayTree((-1) + (+treeId.split (" ")[1])).show()
 ```
 <link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2}</div>
@@ -143,7 +143,7 @@ const figure2 = display_tree((-1) + (+tree_id.split (" ")[1])).show()
 ## Suggested Citation
 
 <br>
-<p><tt>${results_json.analysis["citation"]}</tt></p>
+<p><tt>${resultsJson.analysis["citation"]}</tt></p>
 
 <hr>
 

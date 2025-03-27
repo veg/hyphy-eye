@@ -3,101 +3,155 @@ import * as _ from "lodash-es";
 import * as utils from "../utils/general-utils.js";
 import {html} from "htl";
 
-export function get_attributes(results_json) {
-    const tested_branch_count = d3.median (_.chain (results_json.tested).map ().map((d)=>_.filter (_.map (d), (d)=>d=="test").length).value());
-    const has_resamples = _.get (results_json, ["MLE","LRT"]) ? _.sample (_.get (results_json, ["MLE","LRT"])["0"]).length : 0;
-    const has_substitutions = _.get (results_json, ["substitutions"])
-    const has_site_LRT = _.find (_.get (results_json, ["MLE","headers"]), (d)=>d[0] == "Variation p")
-    const count_sites_with_variation = 
-        has_site_LRT ? 
-        _.chain (results_json["MLE"]["content"])
-            .mapValues ((d)=>_.filter (d, (r)=>r[11] <= +pvalue_threshold).length).values().sum().value() 
+/**
+ * Extracts some summary attributes from MEME results that are used later in the
+ * visualization.
+ *
+ * @param {Object} resultsJson - The JSON object containing the MEME results
+ * @param {number} pvalueThreshold - The P-value threshold used for counting sites with variation
+ *
+ * @returns {Object} An object with the following attributes:
+ *   - testedBranchCount: {number} The median number of branches tested for
+ *     selection for each partition
+ *   - hasResamples: {number} The number of resamples used in the analysis
+ *   - countSitesWithVariation: {number|string} The number of sites with variation
+ *     p-value below the threshold, or "N/A" if site LRT is not available
+ *   - hasSubstitutions: {boolean} Whether substitution information is available
+ *   - hasSiteLRT: {boolean} Whether site-level LRT information is available
+ *   - hasBackground: {boolean} Whether background rate distributions are available
+ *   - siteIndexPartitionCodon: {Array} Array mapping site indices to partition and codon
+ *   - numberOfSequences: {number} The number of sequences in the analysis
+ *   - numberOfSites: {number} The number of sites in the analysis
+ *   - numberOfPartitions: {number} The number of partitions in the analysis
+ *   - partitionSizes: {Array} Array of sizes for each partition
+ */
+export function getAttributes(resultsJson, pvalueThreshold) {
+    // Extract common attributes
+    const commonAttrs = utils.extractCommonAttributes(resultsJson);
+    
+    // MEME-specific attributes
+    const hasResamples = _.get(resultsJson, ["MLE", "LRT"]) ? _.sample(_.get(resultsJson, ["MLE", "LRT"])["0"]).length : 0;
+    const hasSubstitutions = !!_.get(resultsJson, ["substitutions"]);
+    const hasSiteLRT = !!_.find(_.get(resultsJson, ["MLE", "headers"]), (d) => d[0] == "Variation p");
+    const countSitesWithVariation = 
+        hasSiteLRT ? 
+        _.chain(resultsJson["MLE"]["content"])
+            .mapValues((d) => _.filter(d, (r) => r[11] <= +pvalueThreshold).length)
+            .values()
+            .sum()
+            .value() 
         : "N/A";
-    const has_background = _.get (results_json, ["fits","Unconstrained model","Rate Distributions","Background"])
-    // TODO: make this snake case
-    const siteIndexPartitionCodon = _.chain(results_json['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
+    const hasBackground = utils.hasBackground(resultsJson);
+    const siteIndexPartitionCodon = _.chain(resultsJson['data partitions'])
+        .map((d, k) => _.map(d['coverage'][0], (site) => [+k+1, site+1]))
+        .flatten()
+        .value();
 
     return {
-        tested_branch_count: tested_branch_count,
-        has_resamples: has_resamples,
-        count_sites_with_variation: count_sites_with_variation,
-        has_substitutions: has_substitutions,
-        has_site_LRT: has_site_LRT,
-        has_background: has_background,
-        siteIndexPartitionCodon: siteIndexPartitionCodon
-    }
+        testedBranchCount: commonAttrs.testedBranchCount,
+        hasResamples,
+        countSitesWithVariation,
+        hasSubstitutions,
+        hasSiteLRT,
+        hasBackground,
+        siteIndexPartitionCodon,
+        numberOfSequences: commonAttrs.numberOfSequences,
+        numberOfSites: commonAttrs.numberOfSites,
+        numberOfPartitions: commonAttrs.numberOfPartitions,
+        partitionSizes: commonAttrs.partitionSizes
+    };
 }
 
-export function get_count_sites_by_pvalue(results_json, pvalue_threshold) {
-    const count_sites = _.chain (results_json["MLE"]["content"])
-        .mapValues ((d)=>_.filter (d, (r)=>r[6] <= +pvalue_threshold).length)
-        .values().sum().value();
+/**
+ * Counts the number of sites with p-values below the given threshold
+ * 
+ * @param {Object} resultsJson - The JSON object containing the MEME results
+ * @param {number} pvalueThreshold - The P-value threshold
+ * @returns {number} The count of sites with p-values below the threshold
+ */
+export function getCountSitesByPvalue(resultsJson, pvalueThreshold) {
+    const countSites = _.chain(resultsJson["MLE"]["content"])
+        .mapValues((d) => _.filter(d, (r) => r[6] <= +pvalueThreshold).length)
+        .values()
+        .sum()
+        .value();
 
-    return count_sites;
+    return countSites;
 }
 
-export function get_selected_branches_per_selected_site(results_json, pvalue_threshold) {
-    const count_sites = get_count_sites_by_pvalue(results_json, pvalue_threshold)
-    const selected_branches_per_selected_site = 
-        count_sites ? 
-        (_.chain (results_json["MLE"]["content"])
-            .mapValues ((d)=>_.filter (d, (r)=>r[6] <= +pvalue_threshold))
-            .mapValues ((d)=>_.sum(_.map (d, (r)=>r[7]))).values().sum().value() / count_sites).toFixed(2) 
+/**
+ * Calculates the average number of selected branches per selected site
+ * 
+ * @param {Object} resultsJson - The JSON object containing the MEME results
+ * @param {number} pvalueThreshold - The P-value threshold
+ * @returns {string|number} The average number of selected branches per selected site,
+ *                         or "N/A" if no sites are selected
+ */
+export function getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold) {
+    const countSites = getCountSitesByPvalue(resultsJson, pvalueThreshold);
+    const selectedBranchesPerSelectedSite = 
+        countSites ? 
+        (_.chain(resultsJson["MLE"]["content"])
+            .mapValues((d) => _.filter(d, (r) => r[6] <= +pvalueThreshold))
+            .mapValues((d) => _.sum(_.map(d, (r) => r[7])))
+            .values()
+            .sum()
+            .value() / countSites).toFixed(2) 
         : "N/A";
 
-    return selected_branches_per_selected_site; 
+    return selectedBranchesPerSelectedSite; 
 }
 
-export function get_tile_specs(results_json, pvalue_threshold) {
-    const attrs = get_attributes(results_json)
-    const count_sites = get_count_sites_by_pvalue(results_json, pvalue_threshold)
-    const selected_branches_per_selected_site = get_selected_branches_per_selected_site(results_json, pvalue_threshold)
+export function getTileSpecs(resultsJson, pvalueThreshold) {
+    const attrs = getAttributes(resultsJson);
+    const countSites = getCountSitesByPvalue(resultsJson, pvalueThreshold);
+    const selectedBranchesPerSelectedSite = getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
     
     return [
         {
-            number: results_json.input["number of sequences"], 
+            number: resultsJson.input["number of sequences"], 
             color: "asbestos", 
             description: "sequences in the alignment", 
             icon: "icon-options-vertical icons"
         },
         {
-            number: results_json.input["number of sites"], 
+            number: resultsJson.input["number of sites"], 
             color: "asbestos", 
             description: "codon sites in the alignment", 
             icon: "icon-options icons"
         },
         {
-            number: results_json.input["partition count"], 
+            number: resultsJson.input["partition count"], 
             color: "asbestos", 
             description: "partitions", 
             icon: "icon-arrow-up icons"
         },
         {
-            number: attrs.tested_branch_count, 
+            number: attrs.testedBranchCount, 
             color: "asbestos", 
             description: "median branches/partition used for testing", 
             icon: "icon-share icons"
         },
         {
-            number: attrs.has_resamples || "N/A", 
+            number: attrs.hasResamples || "N/A", 
             color: "asbestos", 
             description: "parametric bootstrap replicates", 
             icon: "icon-layers icons"
         },
         {
-            number: count_sites, 
+            number: countSites, 
             color: "midnight_blue", 
             description: "sites subject to episodic diversifying selection", 
             icon: "icon-plus icons"
         },
         {
-            number: selected_branches_per_selected_site, 
+            number: selectedBranchesPerSelectedSite, 
             color: "midnight_blue", 
             description: "median branches with support for selection/selected site", 
             icon: "icon-share icons"
         },
         {
-            number: attrs.count_sites_with_variation, 
+            number: attrs.countSitesWithVariation, 
             color: "midnight_blue", 
             description: "sites with variable &omega; across branches", 
             icon: "icon-energy icons"
@@ -147,68 +201,68 @@ function generateSubstitutionLists(T, labels, test_set) {
     return _.sortBy (_.toPairs (subs), d=>-d[1]);
 }
 
-export function siteTableData(results_json, table_options, pvalue_threshold, siteIndexPartitionCodon, tree_objects) {
-  let site_info = [];
+export function siteTableData(resultsJson, tableOptions, pvalueThreshold, siteIndexPartitionCodon, treeObjects) {
+  let siteInfo = [];
   let index = 0;
-  let show_distribution = table_options.indexOf ('Distribution plot') >= 0;
-  let show_q_values = table_options.indexOf ('Show q-values') >= 0;
-  let show_substitutions = table_options.indexOf ('Show substitutions (tested branches)') >= 0;
-  const mle_headers = _.map (results_json["MLE"]["headers"], (d)=>{
+  let showDistribution = tableOptions.indexOf ('Distribution plot') >= 0;
+  let showQValues = tableOptions.indexOf ('Show q-values') >= 0;
+  let showSubstitutions = tableOptions.indexOf ('Show substitutions (tested branches)') >= 0;
+  const mleHeaders = _.map (resultsJson["MLE"]["headers"], (d)=>{
       d[2] = (d[0]);
       return d;
   });
 
-  let q_values = [];
+  let qValues = [];
   
-  _.each (results_json["data partitions"], (pinfo, partition)=> {
-       const mle_data = results_json["MLE"]["content"][partition];
+  _.each (resultsJson["data partitions"], (pinfo, partition)=> {
+       const mleData = resultsJson["MLE"]["content"][partition];
       _.each (pinfo["coverage"][0], (ignore, i)=> {
-              let site_record = {
+              let siteRecord = {
                   'Partition' : siteIndexPartitionCodon[index][0],
                   'Codon' : siteIndexPartitionCodon[index][1]
               };
 
-              if (show_distribution) {
-                   site_record['dN/dS'] = omega_plot(mle_data[i]);
+              if (showDistribution) {
+                   siteRecord['dN/dS'] = omegaPlot(mleData[i]);
               }
               
-              _.each (mle_headers, (info, idx)=> {
+              _.each (mleHeaders, (info, idx)=> {
                   if (idx < 8) {
-                    site_record[info[2]] = mle_data[i][idx];
+                    siteRecord[info[2]] = mleData[i][idx];
                   }
               });
 
-              let site_class = "Neutral";
-              if (mle_data[i][0] == 0 && mle_data[i][1] == 0 && mle_data[i][3] == 0) {
-                   site_class = "Invariable";
+              let siteClass = "Neutral";
+              if (mleData[i][0] == 0 && mleData[i][1] == 0 && mleData[i][3] == 0) {
+                   siteClass = "Invariable";
               } else {
-                 if (mle_data[i][6] <= +pvalue_threshold) {
-                    site_class = "Diversifying";
+                 if (mleData[i][6] <= +pvalueThreshold) {
+                    siteClass = "Diversifying";
                  }
               }
           
-              if (show_q_values) {
-                  site_record['q'] = 1;
-                  q_values.push ([site_info.length, mle_data[i][6]]);
+              if (showQValues) {
+                  siteRecord['q'] = 1;
+                  qValues.push ([siteInfo.length, mleData[i][6]]);
               }
 
-              if (show_substitutions) {
-                    site_record['Substitutions'] = generateSubstitutionLists (tree_objects[partition],results_json["substitutions"][partition][i],results_json.tested[partition]);
+              if (showSubstitutions) {
+                    siteRecord['Substitutions'] = generateSubstitutionLists (treeObjects[partition],resultsJson["substitutions"][partition][i],resultsJson.tested[partition]);
               }
         
-              site_record['class'] = site_class;
+              siteRecord['class'] = siteClass;
         
         
-              site_info.push (site_record);
+              siteInfo.push (siteRecord);
               index++;
           })  
         
       });
 
-      if (show_q_values) {
-          q_values = _.map (_.sortBy (q_values, (d)=>d[1]), (d,i)=> [d[0],d[1]*results_json.input["number of sites"]/(i+1)]);
-          _.each (q_values, (d)=> {
-            site_info[d[0]]['q'] = Math.min (1,d[1]);
+      if (showQValues) {
+          qValues = _.map (_.sortBy (qValues, (d)=>d[1]), (d,i)=> [d[0],d[1]*resultsJson.input["number of sites"]/(i+1)]);
+          _.each (qValues, (d)=> {
+            siteInfo[d[0]]['q'] = Math.min (1,d[1]);
           });
       }
      
@@ -220,7 +274,7 @@ export function siteTableData(results_json, table_options, pvalue_threshold, sit
       'dN/dS' :  html`<abbr title = "dN/dS distribution at this site">dN/dS</abbr>`
     };
 
-    _.each (mle_headers, (info, idx)=> {
+    _.each (mleHeaders, (info, idx)=> {
         if (idx == 0) {
           options[info[2]] = html`<abbr title = "${info[1]}">${info[0]}</abbr>`;
         } else 
@@ -229,10 +283,10 @@ export function siteTableData(results_json, table_options, pvalue_threshold, sit
           }
     });
 
-    return [site_info, options,mle_headers];
+    return [siteInfo, options,mleHeaders];
 }
 
-function omega_plot(record){
+function omegaPlot(record){
     const ratio = (beta, alpha)=> {
         if (alpha > 0) {
             return beta/alpha;
@@ -256,23 +310,23 @@ function omega_plot(record){
 
 }
 
-export function getPosteriorsPerBranchSite(results_json, rate_class) {
-  rate_class = rate_class || 1;
+export function getPosteriorsPerBranchSite(resultsJson, rateClass) {
+  rateClass = rateClass || 1;
   let results = [];
   let offset = 0;
-  _.each (results_json["branch attributes"], (data, partition) => {
-      let partition_size = 0;
-      _.each (data, (per_branch, branch)=> {
+  _.each (resultsJson["branch attributes"], (data, partition) => {
+      let partitionSize = 0;
+      _.each (data, (perBranch, branch)=> {
           
-          if (per_branch ["Posterior prob omega class by site"]) {
-            _.each (per_branch ["Posterior prob omega class by site"][rate_class], (p,i)=> {
-                let prior = results_json['MLE']['content'][partition][i][4];
+          if (perBranch ["Posterior prob omega class by site"]) {
+            _.each (perBranch ["Posterior prob omega class by site"][rateClass], (p,i)=> {
+                let prior = resultsJson['MLE']['content'][partition][i][4];
                 results.push ({'Branch' : branch, 'Codon' : i + offset + 1, 'Posterior' : p, 'ER' : computeER (prior, p)});
             });     
-            partition_size = per_branch ["Posterior prob omega class by site"][rate_class].length;
+            partitionSize = perBranch ["Posterior prob omega class by site"][rateClass].length;
           }
       });
-      offset += partition_size;
+      offset += partitionSize;
   });
 
   return results;
@@ -289,11 +343,11 @@ export function computeER(prior, posterior) {
     }
 }
 
-export function getRateDistribution(results_json, keys, tags) {
+export function getRateDistribution(resultsJson, keys, tags) {
     tags = tags || ["omega", "proportion"];
-    const rate_info = _.get (results_json, keys);
-    if (rate_info) {
-      return _.sortBy (_.map (rate_info, (d)=>({
+    const rateInfo = _.get (resultsJson, keys);
+    if (rateInfo) {
+      return _.sortBy (_.map (rateInfo, (d)=>({
         "value" : d[tags[0]],
         "weight" : d[tags[1]]
       })), (d)=>d.rate);

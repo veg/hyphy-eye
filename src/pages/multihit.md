@@ -53,11 +53,11 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.get_attributes(results_json);
-const tile_specs = utils.get_tile_specs(results_json);
+const attrs = utils.getAttributes(results_json);
+const tileSpecs = utils.getTileSpecs(results_json);
 ```
 
-<div>${tt.tile_table(tile_specs)}</div>
+<div>${tt.tileTable(tileSpecs)}</div>
 
 **Figure 1**. Evidence Ratios.
 
@@ -65,7 +65,7 @@ const tile_specs = utils.get_tile_specs(results_json);
 const fig1={
   width: 400,
   height: 200,
-  "data": {"values": attrs.evidence_ratios},
+  "data": {"values": attrs.evidenceRatios},
   "mark": {type: "rule", tooltip : true},
   "encoding": {
     "facet": {
@@ -86,7 +86,7 @@ const fig1={
 const fig2={
   width: 400,
   height: 200,
-  "data": {"values": attrs.site_log_likelihood},
+  "data": {"values": attrs.siteLogLikelihood},
   "mark": {type: "point", tooltip : true},
   "encoding": {
     "facet": {
@@ -95,7 +95,7 @@ const fig2={
       "columns": 2
     },
     "x": {"field": "site", "type": "quantitative",  "axis" : {"grid" : false, title : "site"}},
-    "y": {"field": "site_log_likelihood", "type": "quantitative",  "axis" : {"grid" : false, title : "Site Log-Likelihood"}},
+    "y": {"field": "siteLogLikelihood", "type": "quantitative",  "axis" : {"grid" : false, title : "Site Log-Likelihood"}},
   }
 }
 ```

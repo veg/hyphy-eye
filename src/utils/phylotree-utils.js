@@ -17,9 +17,9 @@ import * as phylotree from "phylotree";
  */
 export function generateNodeLabels(T, labels) {
     let L = {};
-    T.traverse_and_compute (function (n) {
+    T.traverse_and_compute(function (n) {
         if (n.data.name in labels) {
-            L[n.data.name] = [labels[n.data.name], utils.translate_ambiguous_codon (labels[n.data.name]),'',0];
+            L[n.data.name] = [labels[n.data.name], utils.translateAmbiguousCodon(labels[n.data.name]),'',0];
             if (n.parent) {
                 L[n.data.name][2] = L[n.parent.data.name][0];             
                 _.each (L[n.data.name][0], (c,i)=> {
@@ -35,7 +35,7 @@ export function generateNodeLabels(T, labels) {
                 L[n.data.name][2] = L[n.data.name][0];
                 L[n.data.name][3] = 0;
             } else {
-                L['root'] = [labels["root"], utils.translate_ambiguous_codon (labels["root"]), "", 0];
+                L['root'] = [labels["root"], utils.translateAmbiguousCodon(labels["root"]), "", 0];
             }
         }
         L[n.data.name][4] = !_.isUndefined (n.children);
@@ -52,7 +52,7 @@ export function generateNodeLabels(T, labels) {
  *
  * @returns {void}
  */
-export function add_svg_defs(svg) {
+export function addSvgDefs(svg) {
     let filter = svg.selectAll ("defs").append ("filter").attr ("x", 0).attr ("y", 0).attr ("width", 1).attr ("height", 1).attr ("id", "tree_branchlabel_bgfill");
     filter.append ("feFlood").attr ("flood-color", "lightgray");
     filter.append ("feComposite").attr ("in", "SourceGraphic").attr ("operator", "atop");
@@ -68,7 +68,7 @@ export function add_svg_defs(svg) {
  * @param {number} font_size - The base font size for the label text.
  * @param {d3.selection} container - The SVG container where the label will be added.
  */
-export function add_branch_label(e, text, font_size, container) {
+export function addBranchLabel(e, text, font_size, container) {
   const where2 = _.get (parse_svg.default(e.attr("d")),["1"]);
   if (where2 && (text.length || _.isNumber (text))) {
       let my_id = e.attr ("id");
@@ -81,29 +81,29 @@ export function add_branch_label(e, text, font_size, container) {
   }
 }
 
-  /**
-   * Takes a tree, a site number, the node labels at that site, and an options object
-   * and returns an object with the same keys as node_labels. The value of each key is
-   * a two-member array of strings, where the first element is a pipe-separated list of
-   * all the codon states at the site numbers that are within 4 of the given site number,
-   * and the second element is the same but for the amino acid states. The states at the
-   * given site number are marked with a leading and trailing "·".
-   * 
-   * This is used to generate the visual display of the codon and amino acid states at
-   * the sites that are neighbors to the given site number.
-   * @param {number} index - the index of the tree in the tree array
-   * @param {number|string} s - the site number
-   * @param {object} node_labels - an object with the node names as keys and two-member
-   *   arrays of strings as values, where the first element is the codon state and the
-   *   second element is the amino acid state.
-   * @param {object} T - the tree object
-   * @param {object} options - an object with options
-   * @param {object} results - the results object
-   * @param {number} site_count - the number of sites
-   * @return {object} - an object with the same keys as node_labels, with values as
-   *   described above.
-   */
-export function display_tree_handle_neighbors(index, s, node_labels, T, options, results, site_count) {
+/**
+ * Takes a tree, a site number, the node labels at that site, and an options object
+ * and returns an object with the same keys as node_labels. The value of each key is
+ * a two-member array of strings, where the first element is a pipe-separated list of
+ * all the codon states at the site numbers that are within 4 of the given site number,
+ * and the second element is the same but for the amino acid states. The states at the
+ * given site number are marked with a leading and trailing "·".
+ * 
+ * This is used to generate the visual display of the codon and amino acid states at
+ * the sites that are neighbors to the given site number.
+ * @param {number} index - the index of the tree in the tree array
+ * @param {number|string} s - the site number
+ * @param {object} node_labels - an object with the node names as keys and two-member
+ *   arrays of strings as values, where the first element is the codon state and the
+ *   second element is the amino acid state.
+ * @param {object} T - the tree object
+ * @param {object} options - an object with options
+ * @param {object} results - the results object
+ * @param {number} site_count - the number of sites
+ * @return {object} - an object with the same keys as node_labels, with values as
+ *   described above.
+ */
+export function displayTreeHandleNeighbors(index, s, node_labels, T, options, results, site_count) {
     let extended_labels = {};
     if (options["neighbors"]) {
         const si = (+s)-1;
@@ -111,7 +111,7 @@ export function display_tree_handle_neighbors(index, s, node_labels, T, options,
         for (let idx = si-4; idx <= si+4; idx++) {
             if (idx >= 0 && idx < site_count) {
                 if (idx != si) {
-                    joint_labels.push (utils.generateNodeLabels (T, results["substitutions"][index][idx]));
+                    joint_labels.push (generateNodeLabels (T, results["substitutions"][index][idx]));
                 } else {
                     joint_labels.push (_.mapValues (node_labels, (d)=> {
                         return ["·" + d[0] + "·", "·" + d[1] + "·"] 
@@ -143,7 +143,7 @@ export function display_tree_handle_neighbors(index, s, node_labels, T, options,
  * count of substitutions for each branch.
  */
 
-export function subs_by_branch(results_json, i) {
+export function subsByBranch(results_json, i) {
     let counts = {};
     _.each (results_json.substitutions[i], (states, site)=> {
         _.each (states, (state, branch)=> {
@@ -177,7 +177,7 @@ export function treeNodeOrdering(results_json, tree_objects, index, root, only_l
     let order = [];
     if (root) {order.push ('root');}
     const T = tree_objects[index];
-    function sort_nodes (asc) {
+    function sortNodes (asc) {
         T.traverse_and_compute (function (n) {
                 var d = 1;
                 if (n.children && n.children.length) {
@@ -190,7 +190,7 @@ export function treeNodeOrdering(results_json, tree_objects, index, root, only_l
             return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
         });
     }
-    sort_nodes (true);
+    sortNodes (true);
     T.traverse_and_compute (function (n) {
         if (results_json.tested[index][n.data.name] == "test" && (!only_leaves || _.isUndefined (n.children))) {
           order.push (n.data.name);
@@ -261,10 +261,10 @@ export function rootChildren(tree) {
  * branch length accessors set.
  */
 
-export function get_tree_objects(results_json, modelForTree = "Global MG94xREV") {
+export function getTreeObjects(results_json, modelForTree = "Global MG94xREV") {
     const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
         let T = new phylotree.phylotree (tree);
-        T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name][modelForTree];
+        T.branchLengthAccessor = (n)=>results_json["branch attributes"][i][n.data.name][modelForTree];
         return T;
     });
 

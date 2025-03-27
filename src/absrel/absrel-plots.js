@@ -18,7 +18,7 @@ const LABEL_COLOR_SCALE = d3.scaleOrdinal([], d3.schemeCategory10)
  * @returns {string} A description of the plot type, or undefined if the plot type is not recognized.
  */
 
-export function get_plot_description(plot_type) {
+export function getPlotDescription(plot_type) {
     const plot_legends = ({
         "Synonymous rates" : "Posterior means for synonymous site-level substitution rates (α). ",
         "Support for positive selection" : "Empirical Bayes Factors for ω>1 at a particular branch and site (only tested branches with 2 or more rate classes are included).",
@@ -40,7 +40,7 @@ export function get_plot_description(plot_type) {
  * @param {Array.<Object>} profileBranchSites - profiles of branch sites
  * @returns {Array.<Array.<string|function>>} The array of arrays described above
  */
-export function get_plot_options(srv_rate_classes, srv_distribution, bsPositiveSelection, profileBranchSites) {
+export function getPlotOptions(srv_rate_classes, srv_distribution, bsPositiveSelection, profileBranchSites) {
     const plot_options = [
         ["Synonymous rates", (d)=>srv_rate_classes > 0 && srv_distribution], 
         ["Support for positive selection", (d)=>bsPositiveSelection.length > 0],
@@ -62,7 +62,7 @@ export function get_plot_options(srv_rate_classes, srv_distribution, bsPositiveS
  * @param {string} fig1_controls - user input for what figure 1 should display
  * @returns {Object} The Vega-Lite spec for the specified plot type
  */
-export function get_plot_spec(
+export function getPlotSpec(
   plot_type, 
   results_json, 
   fig1data, 
@@ -137,8 +137,8 @@ export function get_plot_spec(
  * @param {string} color_branches - option to color branches by
  * @return {object} - the rendered tree
  */
-export function display_tree(results_json, index, T, options, ev_threshold, treeDim, treeLabels, branch_length, color_branches) {
-      const attrs = utils.get_attributes(results_json, ev_threshold)
+export function displayTree(results_json, index, T, options, ev_threshold, treeDim, treeLabels, branch_length, color_branches) {
+      const attrs = utils.getAttributes(results_json, ev_threshold)
       let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     
       T.branch_length_accessor = (n)=>(n.data.name in results_json["branch attributes"][index] ? results_json["branch attributes"][index][n.data.name][branch_length] : 0) || 0;  
@@ -157,7 +157,7 @@ export function display_tree(results_json, index, T, options, ev_threshold, tree
        } );
       
 
-      phylotreeUtils.add_svg_defs (t.svg);
+      phylotreeUtils.addSvgDefs (t.svg);
   
       function sort_nodes (asc) {
           T.traverse_and_compute (function (n) {
@@ -266,12 +266,12 @@ export function display_tree(results_json, index, T, options, ev_threshold, tree
                 } 
                 break;
               case "2-hit rate" : {  
-                 labels = _.mapValues (attrs.mh_rates["DH"], d=>d.toFixed (2));
+                 labels = _.mapValues (attrs.mhRates["DH"], d=>d.toFixed (2));
                  t.color_scale_title = "Double-nucleotide relative substitution rate (δ)";
                 } 
                 break;
               case "3-hit rate" : {  
-                 labels = _.mapValues (attrs.mh_rates["TH"], d=>d.toFixed (2));
+                 labels = _.mapValues (attrs.mhRates["TH"], d=>d.toFixed (2));
                  t.color_scale_title = "Three-nucleotide relative substitution rate (ψ)";
                 } 
                 break;
@@ -316,8 +316,8 @@ export function display_tree(results_json, index, T, options, ev_threshold, tree
    * @param {string} color_branches - option to color branches by
    * @return {object} - the rendered tree
    */
-export function display_tree_site(results_json, index, T,s,options, ev_threshold, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
-    const attrs = utils.get_attributes(results_json, ev_threshold);
+export function displayTree_site(results_json, index, T,s,options, ev_threshold, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
+    const attrs = utils.getAttributes(results_json, ev_threshold);
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     
     T.branch_length_accessor = (n)=>results_json["branch attributes"][index][n.data.name][branch_length] || 0;  
@@ -348,8 +348,8 @@ export function display_tree_site(results_json, index, T,s,options, ev_threshold
      } );
 
       
-      phylotreeUtils.add_svg_defs (t.svg);
-      extended_labels = phylotreeUtils.display_tree_handle_neighbors(index,s,node_labels,T,options,results_json, partition_sizes[index]);
+      phylotreeUtils.addSvgDefs (t.svg);
+      extended_labels = phylotreeUtils.displayTree_handle_neighbors(index,s,node_labels,T,options,results_json, partition_sizes[index]);
   
   
       t.nodeLabel ((n)=> {
@@ -476,12 +476,12 @@ export function display_tree_site(results_json, index, T,s,options, ev_threshold
                 } 
                 break;
               case "2-hit rate" : {  
-                 labels = _.mapValues (attrs.mh_rates["DH"], (d)=>d.toFixed(2));
+                 labels = _.mapValues (attrs.mhRates["DH"], (d)=>d.toFixed(2));
                  t.color_scale_title = "Double-nucleotide relative substitution rate (δ)";
                 } 
                 break;
               case "3-hit rate" : {  
-                 labels = _.mapValues (attrs.mh_rates["TH"], (d)=>d.toFixed(2));
+                 labels = _.mapValues (attrs.mhRates["TH"], (d)=>d.toFixed(2));
                  t.color_scale_title = "Three-nucleotide relative substitution rate (ψ)";
                 } 
                 break;
@@ -548,18 +548,18 @@ export function treeViewOptions(results_json) {
  * @returns {string[]} An array of strings representing the branch color options.
  */
 
-export function tree_color_options(results_json, ev_threshold) {
-  const attrs = utils.get_attributes(results_json, ev_threshold);
+export function treeColorOptions(results_json, ev_threshold) {
+  const attrs = utils.getAttributes(results_json, ev_threshold);
 
   let options = ["Tested"];
   if (results_json.substitutions) {
     options.push ("Support for selection");
     options.push ("Substitutions");
   }
-  if (_.size (attrs.mh_rates['DH'])) {
+  if (_.size (attrs.mhRates['DH'])) {
       options.push ("2-hit rate");
   }
-  if (_.size (attrs.mh_rates['TH'])) {
+  if (_.size (attrs.mhRates['TH'])) {
       options.push ("3-hit rate");
   }
   

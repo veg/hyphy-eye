@@ -1,43 +1,70 @@
 import * as d3 from "d3";
 import * as _ from "lodash-es";
+import * as utils from "../utils/general-utils.js";
 
-export function get_attributes(results_json) {
-    const nSeqs = results_json.input["number of sequences"]
-    const nSites = results_json.input["number of sites"]
-    const stages = _.size(results_json.improvements)
-    const evidence_ratios = _.chain(results_json["Evidence Ratios"])
-        .map((d, k) => [_.map(d[0], (x, i) => { return { model: k, site : i, er:x }})]).flatten().flatten().value()
-    const site_log_likelihood = _.chain(results_json["Site Log Likelihood"])
-        .map((d, k) => [_.map(d[0], (x, i) => { return { model: k, site : i, site_log_likelihood:x }})]).flatten().flatten().value()
-    const timers = _.chain(results_json["timers"]).map((d, k) =>  { return { model: k, time : d.timer}}).value()
+/**
+ * Extracts some summary attributes from Multihit results that are used later in the
+ * visualization.
+ *
+ * @param {Object} resultsJson - The JSON object containing the Multihit results
+ *
+ * @returns {Object} An object with the following attributes:
+ *   - numberOfSequences: {number} The number of sequences in the alignment
+ *   - numberOfSites: {number} The number of sites in the alignment
+ *   - stages: {number} The number of stages in the analysis
+ *   - evidenceRatios: {Array} An array of objects containing evidence ratios for each site
+ *   - siteLogLikelihood: {Array} An array of objects containing site log likelihoods
+ *   - timers: {Array} An array of objects containing timing information for each model
+ *   - numberOfPartitions: {number} The number of partitions in the analysis
+ *   - partitionSizes: {Array} Array of sizes for each partition
+ */
+export function getAttributes(resultsJson) {
+    // Extract common attributes
+    const commonAttrs = utils.extractCommonAttributes(resultsJson);
+    
+    // Multihit-specific attributes
+    const stages = _.size(resultsJson.improvements);
+    const evidenceRatios = _.chain(resultsJson["Evidence Ratios"])
+        .map((d, k) => [_.map(d[0], (x, i) => { return { model: k, site: i, er: x }})]).flatten().flatten().value();
+    const siteLogLikelihood = _.chain(resultsJson["Site Log Likelihood"])
+        .map((d, k) => [_.map(d[0], (x, i) => { return { model: k, site: i, siteLogLikelihood: x }})]).flatten().flatten().value();
+    const timers = _.chain(resultsJson["timers"]).map((d, k) => { return { model: k, time: d.timer }}).value();
 
     return {
-        nSeqs: nSeqs,
-        nSites: nSites,
-        stages: stages,
-        evidence_ratios: evidence_ratios,
-        site_log_likelihood: site_log_likelihood,
-        timers: timers
-    }
+        numberOfSequences: commonAttrs.numberOfSequences,
+        numberOfSites: commonAttrs.numberOfSites,
+        stages,
+        evidenceRatios,
+        siteLogLikelihood,
+        timers,
+        numberOfPartitions: commonAttrs.numberOfPartitions,
+        partitionSizes: commonAttrs.partitionSizes
+    };
 }
 
-export function get_tile_specs(results_json) {
-    const attrs = get_attributes(results_json);
+/**
+ * Generates tile specifications for the Multihit visualization dashboard
+ * 
+ * @param {Object} resultsJson - The JSON object containing the Multihit results
+ * @returns {Array} An array of objects containing specifications for dashboard tiles
+ */
+export function getTileSpecs(resultsJson) {
+    const attrs = getAttributes(resultsJson);
 
-    const tile_table_inputs = [
+    const tileTableInputs = [
         {
-            "number": attrs.nSeqs,
+            "number": attrs.numberOfSequences,
             "description": "sequences in the alignment",
             "icon": "icon-options-vertical icons",
             "color": "asbestos",
         },
         {
-            "number": attrs.nSites,
+            "number": attrs.numberOfSites,
             "description": "sites in the alignment",
             "icon": "icon-options icons",
             "color": "asbestos",
         },
     ];
 
-    return tile_table_inputs;
+    return tileTableInputs;
 }

@@ -16,7 +16,7 @@ export const TABLE_COLORS = ({
 const DYN_RANGE_CAP = 10000;
 const LABEL_COLOR_SCALE = d3.scaleOrdinal([], d3.schemeCategory10)
     
-export function get_plot_description(plot_type, srv_hmm) {
+export function getPlotDescription(plot_type, srv_hmm) {
     const plot_descriptions = ({
         "Evidence ratio for ω>1 (constrained)" : "Evidence ratios (site level likelihood ratios) for ω>1, comparing the unrestricted model with the model where max(ω) := 1, and all other parameters are kept at their maximum likelihood values. Solid line = user selected significance threshold. <small>Values capped at " + DYN_RANGE_CAP + " for readability</small>",
         "Evidence ratio for ω>1 (optimized)" : "Evidence ratios (site level likelihood ratios) for ω>1, comparing the unrestricted model with the optimized constrained model and all other parameters are kept at their maximum likelihood values. Solid line = user selected significance threshold. <small>Values capped at " + DYN_RANGE_CAP + " for readability</small>",
@@ -32,8 +32,8 @@ export function get_plot_description(plot_type, srv_hmm) {
     return plot_descriptions[plot_type];
 }
 
-export function get_plot_options(results_json, bsPositiveSelection) {
-    const attrs = utils.get_attributes(results_json);
+export function getPlotOptions(results_json, bsPositiveSelection) {
+    const attrs = utils.getAttributes(results_json);
 
     const plot_options = [
         ["Evidence ratio for ω>1 (constrained)", (d)=>results_json["Evidence Ratios"]["constrained"]], 
@@ -42,15 +42,15 @@ export function get_plot_options(results_json, bsPositiveSelection) {
         ["Support for positive selection", (d)=>bsPositiveSelection.length > 0], 
         ["Error-sink support", (d)=>attrs.has_error_sink_nt && utils.get_error_sink_rate(results_json, "Test")["proportion"] > 0], 
         ["Site-level LR support", (d)=>results_json["Evidence Ratios"]["optimized null"]], 
-        ["Support for 2H", (d)=>attrs.mh_rates['DH']], 
-        ["Support for 3H", (d)=>attrs.mh_rates['TH']], 
-        ["Support for 2H+3H", (d)=>attrs.mh_rates['DH'] && attrs.mh_rates['TH']]
+        ["Support for 2H", (d)=>attrs.mhRates['DH']], 
+        ["Support for 3H", (d)=>attrs.mhRates['TH']], 
+        ["Support for 2H+3H", (d)=>attrs.mhRates['DH'] && attrs.mhRates['TH']]
     ]
 
     return plot_options
 }
 
-export function get_plot_spec(
+export function getPlotSpec(
     plot_type, 
     results_json, 
     fig1data, 
@@ -189,7 +189,7 @@ console.log("bsPositiveSelection", bsPositiveSelection)
 
 
 export function countBranchesER(results_json, test_omega,  er) {
-    const attrs = utils.get_attributes(results_json);
+    const attrs = utils.getAttributes(results_json);
 
     let prior = test_omega[attrs.omega_rate_classes-1].weight / (1-test_omega[attrs.omega_rate_classes-1].weight);
     let count = [];
@@ -331,7 +331,7 @@ function cdsQuant(data, key1, title) {
   }]}
 }
 
-export function display_tree(results_json, ev_threshold, index, T, options, treeDim, treeLabels, branch_length, color_branches) {
+export function displayTree(results_json, ev_threshold, index, T, options, treeDim, treeLabels, branch_length, color_branches) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
       
       T.branch_length_accessor = (n)=>(n.data.name in results_json["branch attributes"][index] ? results_json["branch attributes"][index][n.data.name][branch_length] : 0) || 0;  
@@ -348,7 +348,7 @@ export function display_tree(results_json, ev_threshold, index, T, options, tree
         'internal-names' : treeLabels.indexOf ("show internal") >= 0
        } );
       
-      phylotreeUtils.add_svg_defs (t.svg);
+      phylotreeUtils.addSvgDefs (t.svg);
   
       function sort_nodes (asc) {
           T.traverse_and_compute (function (n) {
@@ -458,7 +458,7 @@ function site_support_by_branch(results_json, i, key, er) {
 }
 
 
-export function display_tree_site(results_json, index,T,s,options, treeDim, treeLabels, branch_length, color_branches, partition_sizes, test_omega, has_error_sink) {
+export function displayTree_site(results_json, index,T,s,options, treeDim, treeLabels, branch_length, color_branches, partition_sizes, test_omega, has_error_sink) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     T.branch_length_accessor = (n)=>results_json["branch attributes"][index][n.data.name][branch_length] || 0;  
     let node_labels = phylotreeUtils.generateNodeLabels (T, results_json["substitutions"][index][(+s)-1]);
@@ -483,9 +483,9 @@ export function display_tree_site(results_json, index,T,s,options, treeDim, tree
       'internal-names' : treeLabels.indexOf ("show internal") >= 0
      } );
 
-      phylotreeUtils.add_svg_defs (t.svg);
+      phylotreeUtils.addSvgDefs (t.svg);
       
-      let extended_labels = phylotreeUtils.display_tree_handle_neighbors (index,s,node_labels,T,options,results_json, partition_sizes[index]);
+      let extended_labels = phylotreeUtils.displayTree_handle_neighbors (index,s,node_labels,T,options,results_json, partition_sizes[index]);
       t.nodeLabel ((n)=> {
           if (!n._display_me) {
               return "";
@@ -663,8 +663,8 @@ export function getTreeViewOptions(results_json, tree_objects) {
     return opts;
 }
 
-export function tree_color_options(results_json) {
-    const attrs = utils.get_attributes(results_json);
+export function treeColorOptions(results_json) {
+    const attrs = utils.getAttributes(results_json);
 
     let options = ["Tested"];
     if (results_json.substitutions) {
@@ -672,9 +672,9 @@ export function tree_color_options(results_json) {
         options.push ("Substitutions");
     }
 
-    if (attrs.mh_rates["DH"]) options.push ("Support for 2H");
-    if (attrs.mh_rates["TH"]) options.push ("Support for 3H");
-    if (attrs.mh_rates["DH"] && attrs.mh_rates["TH"]) options.push ("Support for 2H+3H");
+    if (attrs.mhRates["DH"]) options.push ("Support for 2H");
+    if (attrs.mhRates["TH"]) options.push ("Support for 3H");
+    if (attrs.mhRates["DH"] && attrs.mhRates["TH"]) options.push ("Support for 2H+3H");
     if (attrs.has_error_sink) options.push ("Error-sink support");
 
     return options;

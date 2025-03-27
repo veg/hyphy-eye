@@ -2,7 +2,7 @@
 
 /**
  * @module busted-utils
- * @description Utility functions for aBSREL visualization
+ * @description Utility functions for BUSTED visualization
  */
 
 import * as _ from "lodash-es";
@@ -14,128 +14,151 @@ import {html} from "htl";
 const floatFmt = d3.format (".2g")
 const percentageFormat = d3.format (".2p")
 
-export function get_attributes(results_json) {
-    const tested_branch_count =  d3.median (_.chain (results_json.tested).map ().map((d)=>_.filter (_.map (d), (d)=>d=="test").length).value())
-    const srv_rate_classes = _.size (results_json.fits["Unconstrained model"]["Rate Distributions"]["Synonymous site-to-site rates"])
-    const partition_sizes = _.chain (results_json['data partitions']).map ((d,k)=>(d['coverage'][0].length)).value();
-    const has_background = _.get (results_json, ["fits","Unconstrained model","Rate Distributions","Background"])
-    const srv_hmm = "Viterbi synonymous rate path" in results_json
-    const has_error_sink = results_json["analysis"]["settings"] && results_json["analysis"]["settings"]["error-sink"] ? true : false;
-    const has_error_sink_nt = get_has_error_sink_nt(results_json, has_error_sink, has_background);
-    const omega_rate_classes = _.size (test_omega(results_json, has_error_sink))
-    const srv_distribution = getRateDistribution (results_json, has_error_sink, ["fits","Unconstrained model","Rate Distributions","Synonymous site-to-site rates"], ["rate","proportion"])
-    const mh_rates = ({
-        'DH' : _.get (results_json, ['fits', 'Unconstrained model','Rate Distributions', 'rate at which 2 nucleotides are changed instantly within a single codon']),
-        'TH' : _.get (results_json, ['fits', 'Unconstrained model','Rate Distributions', 'rate at which 3 nucleotides are changed instantly within a single codon'])
-    })
+/**
+ * Extracts attributes from BUSTED results JSON that are used for visualization
+ *
+ * @param {Object} resultsJson - The JSON object containing the BUSTED results
+ * @returns {Object} An object with the following attributes:
+ *   - testedBranchCount {number} - The median number of branches tested for selection across partitions
+ *   - srvRateClasses {number} - The number of rate classes for the synonymous site-to-site rate distribution
+ *   - srvDistribution {Array} - The distribution of synonymous site-to-site rates
+ *   - omegaRateClasses {number} - The number of rate classes for the omega distribution
+ *   - partitionSizes {Array} - Array of sizes for each partition
+ *   - hasBackground {boolean} - Whether background rate distributions are available
+ *   - hasSrvHmm {boolean} - Whether Viterbi synonymous rate path is present
+ *   - hasErrorSink {boolean} - Whether error sink settings are available
+ *   - hasErrorSinkNt {boolean} - Whether nucleotide-level error sink is available
+ *   - mhRates {Object} - Rates for double-hit and triple-hit substitutions
+ */
+export function getAttributes(resultsJson) {
+    // Extract common attributes using the utility function
+    const commonAttrs = utils.extractCommonAttributes(resultsJson);
+    
+    // BUSTED-specific attributes
+    const srvRateClasses = _.size(resultsJson.fits["Unconstrained model"]["Rate Distributions"]["Synonymous site-to-site rates"]);
+    const hasBackground = utils.hasBackground(resultsJson);
+    const hasSrvHmm = "Viterbi synonymous rate path" in resultsJson;
+    const hasErrorSink = utils.hasErrorSink(resultsJson);
+    const hasErrorSinkNt = getHasErrorSinkNt(resultsJson, hasErrorSink, hasBackground);
+    const omegaRateClasses = _.size(testOmega(resultsJson, hasErrorSink));
+    const srvDistribution = getRateDistribution(
+        resultsJson, 
+        hasErrorSink, 
+        ["fits", "Unconstrained model", "Rate Distributions", "Synonymous site-to-site rates"], 
+        ["rate", "proportion"]
+    );
+    const mhRates = {
+        'DH': _.get(resultsJson, ['fits', 'Unconstrained model', 'Rate Distributions', 'rate at which 2 nucleotides are changed instantly within a single codon']),
+        'TH': _.get(resultsJson, ['fits', 'Unconstrained model', 'Rate Distributions', 'rate at which 3 nucleotides are changed instantly within a single codon'])
+    };
 
     return {
-        "tested_branch_count" : tested_branch_count,
-        "srv_rate_classes" : srv_rate_classes,
-        "srv_distribution" : srv_distribution,
-        "omega_rate_classes" : omega_rate_classes,
-        "partition_sizes" : partition_sizes,
-        "has_background" : has_background,
-        "srv_hmm" : srv_hmm,
-        "has_error_sink" : has_error_sink,
-        "has_error_sink_nt" : has_error_sink_nt,
-        "mh_rates" : mh_rates
-    }
+        testedBranchCount: commonAttrs.testedBranchCount,
+        srvRateClasses,
+        srvDistribution,
+        omegaRateClasses,
+        partitionSizes: commonAttrs.partitionSizes,
+        hasBackground,
+        hasSrvHmm,
+        hasErrorSink,
+        hasErrorSinkNt,
+        mhRates
+    };
 }
 
-export function get_tile_specs(results_json, ev_threshold, bsPositiveSelection, contributing_sites) {
-    const attrs = get_attributes(results_json);
-    const sub_fractions = _.map (
+export function getTileSpecs(resultsJson, evThreshold, bsPositiveSelection, contributingSites) {
+    const attrs = getAttributes(resultsJson);
+    const subFractions = _.map (
         [
             "Fraction of subs rate at which 2 nucleotides are changed instantly within a single codon", 
             "Fraction of subs rate at which 3 nucleotides are changed instantly within a single codon"
         ], 
-        (d)=>results_json["fits"]["Unconstrained model"]["Rate Distributions"][d]
+        (d)=>resultsJson["fits"]["Unconstrained model"]["Rate Distributions"][d]
     );
 
-    const tile_table_inputs = [
+    const tileTableInputs = [
         {
-            number: results_json.input["number of sequences"],
+            number: resultsJson.input["number of sequences"],
             description: "sequences in the alignment",
             icon: "icon-options-vertical icons",
             color: "asbestos"
         },
         {
-            number: results_json.input["number of sites"],
+            number: resultsJson.input["number of sites"],
             description: "codon sites in the alignment",
             icon: "icon-options icons",
             color: "asbestos"
         },
         {
-            number: results_json.input["partition count"],
+            number: resultsJson.input["partition count"],
             description: "partitions",
             icon: "icon-arrow-up icons",
             color: "asbestos"
         },
         {
-            number: attrs.tested_branch_count,
+            number: attrs.testedBranchCount,
             description: "median branches/partition used for testing",
             icon: "icon-share icons",
             color: "asbestos"
         },
         {
-            number: attrs.omega_rate_classes + " classes",
+            number: attrs.omegaRateClasses + " classes",
             description: "non-synonymous rate variation",
             icon: "icon-grid icons",
             color: "asbestos"
         },
         {
-            number: attrs.srv_rate_classes ? attrs.srv_rate_classes + " classes" + (attrs.srv_hmm ? " HMM" : "") : "None",
+            number: attrs.srvRateClasses ? attrs.srvRateClasses + " classes" + (attrs.hasSrvHmm ? " HMM" : "") : "None",
             description: "synonymous rate variation",
             icon: "icon-layers icons",
             color: "asbestos"
         },
         {
-            number: floatFmt(results_json["test results"]["p-value"]),
+            number: floatFmt(resultsJson["test results"]["p-value"]),
             description: "p-value for episodic diversifying selection",
             icon: "icon-plus icons",
             color: "midnight_blue"
         },
         {
-            number: results_json["Evidence Ratios"]["constrained"] ? _.filter(results_json["Evidence Ratios"]["constrained"][0], (d) => d >= ev_threshold).length : 0,
-            description: `Sites with ER≥${ev_threshold} for positive selection`,
+            number: resultsJson["Evidence Ratios"]["constrained"] ? _.filter(resultsJson["Evidence Ratios"]["constrained"][0], (d) => d >= evThreshold).length : 0,
+            description: `Sites with ER≥${evThreshold} for positive selection`,
             icon: "icon-energy icons",
             color: "midnight_blue"
         },
         {
-            number: !_.isUndefined(attrs.mh_rates['DH']) ? floatFmt(attrs.mh_rates['DH']) : "N/A" + ":" + !_.isUndefined(attrs.mh_rates['TH']) ? floatFmt(attrs.mh_rates['TH']) : "N/A",
+            number: !_.isUndefined(attrs.mhRates['DH']) ? floatFmt(attrs.mhRates['DH']) : "N/A" + ":" + !_.isUndefined(attrs.mhRates['TH']) ? floatFmt(attrs.mhRates['TH']) : "N/A",
             description: "Multiple hit rates (2H:3H)",
             icon: "icon-target icons",
             color: "midnight_blue"
         },
         {
-            number: results_json["Evidence Ratios"]["constrained"] ? _.filter(bsPositiveSelection, (d) => d.ER >= 100).length : "N/A",
+            number: resultsJson["Evidence Ratios"]["constrained"] ? _.filter(bsPositiveSelection, (d) => d.ER >= 100).length : "N/A",
             description: "(branch, site) pairs with EBF ≥ 100",
             icon: "icon-bulb icons",
             color: "midnight_blue"
         },
         {
-            number: contributing_sites ? contributing_sites.length : "N/A",
+            number: contributingSites ? contributingSites.length : "N/A",
             description: "Sites contributing most signal to EDS detection",
             icon: "icon-tag icons",
             color: "midnight_blue"
         },
         {
-            number: !_.isUndefined(sub_fractions[0]) ? percentageFormat(sub_fractions[0]) : "N/A" + ":" + !_.isUndefined(sub_fractions[1]) ? percentageFormat(sub_fractions[1]) : "N/A",
+            number: !_.isUndefined(subFractions[0]) ? percentageFormat(subFractions[0]) : "N/A" + ":" + !_.isUndefined(subFractions[1]) ? percentageFormat(subFractions[1]) : "N/A",
             description: "Expected fractions of MH subs (2H:3H)",
             icon: "icon-target icons",
             color: "midnight_blue"
         }
     ];
 
-    return tile_table_inputs;
+    return tileTableInputs;
 }
 
 /**
  * Retrieves and sorts rate distribution data from the results JSON.
  *
- * @param {Object} results_json - The JSON object containing the results
- * @param {boolean} has_error_sink - A flag indicating if the error sink should be
+ * @param {Object} resultsJson - The JSON object containing the results
+ * @param {boolean} hasErrorSink - A flag indicating if the error sink should be
  *   considered.
  * @param {Array} keys - The keys used to access the rate distribution data
  *   within the results JSON.
@@ -148,13 +171,13 @@ export function get_tile_specs(results_json, ev_threshold, bsPositiveSelection, 
  *   The array is sorted by rate value. Returns null if no rate information
  *   is found.
  */
-function getRateDistribution(results_json, has_error_sink, keys, tags) {
+function getRateDistribution(resultsJson, hasErrorSink, keys, tags) {
     tags = tags || ["omega", "proportion"];
-    const rate_info = _.get(results_json, keys);
-    if (rate_info) {
-        let clip_first = has_error_sink && tags[0] == 'omega';
+    const rateInfo = _.get(resultsJson, keys);
+    if (rateInfo) {
+        let clipFirst = hasErrorSink && tags[0] == 'omega';
 
-        return _.sortBy(_.map(clip_first ? _.chain(rate_info).toPairs().filter((d) => d[0] != '0').fromPairs().value() : rate_info, (d) => ({
+        return _.sortBy(_.map(clipFirst ? _.chain(rateInfo).toPairs().filter((d) => d[0] != '0').fromPairs().value() : rateInfo, (d) => ({
             "value": d[tags[0]],
             "weight": d[tags[1]]
         })), (d) => d.rate);
@@ -165,8 +188,8 @@ function getRateDistribution(results_json, has_error_sink, keys, tags) {
 /**
  * Retrieves the rate distribution for the unconstrained model test from the results JSON.
  *
- * @param {Object} results_json - The JSON object containing the BUSTED analysis results.
- * @param {boolean} has_error_sink - A flag indicating if the error sink should be considered.
+ * @param {Object} resultsJson - The JSON object containing the BUSTED analysis results.
+ * @param {boolean} hasErrorSink - A flag indicating if the error sink should be considered.
  *
  * @returns {Array|null} A sorted array of objects, each containing:
  *   - value: The rate value as specified by the first tag.
@@ -174,18 +197,18 @@ function getRateDistribution(results_json, has_error_sink, keys, tags) {
  *   The array is sorted by rate value. Returns null if no rate information is found.
  */
 
-export function test_omega(results_json, has_error_sink) {
-    return getRateDistribution (results_json, has_error_sink, ["fits","Unconstrained model","Rate Distributions","Test"])
+export function testOmega(resultsJson, hasErrorSink) {
+    return getRateDistribution (resultsJson, hasErrorSink, ["fits","Unconstrained model","Rate Distributions","Test"])
 }
 
-export function get_error_sink_rate(results_json, tag) {
-    return _.get (results_json, ["fits","Unconstrained model","Rate Distributions", tag, "0"]);
+export function getErrorSinkRate(resultsJson, tag) {
+    return _.get (resultsJson, ["fits","Unconstrained model","Rate Distributions", tag, "0"]);
 }
 
-function get_has_error_sink_nt(results_json, has_error_sink, has_background){
-  if (has_error_sink) {
-      if (get_error_sink_rate(results_json, "Test")["proportion"] > 0) return true;
-      if (has_background && get_error_sink_rate(results_json, "Background")["proportion"] > 0) return true;
+function getHasErrorSinkNt(resultsJson, hasErrorSink, hasBackground){
+  if (hasErrorSink) {
+      if (getErrorSinkRate(resultsJson, "Test")["proportion"] > 0) return true;
+      if (hasBackground && getErrorSinkRate(resultsJson, "Background")["proportion"] > 0) return true;
       return false;
   }
   return false;
@@ -201,7 +224,7 @@ function get_has_error_sink_nt(results_json, has_error_sink, has_background){
  * and returns the indices of these sites.
  */
 
-export function get_contributing_sites(siteTableData) {
+export function getContributingSites(siteTableData) {
   let site_lr = _.sortBy (_.map (siteTableData, (d,i)=>[d["LR"],i]), (d)=>-d[0]);
   const lrs = d3.sum (site_lr, (d)=>d[0]);
   if (lrs > 2) {
@@ -219,36 +242,36 @@ export function get_contributing_sites(siteTableData) {
   return null;
 }
 
-export function siteTableData(results_json) {
-    const attrs =  get_attributes(results_json);
-    const siteIndexPartitionCodon = getSiteIndexPartitionCodon(results_json);
+export function siteTableData(resultsJson) {
+    const attrs =  getAttributes(resultsJson);
+    const siteIndexPartitionCodon = getSiteIndexPartitionCodon(resultsJson);
 
   let site_info = [];
   let index = 0;
-  _.each (results_json["data partitions"], (pinfo, partition)=> {
+  _.each (resultsJson["data partitions"], (pinfo, partition)=> {
       _.each (pinfo["coverage"][0], (ignore, i)=> {
           
               let site_record = {
                   'Partition' : siteIndexPartitionCodon[index][0],
                   'Codon' : siteIndexPartitionCodon[index][1],
               };
-              if (results_json["Evidence Ratios"]['optimized null']) {
-                  site_record['ER (constrained)'] = results_json["Evidence Ratios"]['constrained'][0][index];
-                  site_record['ER (optimized null)'] = results_json["Evidence Ratios"]['optimized null'][0][index];
+              if (resultsJson["Evidence Ratios"]['optimized null']) {
+                  site_record['ER (constrained)'] = resultsJson["Evidence Ratios"]['constrained'][0][index];
+                  site_record['ER (optimized null)'] = resultsJson["Evidence Ratios"]['optimized null'][0][index];
               };
-              site_record['LogL'] = results_json["Site Log Likelihood"]['unconstrained'][0][index];
-              if (attrs.srv_rate_classes) {
+              site_record['LogL'] = resultsJson["Site Log Likelihood"]['unconstrained'][0][index];
+              if (attrs.srvRateClasses) {
                   let site_srv = [];
-                  _.each (attrs.srv_distribution, (d,i)=> {
-                       site_srv.push ({'value' : d.value, 'weight' : results_json["Synonymous site-posteriors"][i][index]});
+                  _.each (attrs.srvDistribution, (d,i)=> {
+                       site_srv.push ({'value' : d.value, 'weight' : resultsJson["Synonymous site-posteriors"][i][index]});
                   });
                   site_record['SRV posterior mean'] = distMean (site_srv);
-                  if (attrs.srv_hmm) {
-                      site_record['SRV viterbi'] = attrs.srv_distribution[results_json["Viterbi synonymous rate path"][0][index]].value;
+                  if (attrs.hasSrvHmm) {
+                      site_record['SRV viterbi'] = attrs.srvDistribution[resultsJson["Viterbi synonymous rate path"][0][index]].value;
                   }
               }
-              if (results_json["Evidence Ratios"]['optimized null']) {
-                 site_record['LR'] = 2*Math.log (results_json["Evidence Ratios"]['optimized null'][0][index]);
+              if (resultsJson["Evidence Ratios"]['optimized null']) {
+                 site_record['LR'] = 2*Math.log (resultsJson["Evidence Ratios"]['optimized null'][0][index]);
               }
               site_info.push (site_record);
               index++;
@@ -267,8 +290,8 @@ export function siteTableData(results_json) {
     }];
 }
 
-export function getSiteIndexPartitionCodon(results_json) {
-    return _.chain (results_json['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
+export function getSiteIndexPartitionCodon(resultsJson) {
+    return _.chain (resultsJson['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
 }
 
 export function distMean(d) {
@@ -287,28 +310,28 @@ export function distVar(d) {
     return m2 - m*m;
 }
 
-export function getDistributionTable(results_json) {
-    const attrs =  get_attributes(results_json);
+export function getDistributionTable(resultsJson) {
+    const attrs =  getAttributes(resultsJson);
 
   let table = [];
   _.each (["Unconstrained model", "Constrained model"], (m)=> {
-      if (!_.get (results_json,["fits",m])) return;
+      if (!_.get (resultsJson,["fits",m])) return;
       let record = {'Model' : m};
-      record['LogL'] = _.get (results_json,["fits",m,"Log Likelihood"]);
-      record['AICc'] = _.get (results_json,["fits",m,"AIC-c"]);
-      record['p'] = _.get (results_json,["fits",m,"estimated parameters"]);
-      record['dist'] = ["Tested", getRateDistribution (results_json, attrs.has_error_sink, ["fits",m,"Rate Distributions","Test"]),"&omega;",m + " ω tested"];
+      record['LogL'] = _.get (resultsJson,["fits",m,"Log Likelihood"]);
+      record['AICc'] = _.get (resultsJson,["fits",m,"AIC-c"]);
+      record['p'] = _.get (resultsJson,["fits",m,"estimated parameters"]);
+      record['dist'] = ["Tested", getRateDistribution (resultsJson, attrs.hasErrorSink, ["fits",m,"Rate Distributions","Test"]),"&omega;",m + " ω tested"];
       record['plot'] = ["ω",record['dist'][1]];
       table.push (record);
-      if (attrs.has_background) {
+      if (attrs.hasBackground) {
           record = {'Model' : m};
-          record['dist'] = ["Background", getRateDistribution(results_json, attrs.has_error_sink, ["fits",m,"Rate Distributions","Background"]),"&omega;",m + " ω background" ];
+          record['dist'] = ["Background", getRateDistribution(resultsJson, attrs.hasErrorSink, ["fits",m,"Rate Distributions","Background"]),"&omega;",m + " ω background" ];
           record['plot'] = ["ω",record['dist'][1]];
           table.push (record);
       }
-      if (attrs.srv_rate_classes) {
+      if (attrs.srvRateClasses) {
         record = {'Model' : m};
-        record['dist'] = ["Synonymous rates", getRateDistribution(results_json, attrs.has_error_sink, ["fits",m,"Rate Distributions","Synonymous site-to-site rates"], ["rate", "proportion"]),"",m + " syn rates" ];
+        record['dist'] = ["Synonymous rates", getRateDistribution(resultsJson, attrs.hasErrorSink, ["fits",m,"Rate Distributions","Synonymous site-to-site rates"], ["rate", "proportion"]),"",m + " syn rates" ];
         record['plot'] = ["",record['dist'][1]];
         table.push (record);
       }
@@ -316,10 +339,10 @@ export function getDistributionTable(results_json) {
   return table;
 }
 
-export function getBSErrorSink(results_json, tree_objects, has_error_sink_nt) {
-  if (has_error_sink_nt) {
-    let weight = get_error_sink_rate(results_json, "Test")["proportion"];
-    return posteriorsPerBranchSite (results_json, tree_objects, 0, weight / (1-weight));
+export function getBSErrorSink(resultsJson, treeObjects, hasErrorSinkNt) {
+  if (hasErrorSinkNt) {
+    let weight = getErrorSinkRate(resultsJson, "Test")["proportion"];
+    return posteriorsPerBranchSite (resultsJson, treeObjects, 0, weight / (1-weight));
   }
   return [];
 }
@@ -331,22 +354,22 @@ export function getBSErrorSink(results_json, tree_objects, has_error_sink_nt) {
  * of objects each containing the branch name, site number, posterior probability
  * and evidence ratio for each site that was detected as showing positive selection.
  *
- * @param {Object} results_json - The JSON object containing the Busted results
- * @param {Array<phylotree.phylotree>} tree_objects - An array of phylotree objects
+ * @param {Object} resultsJson - The JSON object containing the Busted results
+ * @param {Array<phylotree.phylotree>} treeObjects - An array of phylotree objects
  *   for each partition
- * @param {Array<Object>} test_omega - The rate distribution for the tested
+ * @param {Array<Object>} testOmega - The rate distribution for the tested
  *   branches
- * @param {bool} has_error_sink - Whether the error sink class was used
+ * @param {bool} hasErrorSink - Whether the error sink class was used
  *
  * @returns {Array<Object>} An array of objects each containing the branch name,
  *   site number, posterior probability and evidence ratio for each site that
  *   was detected as showing positive selection
  */
-export function getBSPositiveSelection(results_json, tree_objects, test_omega, has_error_sink) {
-    let w =  test_omega[test_omega.length - 1].weight;
+export function getBSPositiveSelection(resultsJson, treeObjects, testOmega, hasErrorSink) {
+    let w =  testOmega[testOmega.length - 1].weight;
     
     if (w < 1) {
-        return posteriorsPerBranchSite (results_json, tree_objects, test_omega.length - 1 + (has_error_sink ? 1 :0),w / (1-w));
+        return posteriorsPerBranchSite (resultsJson, treeObjects, testOmega.length - 1 + (hasErrorSink ? 1 :0),w / (1-w));
     }
 
     return [];
@@ -356,13 +379,13 @@ export function getBSPositiveSelection(results_json, tree_objects, test_omega, h
  * Computes posterior probabilities for each branch-site combination and returns
  * detailed information for each site.
  *
- * @param {Object} results_json - The JSON object containing the results of the
+ * @param {Object} resultsJson - The JSON object containing the results of the
  * analysis, including branch attributes and substitution information.
- * @param {Array<phylotree.phylotree>} tree_objects - An array of phylotree objects
+ * @param {Array<phylotree.phylotree>} treeObjects - An array of phylotree objects
  *   for each partition
- * @param {number} rate_class - The index of the rate distribution to use for
+ * @param {number} rateClass - The index of the rate distribution to use for
  *   computing posteriors
- * @param {number} prior_odds - The prior odds for the tested rate distribution
+ * @param {number} priorOdds - The prior odds for the tested rate distribution
  *
  * @returns {Array<Object>} An array of objects, each containing:
  *   - Key: A string combining the branch name and site index
@@ -371,41 +394,41 @@ export function getBSPositiveSelection(results_json, tree_objects, test_omega, h
  *   - subs: Substitution information
  *   - from: The originating state of the substitution
  *   - to: The resulting state of the substitution
- *   - syn_subs: The count of synonymous substitutions
- *   - nonsyn_subs: The count of non-synonymous substitutions
+ *   - synSubs: The count of synonymous substitutions
+ *   - nonsynSubs: The count of non-synonymous substitutions
  */
-function posteriorsPerBranchSite(results_json, tree_objects, rate_class, prior_odds) {
+function posteriorsPerBranchSite(resultsJson, treeObjects, rateClass, priorOdds) {
   let results = [];
   let offset = 0;
-  _.each (results_json["branch attributes"], (data, partition) => {
-      let partition_size = 0;
-      let subs = _.get (results_json, ["substitutions",partition]);
-      let subs_at_site = {};
-      _.each (data, (per_branch, branch)=> {
-          if (per_branch ["Posterior prob omega class by site"]) {
-            _.each (per_branch ["Posterior prob omega class by site"][rate_class], (p,i)=> {
-                if ((i in subs_at_site) == false) {
-                     subs_at_site[i] = phylotreeUtils.generateNodeLabels (tree_objects[partition], subs[i]);
+  _.each (resultsJson["branch attributes"], (data, partition) => {
+      let partitionSize = 0;
+      let subs = _.get (resultsJson, ["substitutions",partition]);
+      let subsAtSite = {};
+      _.each (data, (perBranch, branch)=> {
+          if (perBranch ["Posterior prob omega class by site"]) {
+            _.each (perBranch ["Posterior prob omega class by site"][rateClass], (p,i)=> {
+                if ((i in subsAtSite) == false) {
+                     subsAtSite[i] = phylotreeUtils.generateNodeLabels (treeObjects[partition], subs[i]);
                 }
-                const info = subs_at_site[i][branch];
+                const info = subsAtSite[i][branch];
                 
-                const sub_count = utils.subs_for_pair (info[2],info[0])
+                const subCount = utils.subsForPair (info[2],info[0])
                 results.push ({
                     'Key' : branch + "|" + (i + offset + 1), 
                     'Posterior' : p, 
-                    'ER' : (p/(1-p))/prior_odds,
+                    'ER' : (p/(1-p))/priorOdds,
                     'from' : info[2],
                     'to' : info[0],
                     'subs' : info[3],
-                    'syn_subs' : sub_count[0],
-                    'nonsyn_subs' : sub_count[1]
+                    'synSubs' : subCount[0],
+                    'nonsynSubs' : subCount[1]
                   },
                 );
             });     
-            partition_size = per_branch ["Posterior prob omega class by site"][rate_class].length;
+            partitionSize = perBranch ["Posterior prob omega class by site"][rateClass].length;
           }
       });
-      offset += partition_size;
+      offset += partitionSize;
   });
   return results;
 }

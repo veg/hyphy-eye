@@ -46,15 +46,15 @@ const trivial_inputs = [
     }
 ]
 
-<div>${tt.tile_table(trivial_inputs)}</div>;
+<div>${tt.tileTable(trivial_inputs)}</div>;
 ```
 
-<div>${tt.tile_table(trivial_inputs)}</div>
+<div>${tt.tileTable(trivial_inputs)}</div>
 </br>
 
 ```js
 const results_json = await FileAttachment("../data/fel_test_data.json").json();
-const fel_attrs = felUtils.get_attributes(results_json);
+const fel_attrs = felUtils.getAttributes(results_json);
 const pvalue_threshold = 0.1;
 const tile_specs = felUtils.get_tile_specs(results_json, pvalue_threshold);
 const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
@@ -63,7 +63,7 @@ const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
 ## The FEL TileTable Component Test
 
 </br>
-<div>${tt.tile_table(tile_specs)}</div>
+<div>${tt.tileTable(tile_specs)}</div>
 </br>
 
 

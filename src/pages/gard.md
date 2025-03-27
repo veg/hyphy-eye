@@ -58,14 +58,14 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.get_attributes(results_json);
-const tile_specs = utils.get_tile_specs(results_json);
-const tree_objects = plots.get_tree_objects(results_json);
-const tree_lengths = plots.get_tree_lengths(tree_objects);
+const attrs = utils.getAttributes(results_json);
+const tile_specs = utils.getTileSpecs(results_json);
+const tree_objects = plots.getTreeObjects(results_json);
+const tree_lengths = plots.getTreeLengths(tree_objects);
 const gard_result_table = _.chain (results_json['siteBreakPointSupport']).toPairs().map ((d)=>{return {'site' : +d[0], 'support' : d[1]}}).value();
 ```
 
-<div>${tt.tile_table(tile_specs)}</div>
+<div>${tt.tileTable(tile_specs)}</div>
 
 **Figure 1**. Left: the best placement of breakpoints inferred by the algorithm for each number of breakpoints considered. Right: the improvement in the c-AIC score between successive breakpoint numbers (log scale).
 
@@ -146,7 +146,7 @@ const variants = view(Inputs.select(
 
 ```js
 // TODO: this mess seems convoluted
-const displayed_trees = plots.get_displayed_trees(tree_objects, variants)
+const displayed_trees = plots.getDisplayedTrees(tree_objects, variants)
 const trees_html = plots.makeTreeDivs(tree_objects, displayed_trees)
 const trees_container = document.createElement("div")
 trees_container.innerHTML = trees_html;
