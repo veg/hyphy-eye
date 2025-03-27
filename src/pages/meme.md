@@ -36,11 +36,11 @@ const proportionFormat = d3.format (".5p")
 ## Results file
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+const resultsFile = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
 ```
 
 ```js
-const results_json = Mutable(results_file.json());
+const resultsJson = Mutable(resultsFile.json());
 ```
 
 ```js
@@ -48,7 +48,7 @@ window.addEventListener(
   "message",
   (event) => {
     if (event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+      resultsJson.value = event.data.data; // Update the mutable value
     }
   },
   false,
@@ -59,25 +59,25 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.getAttributes(results_json);
+const attrs = utils.getAttributes(resultsJson);
 ```
 
 <span style = 'font-size: 110%; color;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${countSites}** sites in this dataset (<tt>p≤${pvalueThreshold}</tt>).</span>
-${attrs.hasResamples > 0 ? "This analysis used parametric bootstrap with " + attrs.hasResamples + " replicates to test for significance." : ""} ${+results_json.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
+${attrs.hasResamples > 0 ? "This analysis used parametric bootstrap with " + attrs.hasResamples + " replicates to test for significance." : ""} ${+resultsJson.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
 
 ```js
 const pvalueThreshold = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1", submit: "Update"}))
 ```
 
 ```js
-const treeObjects = phylotreeUtils.getTreeObjects(results_json);
-const siteTableData = utils.siteTableData(results_json, tableOptions, pvalueThreshold, attrs.siteIndexPartitionCodon, treeObjects);
-const tileSpecs = utils.getTileSpecs(results_json, pvalueThreshold);
-const bsPositiveSelection = utils.getPosteriorsPerBranchSite(results_json);
-const countSites = utils.getCountSitesByPvalue(results_json, pvalueThreshold);
-const selectedBranchesPerSelectedSite = utils.getSelectedBranchesPerSelectedSite(results_json, pvalueThreshold);
-const testOmega = utils.getRateDistribution(results_json, ["fits","Unconstrained model","Rate Distributions","Test"])
-const treeViewOptions = plots.getTreeViewOptions(results_json, treeObjects)
+const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+const siteTableData = utils.siteTableData(resultsJson, tableOptions, pvalueThreshold, attrs.siteIndexPartitionCodon, treeObjects);
+const tileSpecs = utils.getTileSpecs(resultsJson, pvalueThreshold);
+const bsPositiveSelection = utils.getPosteriorsPerBranchSite(resultsJson);
+const countSites = utils.getCountSitesByPvalue(resultsJson, pvalueThreshold);
+const selectedBranchesPerSelectedSite = utils.getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
+const testOmega = utils.getRateDistribution(resultsJson, ["fits","Unconstrained model","Rate Distributions","Test"])
+const treeViewOptions = plots.getTreeViewOptions(resultsJson, treeObjects)
 // TODO: clean this up
 const sitesTable = [{
     'class' : (d)=>html`<span style = "color:${plots.TABLE_COLORS[d]}">${d}</span>`, 
@@ -93,7 +93,7 @@ const sitesTable = [{
 #### Alignment-wide results
 
 ```js
-const plotType = view(Inputs.select(_.map (_.filter (plots.getPlotOptions(attrs.hasSiteLRT, attrs.hasResamples, bsPositiveSelection), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
+const plotType = view(Inputs.select(_.map (_.filter (plots.getPlotOptions(attrs.hasSiteLRT, attrs.hasResamples, bsPositiveSelection), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
 **Figure 1**. ${plotType ? plots.getPlotDescription(plotType, attrs.hasResamples) : "No plotting options available"}
@@ -109,7 +109,7 @@ const fig1data = getFig1data();
 ```js
 let plot_spec;
 if (plotType) {
-  plot_spec = plots.getPlotSpec(results_json, plotType, bsPositiveSelection, fig1data, siteTableData, attrs.hasSiteLRT, attrs.hasResamples, pvalueThreshold, treeObjects)
+  plot_spec = plots.getPlotSpec(resultsJson, plotType, bsPositiveSelection, fig1data, siteTableData, attrs.hasSiteLRT, attrs.hasResamples, pvalueThreshold, treeObjects)
 }
 ```
 <div>${vl.render({"spec": plot_spec})}</div>
@@ -138,7 +138,7 @@ const treeId =  view(Inputs.select(treeViewOptions[0], {size : 10, label: html`<
 ```
 
 ```js
-const branchLength =  view(Inputs.select(_.chain (results_json["branch attributes"]["attributes"]).toPairs().filter (d=>d[1]["attribute type"] == "branch length").map (d=>d[0]).value(),{value: "unconstrained", label: html`<b>Branch length </b>`}))
+const branchLength =  view(Inputs.select(_.chain (resultsJson["branch attributes"]["attributes"]).toPairs().filter (d=>d[1]["attribute type"] == "branch length").map (d=>d[0]).value(),{value: "unconstrained", label: html`<b>Branch length </b>`}))
 ```
 
 ```js
@@ -148,11 +148,11 @@ const treeLabels = view(Inputs.checkbox(
 ```
 
 ```js
-const colorBranches =  view(Inputs.select(plots.getTreeColorOptions(results_json),{value: "Support for selection", label: html`<b>Color branches </b>`}))
+const colorBranches =  view(Inputs.select(plots.getTreeColorOptions(resultsJson),{value: "Support for selection", label: html`<b>Color branches </b>`}))
 ```
 
 ```js
-const shadeBranches =  view(Inputs.select(plots.getTreeColorOptions(results_json).concat ("None"),{value: "None", label: html`<b>Opaqueness of branches </b>`}))
+const shadeBranches =  view(Inputs.select(plots.getTreeColorOptions(resultsJson).concat ("None"),{value: "None", label: html`<b>Opaqueness of branches </b>`}))
 ```
 
 ```js
@@ -166,10 +166,10 @@ function getFigure2() {
       if (toDisplay[0] == "Codon") {  
           const codonIndex = (+toDisplay[1]);
           let partitionId = attrs.siteIndexPartitionCodon [codonIndex][0]-1;
-          let TT = plots.displayTreeSite(results_json, partitionId, codonIndex, treeDim, treeLabels, branchLength, colorBranches, shadeBranches, treeObjects, treeViewOptions);
+          let TT = plots.displayTreeSite(resultsJson, partitionId, codonIndex, treeDim, treeLabels, branchLength, colorBranches, shadeBranches, treeObjects, treeViewOptions);
           return TT;
       } 
-      let TT = plots.displayTree(results_json, (-1) + (+toDisplay[1]), treeDim, treeLabels, branchLength, colorBranches, treeObjects);
+      let TT = plots.displayTree(resultsJson, (-1) + (+toDisplay[1]), treeDim, treeLabels, branchLength, colorBranches, treeObjects);
       return TT;
     }
 
@@ -207,7 +207,7 @@ if (figure2 && figure2.colorScale) {
 ## Suggested Citation
 
 <br>
-<p><tt>${results_json.analysis["citation"]}</tt></p>
+<p><tt>${resultsJson.analysis["citation"]}</tt></p>
 
 <hr>
 

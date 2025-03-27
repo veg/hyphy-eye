@@ -35,11 +35,11 @@ const proportionFormat = d3.format (".5p")
 ## Results file
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+const resultsFile = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
 ```
 
 ```js
-const results_json = Mutable(results_file.json());
+const resultsJson = Mutable(resultsFile.json());
 ```
 
 ```js
@@ -47,7 +47,7 @@ window.addEventListener(
   "message",
   (event) => {
     if (event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+      resultsJson.value = event.data.data; // Update the mutable value
     }
   },
   false,
@@ -58,25 +58,25 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.getAttributes(results_json);
+const attributes = utils.getAttributes(resultsJson);
 ```
 
-Based on the likelihood ratio test, there **are ${attrs.positiveResults}** branches with evidence of _episodic diversifying selection_ in this dataset (<tt>p&leq;${floatFormat(attrs.pvalueThreshold || 0.05)}</tt>).
-This analysis **${attrs.srvRateClasses > 0 ? "included" : "did not include"}** site-to-site synonymous rate variation. ${_.size (attrs.mhRates['DH']) == 0 ? "" : (_.size (attrs.mhRates['TH'] == 0) ? "Double nucleotide substitutions were included in the model." : "Double and triple nucleotide substitutions were included in the model.")}
+Based on the likelihood ratio test, there **are ${attributes.positiveResults}** branches with evidence of _episodic diversifying selection_ in this dataset (<tt>p&leq;${floatFormat(attributes.pvalueThreshold || 0.05)}</tt>).
+This analysis **${attributes.srvRateClasses > 0 ? "included" : "did not include"}** site-to-site synonymous rate variation. ${_.size (attributes.mhRates['DH']) == 0 ? "" : (_.size (attributes.mhRates['TH'] == 0) ? "Double nucleotide substitutions were included in the model." : "Double and triple nucleotide substitutions were included in the model.")}
 
 ```js
-const evThreshold = view(Inputs.text({label: html`<b>Evidence ratio threshold</b>`, value: "100", submit: "Update"}))
+const evidenceThreshold = view(Inputs.text({label: html`<b>Evidence ratio threshold</b>`, value: "100", submit: "Update"}))
 ```
 
 ```js
-const treeObjects = phylotreeUtils.getTreeObjects(results_json);
-const distributionTable = utils.getDistributionTable(results_json, evThreshold, treeObjects);
-const tileSpecs = utils.getTileSpecs(results_json, evThreshold, distributionTable);
-const profileBranchSites = utils.getProfileBranchSites(results_json, treeObjects);
-const siteTableData = utils.siteTableData(results_json, evThreshold, profileBranchSites);
+const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+const distributionTable = utils.getDistributionTable(resultsJson, evidenceThreshold, treeObjects);
+const tileSpecs = utils.getTileSpecs(resultsJson, evidenceThreshold, distributionTable);
+const profileBranchSites = utils.getProfileBranchSites(resultsJson, treeObjects);
+const siteTableData = utils.siteTableData(resultsJson, evidenceThreshold, profileBranchSites);
 const sitesTable = [{}, siteTableData[0], siteTableData[1]];
-// NOTE: doesnt look like this actually uses evThreshold if doCounts is false anyhow..
-const bsPositiveSelection = utils.getPosteriorsPerBranchSite(results_json, false, evThreshold, treeObjects);
+// NOTE: doesnt look like this actually uses evidenceThreshold if doCounts is false anyhow..
+const branchSitePositiveSelection = utils.getPosteriorsPerBranchSite(resultsJson, false, evidenceThreshold, treeObjects);
 ```
 
 <div>${tt.tileTable(tileSpecs)}</div>
@@ -87,7 +87,7 @@ const bsPositiveSelection = utils.getPosteriorsPerBranchSite(results_json, false
 const rateTable = view(Inputs.table (distributionTable, {
   header : {'LogL' : "Log (L)", "AICc" : "AIC-c", "p" : "<abbr title=\"Number of estimated parameters\">Params.</abbr>", "dist" : "ω distribution", "plot" : "ω plot"},
   format : {
-    'branch' : (d)=>!_.isUndefined (results_json["branch attributes"][0][d]["Corrected P-value"]) && results_json["branch attributes"][0][d]["Corrected P-value"]<=0.05 ? html`<b>${d}</b>` : d,
+    'branch' : (d)=>!_.isUndefined (resultsJson["branch attributes"][0][d]["Corrected P-value"]) && resultsJson["branch attributes"][0][d]["Corrected P-value"]<=0.05 ? html`<b>${d}</b>` : d,
     'LogL' : d3.format ("2g"),
     'AICc' : d3.format ("2g"),
     'dist' : (d)=>{
@@ -109,11 +109,11 @@ const distComparisonPlot = rateTable.length == 2 ? omegaPlots.renderTwoDiscreteD
 <div>${distComparisonPlot}</div>
 
 ```js
-const treeId =  view(Inputs.select (plots.treeViewOptions(results_json), {label: html`<b>Tree to view</b>`, placeholder : "Select something to view", "value" : "Alignment-wide tree"}))
+const treeId =  view(Inputs.select (plots.treeViewOptions(resultsJson), {label: html`<b>Tree to view</b>`, placeholder : "Select something to view", "value" : "Alignment-wide tree"}))
 ```
 
 ```js
-const branchLength =  view(Inputs.select(_.chain (results_json["branch attributes"]["attributes"]).toPairs().filter (d=>d[1]["attribute type"] == "branch length").map (d=>d[0]).value(),{value: "Baseline MG94xREV", label: html`<b>Branch length </b>`}))
+const branchLength =  view(Inputs.select(_.chain (resultsJson["branch attributes"]["attributes"]).toPairs().filter (d=>d[1]["attribute type"] == "branch length").map (d=>d[0]).value(),{value: "Baseline MG94xREV", label: html`<b>Branch length </b>`}))
 ```
 
 ```js
@@ -123,7 +123,7 @@ const treeLabels = view(Inputs.checkbox(
 ```
 
 ```js
-const colorBranches =  view(Inputs.select(plots.treeColorOptions(results_json, evThreshold),{value: "Support for selection", label: html`<b>Color branches </b>`}))
+const colorBranches =  view(Inputs.select(plots.treeColorOptions(resultsJson, evidenceThreshold),{value: "Support for selection", label: html`<b>Color branches </b>`}))
 ```
 
 ```js
@@ -132,9 +132,8 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", label: "H x W (pix
 
 ```js
 // TODO: consider making a phylotreeProps object or similar for treeDim, treeLabels, branchLength and colorBranches
-// TODO: pick either snake case or camel case lol
 function getFigure2() {
-  const siteIndexPartitionCodon = utils.getSiteIndexPartitionCodon(results_json);
+  const siteIndexPartitionCodon = utils.getSiteIndexPartitionCodon(resultsJson);
 
     let toDisplay = treeId.split (" ");
     if (toDisplay.length > 1) {
@@ -147,10 +146,10 @@ function getFigure2() {
           const codonIndex = (+toDisplay[1]);
           let partitionId = siteIndexPartitionCodon[codonIndex-1][0]-1;
           console.log("partition", partitionId)
-          let TT = plots.displayTreeSite (results_json, partitionId, treeObjects[0], codonIndex, treeOptions, evThreshold, treeDim, treeLabels, branchLength, colorBranches, attrs.partitionSizes);
+          let TT = plots.displayTreeSite (resultsJson, partitionId, treeObjects[0], codonIndex, treeOptions, evidenceThreshold, treeDim, treeLabels, branchLength, colorBranches, attributes.partitionSizes);
           return TT;
       } 
-      let TT = plots.displayTree(results_json, 0, treeObjects[0], treeOptions, evThreshold, treeDim, treeLabels, branchLength, colorBranches);
+      let TT = plots.displayTree(resultsJson, 0, treeObjects[0], treeOptions, evidenceThreshold, treeDim, treeLabels, branchLength, colorBranches);
       return TT;
     }
     return null;
@@ -187,7 +186,7 @@ if (figure2 && figure2.colorScale) {
 **Figure 1**. ${plotType ? plots.getPlotDescription(plotType) : "No plotting options available"}
 
 ```js
-const plotType =  view(Inputs.select(_.map (_.filter (plots.getPlotOptions(attrs.srvRateClasses, attrs.srvDistribution, bsPositiveSelection, profileBranchSites), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`, value : 'Evidence ratio alignment profile'}))
+const plotType =  view(Inputs.select(_.map (_.filter (plots.getPlotOptions(attributes.srvRateClasses, attributes.srvDistribution, branchSitePositiveSelection, profileBranchSites), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`, value : 'Evidence ratio alignment profile'}))
 ```
 
 ```js
@@ -205,13 +204,13 @@ function getFig1data() {
 }
 const fig1data = getFig1data();
 const selectedBranches = new Set (_.map (rateTable, (d)=>d.branch));
-const branchOrder = _.filter (phylotreeUtils.treeNodeOrdering(results_json, treeObjects, 0), (d)=>attrs.profilableBranches.has (d) && selectedBranches.has (d));
+const branchOrder = _.filter (phylotreeUtils.treeNodeOrdering(resultsJson, treeObjects, 0), (d)=>attributes.profilableBranches.has (d) && selectedBranches.has (d));
 ```
 
 ```js
 let plotSpec;
 if (plotType) {
-  plotSpec = plots.getPlotSpec(plotType, results_json, fig1data, bsPositiveSelection, profileBranchSites, branchOrder, fig1Controls)
+  plotSpec = plots.getPlotSpec(plotType, resultsJson, fig1data, branchSitePositiveSelection, profileBranchSites, branchOrder, fig1Controls)
 }
 ```
 <div>${vl.render({"spec": plotSpec})}</div>
@@ -231,7 +230,7 @@ const table1 = view(Inputs.table (sitesTable[1], {
 
 ```js
 const whichBranch = view(Inputs.select(
-  _.map ([...attrs.profilableBranches], (d)=>d),
+  _.map ([...attributes.profilableBranches], (d)=>d),
   {multiple: true,
   label: "Select some branches"
   }
@@ -241,7 +240,7 @@ const whichBranch = view(Inputs.select(
 ```js
 function getTable3Data() {
   let rc = _.keyBy (_.filter (profileBranchSites, (d)=>whichBranch.indexOf (d.branch)>=0), (d)=>d.Key);
-  _.each (bsPositiveSelection, (d)=> {
+  _.each (branchSitePositiveSelection, (d)=> {
       if (d.Key in rc) {
           rc[d.Key].EBF = d.ER;
       }
@@ -276,7 +275,7 @@ const table3 = view(Inputs.table (table3Data,
 ## Suggested Citation
 
 <br>
-<p><tt>${results_json.analysis["citation"]}</tt></p>
+<p><tt>${resultsJson.analysis["citation"]}</tt></p>
 
 <hr>
 

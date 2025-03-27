@@ -35,16 +35,16 @@ const filteredCodons = data.column2NodeIds.filter(function(d) {
     return(filteredLinks.some(link => link.target === d));
 });
 //const filteredCodons = data.column2NodeIds;
-const filtered_data = {
+const filteredData = {
     column1NodeIds: data.column1NodeIds,
     column2NodeIds: filteredCodons,
     links: filteredLinks
 };
 
-const bpnet_svg = bpnet.render(filtered_data, document.createElement("div"));
+const bpnetSvg = bpnet.render(filteredData, document.createElement("div"));
 ```
 
-<div>${bpnet_svg}</div>
+<div>${bpnetSvg}</div>
 
 
 ## Force directed bipartite network
@@ -64,7 +64,7 @@ my 2c, i dont currently think this is a primary result summary viz, but could be
 more exploratory one. it does seem fun though, something offered after we get the primary thing sorted.
 
 ```js
-const force_net = forcenet.render(filtered_data, document.createElement("div"));
+const forceNet = forcenet.render(filteredData, document.createElement("div"));
 ```
 
-<div>${force_net}</div>
+<div>${forceNet}</div>

@@ -7,13 +7,13 @@
 <br/>
 
 ```js
-import * as continuous_schemes from "../color-maps/crameri.js";
-import * as categorical_schemes from "../color-maps/tol.js";
-import * as custom_schemes from "../color-maps/custom.js";
+import * as continuousSchemes from "../color-maps/crameri.js";
+import * as categoricalSchemes from "../color-maps/tol.js";
+import * as customSchemes from "../color-maps/custom.js";
 import * as utils from "../color-maps/utils.js";
 import * as Plot from "npm:@observablehq/plot";
 
-console.log(continuous_schemes)
+console.log(continuousSchemes)
 // TODO: refactor, as some of this logic is reused in the function below as well
 // and is likely to be reused for any other color schemes we add
 function getLabeledRamps(schemesJson) {
@@ -24,7 +24,7 @@ function getLabeledRamps(schemesJson) {
         const label = document.createElement("text")
         label.textContent = name
         schemeElement.append(label)
-        const rampFxn = utils.ramp(continuous_schemes[name])
+        const rampFxn = utils.ramp(continuousSchemes[name])
         const exLegend = Plot.legend({
             color: {
                 type: "linear",
@@ -44,7 +44,7 @@ function getLabeledRamps(schemesJson) {
 ## Crameri's Continuous Schemes
 
 </br>
-<div>${getLabeledRamps(continuous_schemes)}</div>
+<div>${getLabeledRamps(continuousSchemes)}</div>
 </br>
 
 ```js
@@ -56,7 +56,7 @@ function getLabeledSwatches(schemesJson) {
         const label = document.createElement("text")
         label.textContent = name
         schemeElement.append(label)
-        const scheme = categorical_schemes[name]
+        const scheme = categoricalSchemes[name]
         const exLegend = Plot.legend({
             color: {
                 type: "categorical",
@@ -82,7 +82,7 @@ function getLabeledSwatches(schemesJson) {
 ## Tol's Categorical Schemes
 
 </br>
-<div>${getLabeledSwatches(categorical_schemes)}</div>
+<div>${getLabeledSwatches(categoricalSchemes)}</div>
 </br>
 
 </br>
@@ -90,7 +90,7 @@ function getLabeledSwatches(schemesJson) {
 ## Custom Schemes
 
 ```js
-const scheme = custom_schemes.binary_with_gray
+const scheme = customSchemes.binary_with_gray
 const legend = 
     Plot.legend({
         color: {
@@ -107,6 +107,6 @@ const legend =
 
 </br>
 <div>
-    <text>binary_with_gray</text>
+    <text>binaryWithGray</text>
     <div>${legend}</div>
 </div>

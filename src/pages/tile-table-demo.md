@@ -12,7 +12,7 @@ import * as felUtils from "../fel/fel-utils.js";
 </br>
 
 ```js
-const trivial_inputs = [
+const trivialInputs = [
     {
         "number": 12,
         "description": "I'm a number!",
@@ -31,7 +31,7 @@ const trivial_inputs = [
 ```
 import * as tt from "./components/tile-table/tile-table.js";
 
-const trivial_inputs = [
+const trivialInputs = [
     {
         "number": 12,
         "description": "I'm a number!",
@@ -46,24 +46,24 @@ const trivial_inputs = [
     }
 ]
 
-<div>${tt.tileTable(trivial_inputs)}</div>;
+<div>${tt.tileTable(trivialInputs)}</div>;
 ```
 
-<div>${tt.tileTable(trivial_inputs)}</div>
+<div>${tt.tileTable(trivialInputs)}</div>
 </br>
 
 ```js
-const results_json = await FileAttachment("../data/fel_test_data.json").json();
-const fel_attrs = felUtils.getAttributes(results_json);
-const pvalue_threshold = 0.1;
-const tile_specs = felUtils.get_tile_specs(results_json, pvalue_threshold);
-const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
+const resultsJson = await FileAttachment("../data/fel_test_data.json").json();
+const felAttrs = felUtils.getAttributes(resultsJson);
+const pvalueThreshold = 0.1;
+const tileSpecs = felUtils.getTileSpecs(resultsJson, pvalueThreshold);
+const sitesTable = felUtils.getSitesTable(resultsJson, pvalueThreshold);
 ```
 
 ## The FEL TileTable Component Test
 
 </br>
-<div>${tt.tileTable(tile_specs)}</div>
+<div>${tt.tileTable(tileSpecs)}</div>
 </br>
 
 
@@ -77,7 +77,7 @@ const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
   <div class="stati asbestos left ">
   <i class="icon-options-vertical icons"></i>
   <div>
-  <b>${fel_attrs.number_sequences}</b>
+  <b>${felAttrs.numberSequences}</b>
   <span>sequences in the alignment</span>
   </div> 
   </div>
@@ -86,7 +86,7 @@ const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
   <div class="stati asbestos left ">
   <i class="icon-options icons"></i>
   <div>
-  <b>${fel_attrs.number_sites}</b>
+  <b>${felAttrs.numberSites}</b>
   <span>codon sites in the alignment</span>
   </div> 
   </div>
@@ -95,7 +95,7 @@ const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
   <div class="stati asbestos left ">
   <i class="icon-arrow-up icons"></i>
   <div>
-  <b>${fel_attrs.number_partitions}</b>
+  <b>${felAttrs.numberPartitions}</b>
   <span>partitions</span>
   </div> 
   </div>
@@ -106,7 +106,7 @@ const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
   <div class="stati asbestos left ">
   <i class="icon-share icons"></i>
   <div>
-  <b>${fel_attrs.tested_branch_count}</b>
+  <b>${felAttrs.testedBranchCount}</b>
   <span>median branches/partition used for testing</span>
   </div> 
   </div>
@@ -115,7 +115,7 @@ const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
   <div class="stati asbestos left ">
   <i class="icon-check icons"></i>
   <div>
-  <b>${fel_attrs.variable_site_count}</b>
+  <b>${felAttrs.variableSiteCount}</b>
   <span>non-invariant sites tested</span>
   </div> 
   </div>
@@ -124,7 +124,7 @@ const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
   <div class="stati asbestos left ">
   <i class="icon-layers icons"></i>
   <div>
-  <b>${results_json.simulated || "N/A"}</b>
+  <b>${resultsJson.simulated || "N/A"}</b>
   <span>parametric bootstrap replicates</span>
   </div> 
   </div>
@@ -135,8 +135,8 @@ const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
   <div class="stati midnight_blue left ">
   <i class="icon-plus icons"></i>
   <div>
-  <b>${_.filter (sites_table[1], (d)=>d.class == "Diversifying").length}</b>
-  <span>Sites under diversifying positive selection at p≤${pvalue_threshold}</span>
+  <b>${_.filter (sitesTable[1], (d)=>d.class == "Diversifying").length}</b>
+  <span>Sites under diversifying positive selection at p≤${pvalueThreshold}</span>
   </div> 
   </div>
 </td>
@@ -144,8 +144,8 @@ const sites_table = felUtils.get_sites_table(results_json, pvalue_threshold);
   <div class="stati  midnight_blue left ">
   <i class="icon-minus icons"></i>
   <div>
-  <b>${_.filter (sites_table[1], (d)=>d.class == "Purifying").length}</b>
-  <span>Sites under purifying selection at p≤${pvalue_threshold}</span>
+  <b>${_.filter (sitesTable[1], (d)=>d.class == "Purifying").length}</b>
+  <span>Sites under purifying selection at p≤${pvalueThreshold}</span>
   </div> 
   </div>
 </td>

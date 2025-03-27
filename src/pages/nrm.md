@@ -34,11 +34,11 @@ const proportionFormat = d3.format(".5p")
 ## Results file
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+const resultsFile = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
 ```
 
 ```js
-const results_json = Mutable(results_file.json());
+const resultsJson = Mutable(resultsFile.json());
 ```
 
 ```js
@@ -46,7 +46,7 @@ window.addEventListener(
   "message",
   (event) => {
     if (event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+      resultsJson.value = event.data.data; // Update the mutable value
     }
   },
   false,
@@ -57,17 +57,17 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.getAttributes(results_json);
-const tileSpecs = utils.getTileSpecs(results_json);
+const attrs = utils.getAttributes(resultsJson);
+const tileSpecs = utils.getTileSpecs(resultsJson);
 ```
 
 <div>${tt.tileTable(tileSpecs)}</div>
 
 The best-fitting model (based on AIC-c) is **${attrs.bestModel}**. 
 
-Based on the comparison of the general reversible (GTR) and non-reversible models (NREV12), there ${utils.reportResult(utils.getTestResult(results_json, "GTR","NREV12"))} for the <b>non-reversibility of the evolutionary process</b>.
+Based on the comparison of the general reversible (GTR) and non-reversible models (NREV12), there ${utils.reportResult(utils.getTestResult(resultsJson, "GTR","NREV12"))} for the <b>non-reversibility of the evolutionary process</b>.
 
-Based on the comparison of the non-reversible model which estimate root character frequencies (NREV12+F) and the model which assumes that these equal empirical frequencies (NREV12), there ${utils.reportResult(utils.getTestResult(results_json, "NREV12","NREV12+F"))} for the <b>difference in root character frequencies from the distribution implied by the sequences</b>.
+Based on the comparison of the non-reversible model which estimate root character frequencies (NREV12+F) and the model which assumes that these equal empirical frequencies (NREV12), there ${utils.reportResult(utils.getTestResult(resultsJson, "NREV12","NREV12+F"))} for the <b>difference in root character frequencies from the distribution implied by the sequences</b>.
 
 ```js
 const table1 = view(Inputs.table (attrs.modelTableData, {
@@ -84,7 +84,7 @@ const modelForQ = view(Inputs.select(_.map (attrs.modelSummary, (d)=>d[0]), {val
 
 ```js
 // TODO: we do this a lot.. a helper function to produce standalone legends?
-const qMaxRate = utils.getQMaxRate(results_json, modelForQ)
+const qMaxRate = utils.getQMaxRate(resultsJson, modelForQ)
 const schemeElement = document.createElement("div")
 const label = document.createElement("text")
 label.textContent = "Relative rate"
@@ -118,7 +118,7 @@ function sparkbar(max) {
     justify-content: end;">${x.toLocaleString("en")}`
 }
 
-const qMatrixTableData = utils.getQMatrixTable(results_json, modelForQ)
+const qMatrixTableData = utils.getQMatrixTable(resultsJson, modelForQ)
 ```
 
 ```js
@@ -240,9 +240,9 @@ const distanceFunction = view(Inputs.select(availableDistances, {value: "Jensen 
 ```
 
 ```js
-const treeObjects = phylotreeUtils.getTreeObjects(results_json, modelForTree);
-const branchLengths = plots.getBranchLengths(results_json, attrs.modelSummary, treeObjects);
-const figure2 = plots.displayTree(results_json, 0, treeDim, treeLabels, treeObjects, availableDistances, distanceFunction, modelForTree)
+const treeObjects = phylotreeUtils.getTreeObjects(resultsJson, modelForTree);
+const branchLengths = plots.getBranchLengths(resultsJson, attrs.modelSummary, treeObjects);
+const figure2 = plots.displayTree(resultsJson, 0, treeDim, treeLabels, treeObjects, availableDistances, distanceFunction, modelForTree)
 // TODO: we do this a lot.. a helper function to produce standalone legends?
 const schemeElement2 = document.createElement("div")
 const label = document.createElement("text")

@@ -30,11 +30,11 @@ const proportionFormat = d3.format(".5p")
 ## Results file
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+const resultsFile = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
 ```
 
 ```js
-const results_json = Mutable(results_file.json());
+const resultsJson = Mutable(resultsFile.json());
 ```
 
 ```js
@@ -42,7 +42,7 @@ window.addEventListener(
   "message",
   (event) => {
     if (event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+      resultsJson.value = event.data.data; // Update the mutable value
     }
   },
   false,
@@ -53,8 +53,8 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.getAttributes(results_json);
-const tileSpecs = utils.getTileSpecs(results_json);
+const attrs = utils.getAttributes(resultsJson);
+const tileSpecs = utils.getTileSpecs(resultsJson);
 ```
 
 <div>${tt.tileTable(tileSpecs)}</div>

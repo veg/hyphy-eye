@@ -35,11 +35,11 @@ const proportionFormat = d3.format(".5p")
 ## Results file
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+const resultsFile = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
 ```
 
 ```js
-const results_json = Mutable(results_file.json());
+const resultsJson = Mutable(resultsFile.json());
 ```
 
 ```js
@@ -47,7 +47,7 @@ window.addEventListener(
   "message",
   (event) => {
     if (event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+      resultsJson.value = event.data.data; // Update the mutable value
     }
   },
   false,
@@ -58,14 +58,14 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.getAttributes(results_json);
-const tile_specs = utils.getTileSpecs(results_json);
-const tree_objects = plots.getTreeObjects(results_json);
-const tree_lengths = plots.getTreeLengths(tree_objects);
-const gard_result_table = _.chain (results_json['siteBreakPointSupport']).toPairs().map ((d)=>{return {'site' : +d[0], 'support' : d[1]}}).value();
+const attrs = utils.getAttributes(resultsJson);
+const tileSpecs = utils.getTileSpecs(resultsJson);
+const treeObjects = plots.getTreeObjects(resultsJson);
+const treeLengths = plots.getTreeLengths(treeObjects);
+const gardResultTable = _.chain (resultsJson['siteBreakPointSupport']).toPairs().map ((d)=>{return {'site' : +d[0], 'support' : d[1]}}).value();
 ```
 
-<div>${tt.tileTable(tile_specs)}</div>
+<div>${tt.tileTable(tileSpecs)}</div>
 
 **Figure 1**. Left: the best placement of breakpoints inferred by the algorithm for each number of breakpoints considered. Right: the improvement in the c-AIC score between successive breakpoint numbers (log scale).
 
@@ -121,7 +121,7 @@ const fig2={
 const fig3= {
   width: 800,
   height: 200,
-  "data": {"values": tree_lengths},
+  "data": {"values": treeLengths},
   "mark": {type: "line", tooltip : true,  point : false},
   "encoding": {
     "x": {"field": "x", "type": "quantitative",  "axis" : {"grid" : false, title : "Coordinate"}},
@@ -135,7 +135,7 @@ const fig3= {
 
 ```js
 const variants = view(Inputs.select(
-  phylotreeUtils.seqNames(tree_objects[0].tree),
+  phylotreeUtils.seqNames(treeObjects[0].tree),
   {
     label: "Select some sequences to highlight",
     placeholder: "Select some sequences",
@@ -146,20 +146,20 @@ const variants = view(Inputs.select(
 
 ```js
 // TODO: this mess seems convoluted
-const displayed_trees = plots.getDisplayedTrees(tree_objects, variants)
-const trees_html = plots.makeTreeDivs(tree_objects, displayed_trees)
-const trees_container = document.createElement("div")
-trees_container.innerHTML = trees_html;
+const displayedTrees = plots.getDisplayedTrees(treeObjects, variants)
+const treesHtml = plots.makeTreeDivs(treeObjects, displayedTrees)
+const treesContainer = document.createElement("div")
+treesContainer.innerHTML = treesHtml;
 ```
 <link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
-<div>${trees_container}</div>
+<div>${treesContainer}</div>
 
 <hr>
 
 ## Suggested Citation
 
 <br>
-<p><tt>${results_json.analysis["citation"]}</tt></p>
+<p><tt>${resultsJson.analysis["citation"]}</tt></p>
 
 <hr>
 

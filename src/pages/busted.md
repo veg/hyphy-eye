@@ -33,11 +33,11 @@ const proportionFormat = d3.format (".5p")
 ## Results file
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+const resultsFile = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
 ```
 
 ```js
-const results_json = Mutable(results_file.json());
+const resultsJson = Mutable(resultsFile.json());
 ```
 
 ```js
@@ -45,7 +45,7 @@ window.addEventListener(
   "message",
   (event) => {
     if (event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+      resultsJson.value = event.data.data; // Update the mutable value
     }
   },
   false,
@@ -56,46 +56,46 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.getAttributes(results_json);
+const attrs = utils.getAttributes(resultsJson);
 ```
 
-<span style = 'font-size: 110%;'>Based on the likelihood ratio test, there **is ${results_json["test results"]["p-value"]>0.05 ? "no" : ""}** evidence of _episodic diversifying selection_ in this dataset (<tt>p=${floatFormat(results_json["test results"]["p-value"])}</tt>).
+<span style = 'font-size: 110%;'>Based on the likelihood ratio test, there **is ${resultsJson["test results"]["p-value"]>0.05 ? "no" : ""}** evidence of _episodic diversifying selection_ in this dataset (<tt>p=${floatFormat(resultsJson["test results"]["p-value"])}</tt>).
 </span>This analysis **${attrs.srvRateClasses > 0 ? "included" : "did not include"}** site-to-site synonymous rate variation${attrs.srvHMM?" with linear autocorrelation (HMM)" : ""}. ${_.isUndefined (attrs.mhRates['DH']) ? "" : (_.isUndefined (attrs.mhRates['TH']) ? "Double nucleotide substitutions were included in the model." : "Double and triple nucleotide substitutions were included in the model.")}
-${results_json.analysis.version < 4.0 ? "<small><b>Some of the visualizations are not available for BUSTED analyses before v4.0</b>" : ""} 
+${resultsJson.analysis.version < 4.0 ? "<small><b>Some of the visualizations are not available for BUSTED analyses before v4.0</b>" : ""} 
 
 ```js
 //${contributing_sites && contributing_sites.length == 1? "\n><small style = 'color:firebrick'><i class='icon-fire icons'></i>Most of the statistical signal for episodic diversifying selection in this alignment is derived from a single codon site (**codon " + (1+contributing_sites[0])  + "**). This could be a sign of possible data quality issues, or outsized influence of a few substitutions, especially if they involve replacing multiple nucleotides along a short branch. You may want to examine the alignment at this site using BUSTED visualization tools, performing model-averaged inference, or rerunning the alignment with data at that site masked to confirm robustness of the result</small>" : ""} 
 ```
 
-${results_json.analysis.version >= 4.5 && attrs.hasErrorSink ? "<br><small style = 'color:darkgreen'>This analysis was run with the error sink category enabled</small>" : ""}
+${resultsJson.analysis.version >= 4.5 && attrs.hasErrorSink ? "<br><small style = 'color:darkgreen'>This analysis was run with the error sink category enabled</small>" : ""}
 ${attrs.hasErrorSinkNT? "<details><summary style='background-color: 0xCCC; color: firebrick; font-size: 0.75em;'>Possible alignment errors detected</summary><span style='background-color: 0xCCC; color: darkorange; font-size: 0.75em;'>A " +proportionFormat (utils.getErrorSinkRate ("Test")["proportion"]) + " fraction of the alignment (test branches" + (attrs.hasBackground ? ", and " + proportionFormat (utils.getErrorSinkRate ("Background")["proportion"]) + " of background branches)"  : ")" ) + " was placed in the <b>error sink</b> rate class, meaning that misalignment or other data quality issues may be present. You may use exploratory plots and other components on this page to further explore this.</span></details>" : ""}
 
 ```js
-const ev_threshold = view(Inputs.text({label: html`<b>Evidence ratio threshold</b>`, value: "10", submit: "Update"}))
+const evThreshold = view(Inputs.text({label: html`<b>Evidence ratio threshold</b>`, value: "10", submit: "Update"}))
 ```
 
 ```js
-const siteTableData = utils.siteTableData(results_json, ev_threshold);
-const sites_table = [{}, siteTableData[0], siteTableData[1]];
-const distributionTable = utils.getDistributionTable(results_json, ev_threshold);
-const contributing_sites = utils.getContributingSites(siteTableData);
-const test_omega = utils.testOmega(results_json, attrs.hasErrorSink);
-const tree_objects = phylotreeUtils.getTreeObjects(results_json);
-const bsPositiveSelection = utils.getBSPositiveSelection(results_json, tree_objects, test_omega, attrs.hasErrorSink);
+const siteTableData = utils.siteTableData(resultsJson, evThreshold);
+const sitesTable = [{}, siteTableData[0], siteTableData[1]];
+const distributionTable = utils.getDistributionTable(resultsJson, evThreshold);
+const contributingSites = utils.getContributingSites(siteTableData);
+const testOmega = utils.testOmega(resultsJson, attrs.hasErrorSink);
+const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+const bsPositiveSelection = utils.getBSPositiveSelection(resultsJson, treeObjects, testOmega, attrs.hasErrorSink);
 console.log("bsPos", bsPositiveSelection)
 console.log("err_sink", attrs.hasErrorSink)
-console.log("omega", test_omega)
-const bsErrorSink = utils.getBSErrorSink(results_json, tree_objects, attrs.hasErrorSinkNT);
-const tile_specs = utils.getTileSpecs(results_json, ev_threshold, bsPositiveSelection, contributing_sites);
+console.log("omega", testOmega)
+const bsErrorSink = utils.getBSErrorSink(resultsJson, treeObjects, attrs.hasErrorSinkNT);
+const tileSpecs = utils.getTileSpecs(resultsJson, evThreshold, bsPositiveSelection, contributingSites);
 
 ```
 
-<div>${tt.tileTable(tile_specs)}</div>
+<div>${tt.tileTable(tileSpecs)}</div>
 
 #### Alignment-wide results
 
 ```js
-const rate_table = view(Inputs.table (distributionTable, {
+const rateTable = view(Inputs.table (distributionTable, {
   header : {'LogL' : "Log (L)", "AICc" : "AIC-c", "p" : html`<abbr title="Number of estimated parameters">Params.</abbr`, "dist" : "Rate distribution", "plot" : "Rate plot"},
   format : {
     'LogL' : d3.format ("2g"),
@@ -112,61 +112,61 @@ const rate_table = view(Inputs.table (distributionTable, {
 ```
 
 ```js
-const distComparisonPlot = rate_table.length == 2 ? omegaPlots.renderTwoDiscreteDistributions (rate_table[0].dist[1],rate_table[1].dist[1],{"label" : {"chart" : rate_table[0].plot[0], "series" : [rate_table[0].dist[3],rate_table[1].dist[3]]}, "width" : 700, "height" : 120, "scale" : "sqrt", "margin" : {top: 5, right: 250, bottom: 30, left: 20}}) : "<small>Select exactly two distributions to plot a side-by-side comparison</small>"
+const distComparisonPlot = rateTable.length == 2 ? omegaPlots.renderTwoDiscreteDistributions (rateTable[0].dist[1],rateTable[1].dist[1],{"label" : {"chart" : rateTable[0].plot[0], "series" : [rateTable[0].dist[3],rateTable[1].dist[3]]}, "width" : 700, "height" : 120, "scale" : "sqrt", "margin" : {top: 5, right: 250, bottom: 30, left: 20}}) : "<small>Select exactly two distributions to plot a side-by-side comparison</small>"
 ```
 
 ```js
-const plot_type =  view(Inputs.select(_.map (_.filter (plots.getPlotOptions(results_json, bsPositiveSelection), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
+const plotType =  view(Inputs.select(_.map (_.filter (plots.getPlotOptions(resultsJson, bsPositiveSelection), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
 ```js
-const plot_extras = ({
+const plotExtras = ({
     'Support for positive selection' : Inputs.select(['Total subs', 'Syn subs', 'Non-syn subs', 'None'], {'label' : 'Circle size'} ),
     'Error-sink support' : Inputs.select(['Total subs', 'Syn subs', 'Non-syn subs', 'None'], {'label' : 'Circle size'} )
 })
 ```
 
 ```js
-const fig1_controls = view(plot_extras[plot_type] || Inputs.text({label: "Plot options", value: "None", disabled: true}))
+const fig1Controls = view(plotExtras[plotType] || Inputs.text({label: "Plot options", value: "None", disabled: true}))
 ```
 
-**Figure 1**. ${plot_type ? plots.getPlotDescription(plot_type, attrs.srvHMM) : "No plotting options available"}`
+**Figure 1**. ${plotType ? plots.getPlotDescription(plotType, attrs.srvHMM) : "No plotting options available"}`
 
 ```js
 function getFig1data() {
-   let in_set = new Set (_.map (table1, (d)=>d.Codon));
-   return _.filter (siteTableData[0], (x)=>in_set.has (x.Codon));
+   let inSet = new Set (_.map (table1, (d)=>d.Codon));
+   return _.filter (siteTableData[0], (x)=>inSet.has (x.Codon));
 }
 const fig1data = getFig1data()
 ```
 
 ```js
-let plot_spec;
-if (plot_type) {
-  plot_spec = plots.getPlotSpec(plot_type, results_json, fig1data, bsPositiveSelection, bsErrorSink, ev_threshold, attrs.srvHMM, tree_objects, attrs.testedBranchCount, fig1_controls)
+let plotSpec;
+if (plotType) {
+  plotSpec = plots.getPlotSpec(plotType, resultsJson, fig1data, bsPositiveSelection, bsErrorSink, evThreshold, attrs.srvHMM, treeObjects, attrs.testedBranchCount, fig1Controls)
 }
 ```
-<div>${vl.render({"spec": plot_spec})}</div>
+<div>${vl.render({"spec": plotSpec})}</div>
 
 **Table 1**. Detailed site-by-site results from the BUSTED analysis
 
 ```js
-const table1 = view(Inputs.table (sites_table[1], {
+const table1 = view(Inputs.table (sitesTable[1], {
   rows : 10,
-  format: sites_table[0],
+  format: sitesTable[0],
   layout: "auto",
-  header: sites_table[2]
+  header: sitesTable[2]
 }))
 ```
 
 **Figure 2**.
 
 ```js
-const tree_id =  view(Inputs.select (plots.getTreeViewOptions(results_json, tree_objects), {size : 10, label: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
+const treeId =  view(Inputs.select (plots.getTreeViewOptions(resultsJson, treeObjects), {size : 10, label: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
 ```
 
 ```js
-const branch_length =  view(Inputs.select(_.chain (results_json["branch attributes"]["attributes"]).toPairs().filter (d=>d[1]["attribute type"] == "branch length").map (d=>d[0]).value(),{value: "unconstrained", label: html`<b>Branch length </b>`}))
+const branchLength =  view(Inputs.select(_.chain (resultsJson["branch attributes"]["attributes"]).toPairs().filter (d=>d[1]["attribute type"] == "branch length").map (d=>d[0]).value(),{value: "unconstrained", label: html`<b>Branch length </b>`}))
 ```
 
 ```js
@@ -176,7 +176,7 @@ const treeLabels = view(Inputs.checkbox(
 ```
 
 ```js
-const color_branches =  view(Inputs.select(plots.treeColorOptions(results_json, tree_objects),{value: "Support for selection", label: html`<b>Color branches </b>`}))
+const colorBranches =  view(Inputs.select(plots.treeColorOptions(resultsJson, treeObjects),{value: "Support for selection", label: html`<b>Color branches </b>`}))
 ```
 
 ```js
@@ -186,22 +186,22 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", description: "Tree
 ```js
 function getFigure2() {
 
-    let toDisplay = tree_id.split (" ");
+    let toDisplay = treeId.split (" ");
     if (toDisplay.length > 1) {
-      let tree_options = {  
+      let treeOptions = {  
           'branch-labels' : treeLabels.indexOf ("show branch labels") >= 0,
           'neighbors' : treeLabels.indexOf ("include neighboring codons") >= 0
       };
       
       if (toDisplay[0] == "Codon") {  
-          let codon_index = (+toDisplay[1]);
-          let partition_id = utils.getSiteIndexPartitionCodon(results_json)[codon_index-1][0]-1;
-          codon_index -= d3.sum (attrs.partitionSizes.slice (0,partition_id));
-          let TT = plots.displayTreeSite(results_json, partition_id, tree_objects[partition_id], codon_index, tree_options, treeDim, treeLabels, branch_length, color_branches, attrs.partitionSizes, test_omega, attrs.hasErrorSink);
+          let codonIndex = (+toDisplay[1]);
+          let partitionId = utils.getSiteIndexPartitionCodon(resultsJson)[codonIndex-1][0]-1;
+          codonIndex -= d3.sum (attrs.partitionSizes.slice (0,partitionId));
+          let TT = plots.displayTreeSite(resultsJson, partitionId, treeObjects[partitionId], codonIndex, treeOptions, treeDim, treeLabels, branchLength, colorBranches, attrs.partitionSizes, testOmega, attrs.hasErrorSink);
           return TT;
       } 
       let pi = (-1) + (+toDisplay[1]);
-      let TT = plots.displayTree(results_json, ev_threshold, pi, tree_objects[pi], tree_options, treeDim, treeLabels, branch_length, color_branches);
+      let TT = plots.displayTree(resultsJson, evThreshold, pi, treeObjects[pi], treeOptions, treeDim, treeLabels, branchLength, colorBranches);
       return TT;
     }
     return null;
@@ -211,16 +211,16 @@ const figure2 = getFigure2();
 
 ```js
 const schemeElement = document.createElement("div")
-if (figure2 && figure2.color_scale) {
+if (figure2 && figure2.colorScale) {
   const label = document.createElement("text")
-  label.textContent = figure2.color_scale_title
+  label.textContent = figure2.colorScaleTitle
   schemeElement.append(label)
   const legend = Plot.legend({
         color: {
             type: "linear",
-            interpolate: figure2.color_scale.interpolate,
-            domain: figure2.color_scale.domain(),
-            range: figure2.color_scale.range(),
+            interpolate: figure2.colorScale.interpolate,
+            domain: figure2.colorScale.domain(),
+            range: figure2.colorScale.range(),
             ticks: 5
         },
         width: 200
@@ -238,7 +238,7 @@ if (figure2 && figure2.color_scale) {
 ## Suggested Citation
 
 <br>
-<p><tt>${results_json.analysis["citation"]}</tt></p>
+<p><tt>${resultsJson.analysis["citation"]}</tt></p>
 
 <hr>
 
