@@ -3,6 +3,7 @@ import * as colors from "../color-maps/custom.js";
 import * as qq from "../components/qq-plot.js";
 import * as rateDist from "../components/rate-summary-plots/rate-densities.js";
 import * as rates from "../components/rate-summary-plots/rate-bars.js";
+import * as d3 from "d3";
 
 const DYN_RANGE_CAP = 10;
 export const COLORS = {
@@ -305,6 +306,65 @@ function get_alpha_beta_yrange(fig1data) {
   min = min * -1;
 
   return [min, max];
+}
+
+/**
+ * Renders a phylogenetic tree for FEL analysis
+ * 
+ * @param {Object} results_json - The results JSON object
+ * @param {number} i - The tree index
+ * @param {string} treeDim - Tree dimensions in format "height x width"
+ * @param {Array} tree_objects - Array of tree objects
+ * @returns {Object} The rendered tree object
+ */
+export function display_tree(results_json, i, treeDim, tree_objects) {
+    let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
+ 
+    let T = tree_objects[i];
+    var t = T.render({
+        height: dim && dim[0] || 1024, 
+        width: dim && dim[1] || 600,
+        'show-scale': true,
+        'is-radial': false,
+        'left-right-spacing': 'fit-to-size', 
+        'top-bottom-spacing': 'fit-to-size',
+        'node_circle_size': (n) => 0
+    });
+      
+    function sort_nodes(asc) {
+        T.traverse_and_compute(function(n) {
+            var d = 1;
+            if (n.children && n.children.length) {
+                d += d3.max(n.children, function(d) { return d["count_depth"]; });
+            } 
+            n["count_depth"] = d;
+        });
+        
+        T.resortChildren(function(a, b) {
+            return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
+        });
+    }
+
+    sort_nodes(true);
+    
+    t.style_nodes((e, n) => {
+        if (n.children && n.children.length) return; 
+        e.selectAll("title").data([n.data.name]).join("title").text((d) => d);
+    });
+  
+    t.style_edges((e, n) => {
+        const is_tested = results_json["tested"][i][n.target.data.name] == "test";
+        if (is_tested) {
+            e.style("stroke", "firebrick"); 
+        } else {
+            e.style("stroke", null); 
+        }
+    });
+    
+    t.placenodes();
+    t.update();
+    
+    return t;      
 }
 
 export function get_plot_spec(plot_type, fig1data, pvalue_threshold, has_pasmt) {

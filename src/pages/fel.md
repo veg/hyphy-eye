@@ -130,57 +130,8 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", description: "Tree
 
 ```js
 function display_tree(i) {
-    let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
- 
-      let T = tree_objects[i];
-      var t = T.render({
-        height:dim && dim[0] || 1024, 
-        width:dim && dim[1] || 600,
-        'show-scale' : true,
-        'is-radial' : false,
-        'left-right-spacing': 'fit-to-size', 
-        'top-bottom-spacing': 'fit-to-size',
-        'node_circle_size' : (n)=>0
-       } );
-      
-      
-      function sort_nodes (asc) {
-          T.traverse_and_compute (function (n) {
-                  var d = 1;
-                  if (n.children && n.children.length) {
-                      d += d3.max (n.children, function (d) { return d["count_depth"];});
-                  } 
-
-                  n["count_depth"] = d;
-              });
-          T.resortChildren (function (a,b) {
-              return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
-          });
-        }
-
-        sort_nodes (true);
-        t.style_nodes ((e,n) => {
-           if (n.children && n.children.length) return; 
-           /*if (variants.indexOf (n.data.name) >= 0) {
-              e.style ("fill", "firebrick"); 
-           } else {
-              e.style ("fill", null); 
-           }*/
-           e.selectAll ("title").data ([n.data.name]).join ("title").text ((d)=>d);
-        });
-  
-        t.style_edges ((e,n) => {
-           const is_tested = results_json["tested"][i][n.target.data.name] == "test";
-           if (is_tested) {
-              e.style ("stroke", "firebrick"); 
-           } else {
-              e.style ("stroke", null); 
-           }
-        });
-        t.placenodes();
-        t.update();
-        return t;      
-    }
+    return plots.display_tree(results_json, i, treeDim, tree_objects);
+}
 
 const figure2 = display_tree((-1) + (+tree_id.split (" ")[1])).show()
 ```
@@ -204,4 +155,3 @@ View _more_ results at [hyphy-eye](/)!!
 
 ```js
 const svgSize = 700
-```
