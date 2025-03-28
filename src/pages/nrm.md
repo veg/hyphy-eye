@@ -251,9 +251,9 @@ schemeElement2.append(label)
 const legend = Plot.legend({
   color: {
     type: "linear",
-    interpolate: figure2.colorScale.interpolate,
-    domain: figure2.colorScale.domain(),
-    range: figure2.colorScale.range(),
+    interpolate: figure2.color_scale.interpolate,
+    domain: figure2.color_scale.domain(),
+    range: figure2.color_scale.range(),
     ticks: 5,
     tickFormat: "g"
   },

@@ -77,7 +77,10 @@ const bsPositiveSelection = utils.getPosteriorsPerBranchSite(resultsJson);
 const countSites = utils.getCountSitesByPvalue(resultsJson, pvalueThreshold);
 const selectedBranchesPerSelectedSite = utils.getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
 const testOmega = utils.getRateDistribution(resultsJson, ["fits","Unconstrained model","Rate Distributions","Test"])
-const treeViewOptions = plots.getTreeViewOptions(resultsJson, treeObjects)
+const treeViewOptions = phylotreeUtils.getTreeViewOptions(resultsJson, {
+    onlyWithSubstitutions: true,
+    includeMapping: true
+  })
 // TODO: clean this up
 const sitesTable = [{
     'class' : (d)=>html`<span style = "color:${plots.TABLE_COLORS[d]}">${d}</span>`, 
@@ -134,7 +137,7 @@ const table1 = view(Inputs.table (sitesTable[1], {
 ```
 
 ```js
-const treeId =  view(Inputs.select(treeViewOptions[0], {size : 10, label: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
+const selectedTree =  view(Inputs.select(treeViewOptions[0], {size : 10, label: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
 ```
 
 ```js
@@ -160,16 +163,17 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", description: "Tree
 ```
 
 ```js
+const treeId = phylotreeUtils.getTreeId(selectedTree);
 function getFigure2() {
-    let toDisplay = treeId.split (" ");
+    let toDisplay = selectedTree.split (" ");
     if (toDisplay.length > 1) {
       if (toDisplay[0] == "Codon") {  
-          const codonIndex = (+toDisplay[1]);
+          const codonIndex = treeId;
           let partitionId = attrs.siteIndexPartitionCodon [codonIndex][0]-1;
           let TT = plots.displayTreeSite(resultsJson, partitionId, codonIndex, treeDim, treeLabels, branchLength, colorBranches, shadeBranches, treeObjects, treeViewOptions);
           return TT;
       } 
-      let TT = plots.displayTree(resultsJson, (-1) + (+toDisplay[1]), treeDim, treeLabels, branchLength, colorBranches, treeObjects);
+      let TT = plots.displayTree(resultsJson, treeId, treeDim, treeLabels, branchLength, colorBranches, treeObjects);
       return TT;
     }
 
@@ -180,16 +184,16 @@ const figure2 = getFigure2();
 
 ```js
 const schemeElement = document.createElement("div")
-if (figure2 && figure2.colorScale) {
+if (figure2 && figure2.color_scale) {
   const label = document.createElement("text")
-  label.textContent = figure2.colorScaleTitle
+  label.textContent = figure2.color_scale_title
   schemeElement.append(label)
   const legend = Plot.legend({
         color: {
             type: "linear",
-            interpolate: figure2.colorScale.interpolate,
-            domain: figure2.colorScale.domain(),
-            range: figure2.colorScale.range(),
+            interpolate: figure2.color_scale.interpolate,
+            domain: figure2.color_scale.domain(),
+            range: figure2.color_scale.range(),
             ticks: 5
         },
         width: 200

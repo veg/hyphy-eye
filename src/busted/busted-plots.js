@@ -333,7 +333,7 @@ function cdsQuant(data, key1, title) {
 
 export function displayTree(results_json, ev_threshold, index, T, options, treeDim, treeLabels, branch_length, color_branches) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
-      
+     
       T.branch_length_accessor = (n)=>(n.data.name in results_json["branch attributes"][index] ? results_json["branch attributes"][index][n.data.name][branch_length] : 0) || 0;  
       let alignTips = treeLabels.indexOf ("align tips") >= 0;
       var t = T.render({
@@ -458,7 +458,7 @@ function site_support_by_branch(results_json, i, key, er) {
 }
 
 
-export function displayTree_site(results_json, index,T,s,options, treeDim, treeLabels, branch_length, color_branches, partition_sizes, test_omega, has_error_sink) {
+export function displayTreeSite(results_json, index,T,s,options, treeDim, treeLabels, branch_length, color_branches, partition_sizes, test_omega, has_error_sink) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     T.branch_length_accessor = (n)=>results_json["branch attributes"][index][n.data.name][branch_length] || 0;  
     let node_labels = phylotreeUtils.generateNodeLabels (T, results_json["substitutions"][index][(+s)-1]);
@@ -485,7 +485,7 @@ export function displayTree_site(results_json, index,T,s,options, treeDim, treeL
 
       phylotreeUtils.addSvgDefs (t.svg);
       
-      let extended_labels = phylotreeUtils.displayTree_handle_neighbors (index,s,node_labels,T,options,results_json, partition_sizes[index]);
+      let extended_labels = phylotreeUtils.displayTreeHandleNeighbors (index,s,node_labels,T,options,results_json, partition_sizes[index]);
       t.nodeLabel ((n)=> {
           if (!n._display_me) {
               return "";
@@ -652,16 +652,6 @@ export function displayTree_site(results_json, index,T,s,options, treeDim, treeL
         LABEL_COLOR_SCALE.domain (labelDomain);
         return t;      
     }
-
-
-export function getTreeViewOptions(results_json, tree_objects) {
-    let opts = _.map (_.range (1,tree_objects.length+1), (d)=>"Partition " + d);
-    if (results_json.substitutions) {
-        opts = opts.concat(_.map (_.range (1,results_json.input["number of sites"]+1), (d)=>"Codon " + d));
-    }
-
-    return opts;
-}
 
 export function treeColorOptions(results_json) {
     const attrs = utils.getAttributes(results_json);

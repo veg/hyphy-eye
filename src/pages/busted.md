@@ -162,7 +162,7 @@ const table1 = view(Inputs.table (sitesTable[1], {
 **Figure 2**.
 
 ```js
-const treeId =  view(Inputs.select (plots.getTreeViewOptions(resultsJson, treeObjects), {size : 10, label: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
+const selectedTree =  view(Inputs.select (phylotreeUtils.getTreeViewOptions(resultsJson, treeObjects), {size : 10, label: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
 ```
 
 ```js
@@ -185,8 +185,9 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", description: "Tree
 
 ```js
 function getFigure2() {
-
-    let toDisplay = treeId.split (" ");
+    
+    let toDisplay = selectedTree.split (" ");
+    let index = phylotreeUtils.getTreeId(selectedTree);
     if (toDisplay.length > 1) {
       let treeOptions = {  
           'branch-labels' : treeLabels.indexOf ("show branch labels") >= 0,
@@ -194,14 +195,12 @@ function getFigure2() {
       };
       
       if (toDisplay[0] == "Codon") {  
-          let codonIndex = (+toDisplay[1]);
-          let partitionId = utils.getSiteIndexPartitionCodon(resultsJson)[codonIndex-1][0]-1;
-          codonIndex -= d3.sum (attrs.partitionSizes.slice (0,partitionId));
+          let partitionId = utils.getSiteIndexPartitionCodon(resultsJson)[index][0]-1;
+          let codonIndex = index - d3.sum (attrs.partitionSizes.slice (0,partitionId));
           let TT = plots.displayTreeSite(resultsJson, partitionId, treeObjects[partitionId], codonIndex, treeOptions, treeDim, treeLabels, branchLength, colorBranches, attrs.partitionSizes, testOmega, attrs.hasErrorSink);
           return TT;
       } 
-      let pi = (-1) + (+toDisplay[1]);
-      let TT = plots.displayTree(resultsJson, evThreshold, pi, treeObjects[pi], treeOptions, treeDim, treeLabels, branchLength, colorBranches);
+      let TT = plots.displayTree(resultsJson, evThreshold, index, treeObjects[index], treeOptions, treeDim, treeLabels, branchLength, colorBranches);
       return TT;
     }
     return null;
@@ -210,17 +209,18 @@ const figure2 = getFigure2();
 ```
 
 ```js
+console.log(figure2)
 const schemeElement = document.createElement("div")
-if (figure2 && figure2.colorScale) {
+if (figure2 && figure2.color_scale) {
   const label = document.createElement("text")
-  label.textContent = figure2.colorScaleTitle
+  label.textContent = figure2.color_scale_title
   schemeElement.append(label)
   const legend = Plot.legend({
         color: {
             type: "linear",
-            interpolate: figure2.colorScale.interpolate,
-            domain: figure2.colorScale.domain(),
-            range: figure2.colorScale.range(),
+            interpolate: figure2.color_scale.interpolate,
+            domain: figure2.color_scale.domain(),
+            range: figure2.color_scale.range(),
             ticks: 5
         },
         width: 200
@@ -229,7 +229,7 @@ if (figure2 && figure2.colorScale) {
   schemeElement.appendChild(document.createElement("br"))
 }
 ```
-<div>${schemeElement}</div>
+<div id="legend">${schemeElement}</div>
 <link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2.show()}</div>
 

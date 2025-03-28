@@ -119,7 +119,7 @@ const table1 = view(Inputs.table (siteTableData, {
 </details>
 
 ```js
- const treeId =  view(Inputs.select(_.map (_.range (1,treeObjects.length+1), (d)=>"Partition " + d),{label: html`<b>View tree for </b>`}))
+const selectedTree = view(Inputs.select(phylotreeUtils.getTreeViewOptions(resultsJson, treeObjects, {includeCodons: false}),{label: html`<b>View tree for </b>`}))
 ```
 
 ```js
@@ -133,7 +133,8 @@ function displayTree(i) {
     return plots.displayTree(resultsJson, i, treeDim, treeObjects);
 }
 
-const figure2 = displayTree((-1) + (+treeId.split (" ")[1])).show()
+const treeId = phylotreeUtils.getTreeId(selectedTree);
+const figure2 = displayTree(treeId).show()
 ```
 <link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2}</div>

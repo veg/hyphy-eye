@@ -109,7 +109,7 @@ const distComparisonPlot = rateTable.length == 2 ? omegaPlots.renderTwoDiscreteD
 <div>${distComparisonPlot}</div>
 
 ```js
-const treeId =  view(Inputs.select (plots.treeViewOptions(resultsJson), {label: html`<b>Tree to view</b>`, placeholder : "Select something to view", "value" : "Alignment-wide tree"}))
+const selectedTree =  view(Inputs.select (phylotreeUtils.getTreeViewOptions(resultsJson), {label: html`<b>Tree to view</b>`, placeholder : "Select something to view", "value" : "Alignment-wide tree"}))
 ```
 
 ```js
@@ -135,7 +135,7 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", label: "H x W (pix
 function getFigure2() {
   const siteIndexPartitionCodon = utils.getSiteIndexPartitionCodon(resultsJson);
 
-    let toDisplay = treeId.split (" ");
+    let toDisplay = selectedTree.split (" ");
     if (toDisplay.length > 1) {
       let treeOptions = {  
           'branchLabels' : treeLabels.indexOf ("show branch labels") >= 0,
@@ -145,7 +145,6 @@ function getFigure2() {
       if (toDisplay[0] == "Codon") {  
           const codonIndex = (+toDisplay[1]);
           let partitionId = siteIndexPartitionCodon[codonIndex-1][0]-1;
-          console.log("partition", partitionId)
           let TT = plots.displayTreeSite (resultsJson, partitionId, treeObjects[0], codonIndex, treeOptions, evidenceThreshold, treeDim, treeLabels, branchLength, colorBranches, attributes.partitionSizes);
           return TT;
       } 
@@ -159,16 +158,16 @@ const figure2 = getFigure2();
 
 ```js
 const schemeElement = document.createElement("div")
-if (figure2 && figure2.colorScale) {
+if (figure2 && figure2.color_scale) {
   const label = document.createElement("text")
-  label.textContent = figure2.colorScaleTitle
+  label.textContent = figure2.color_scale_title
   schemeElement.append(label)
   const legend = Plot.legend({
         color: {
             type: "linear",
-            interpolate: figure2.colorScale.interpolate,
-            domain: figure2.colorScale.domain(),
-            range: figure2.colorScale.range(),
+            interpolate: figure2.color_scale.interpolate,
+            domain: figure2.color_scale.domain(),
+            range: figure2.color_scale.range(),
             ticks: 5
             //ticks: figure2.colorScale.ticks(),
             //tickFormat: figure2.colorScale.tickFormat()

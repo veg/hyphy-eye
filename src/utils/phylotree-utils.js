@@ -249,6 +249,67 @@ export function rootChildren(tree) {
 }
 
 /**
+ * Returns an array of strings representing the tree view options for the
+ * given results JSON object. The options depend on the number
+ * of partitions and whether substitutions data is available.
+ * 
+ * @param {Object} resultsJson - The results JSON object containing tree data.
+ * @param {Object} options - Configuration options.
+ * @param {boolean} [options.onlyWithSubstitutions=false] - If true, only include codons with substitutions.
+ * @param {boolean} [options.includeMapping=false] - If true, return a mapping between codon indices and partition indices.
+ * @param {boolean} [options.includeCodons=true] - If false, only include partition options, no codons.
+ * 
+ * @returns {Array|Array[]} If includeMapping is false, returns an array of strings representing 
+ * the tree view options. If includeMapping is true, returns an array containing both the options 
+ * array and a mapping object.
+ */
+export function getTreeViewOptions(resultsJson, options = {}) {
+  const treeObjects = getTreeObjects(resultsJson);
+  const onlyWithSubstitutions = options.onlyWithSubstitutions || false;
+  const includeMapping = options.includeMapping || false;
+  const includeCodons = options.includeCodons !== false; // Default to true
+  
+  let opts = [];
+  let codonIdxToPartIdx = {};
+  
+  // Add partition options based on number of partitions
+  if (treeObjects.length === 1) {
+    opts.push("Alignment-wide tree");
+  } else {
+    opts = opts.concat(_.map(_.range(1, treeObjects.length + 1), (d) => "Partition " + d));
+  }
+  
+  // Add codon options if substitutions data exists and includeCodons is true
+  if (resultsJson.substitutions && includeCodons) {
+    if (onlyWithSubstitutions) {
+      // Only include codons with substitutions
+      let offset = 0;
+      _.each(resultsJson.substitutions, (sites, partition) => {
+        _.each(sites, (subs, site) => {
+          if (subs) {
+            let idx = ((+site) + 1 + offset);
+            codonIdxToPartIdx[idx] = [partition, (+site) + 1];
+            opts.push("Codon " + idx);
+          }
+        });
+        
+        // Calculate offset based on partition coverage
+        if (resultsJson["data partitions"] && 
+            resultsJson["data partitions"][partition] && 
+            resultsJson["data partitions"][partition].coverage) {
+          offset += resultsJson["data partitions"][partition].coverage[0].length;
+        }
+      });
+    } else {
+      // Include all codons
+      opts = opts.concat(_.map(_.range(1, resultsJson.input["number of sites"] + 1), (d) => "Codon " + d));
+    }
+  }
+  
+  return includeMapping ? [opts, codonIdxToPartIdx] : opts;
+}
+
+/**
  * Constructs an array of phylotree objects from the provided results JSON,
  * each with a branch length accessor set according to the specified model.
  *
@@ -264,9 +325,27 @@ export function rootChildren(tree) {
 export function getTreeObjects(results_json, modelForTree = "Global MG94xREV") {
     const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
         let T = new phylotree.phylotree (tree);
-        T.branchLengthAccessor = (n)=>results_json["branch attributes"][i][n.data.name][modelForTree];
+        T.branch_length_accessor = (n)=>results_json["branch attributes"][i][n.data.name][modelForTree];
         return T;
     });
 
     return tree_objects;
+}
+
+/**
+ * Parses a selected tree view option and returns a 0-based index.
+ * For options like 'Partition X' or 'Codon Y', returns (parsed number - 1).
+ * For 'Alignment-wide tree', returns 0.
+ * 
+ * @param {string} option - The selected tree view option
+ * @returns {number} The 0-based index
+ */
+export function getTreeId(option) {
+  if (option === 'Alignment-wide tree') {
+    return 0;
+  }
+  
+  // Extract number from strings like 'Partition 1' or 'Codon 3'
+  const match = option.match(/\d+/);
+  return match ? parseInt(match[0], 10) - 1 : 0;
 }

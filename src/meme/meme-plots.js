@@ -54,29 +54,6 @@ export function getTreeColorOptions(results_json) {
   return options;
 }
 
-// TODO: snake case godammert
-export function getTreeViewOptions(results_json, tree_objects) {
-  let opts = _.map (_.range (1,tree_objects.length+1), (d)=>"Partition " + d);
-  let codonIdxToPartIdx = {};
-
-  if (results_json.substitutions) {
-    //opts = opts.concat(_.map (_.range (1,results_json.input["number of sites"]), (d)=>"Codon " + d));
-    let offset = 0;
-    _.each (results_json.substitutions, (sites, partition)=> {
-        _.each (sites, (subs, site)=> {
-          if (subs) {
-            let idx = ((+site) + 1 + offset);
-            codonIdxToPartIdx[idx] = [partition, (+site)+1];
-            opts.push ("Codon " + idx);
-          }
-        })
-        offset += results_json["data partitions"][partition].coverage[0].length;
-    }); 
-  }
-
-  return [opts,codonIdxToPartIdx];
-}
-
 export function getPlotSpec(
     results_json, 
     plot_type, 

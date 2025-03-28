@@ -316,7 +316,7 @@ export function displayTree(results_json, index, T, options, ev_threshold, treeD
    * @param {string} color_branches - option to color branches by
    * @return {object} - the rendered tree
    */
-export function displayTree_site(results_json, index, T,s,options, ev_threshold, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
+export function displayTreeSite(results_json, index, T,s,options, ev_threshold, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
     const attrs = utils.getAttributes(results_json, ev_threshold);
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
     
@@ -349,7 +349,7 @@ export function displayTree_site(results_json, index, T,s,options, ev_threshold,
 
       
       phylotreeUtils.addSvgDefs (t.svg);
-      extended_labels = phylotreeUtils.displayTree_handle_neighbors(index,s,node_labels,T,options,results_json, partition_sizes[index]);
+      extended_labels = phylotreeUtils.displayTreeHandleNeighbors(index,s,node_labels,T,options,results_json, partition_sizes[index]);
   
   
       t.nodeLabel ((n)=> {
@@ -517,24 +517,6 @@ export function displayTree_site(results_json, index, T,s,options, ev_threshold,
         LABEL_COLOR_SCALE.domain (labelDomain);
         return t;      
     }
-
-/**
- * Returns an array of strings representing the tree view options for the
- * given results JSON object. The first element is "Alignment-wide tree".
- * If the results JSON contains substitutions data, the remaining elements
- * are strings of the form "Codon X", where X is the site number.
- * 
- * @param {Object} results_json - The results JSON object.
- * 
- * @returns {string[]} An array of strings representing the tree view options.
- */
-export function treeViewOptions(results_json) {
-  let opts = ["Alignment-wide tree"];
-  if (results_json.substitutions) {
-    opts = opts.concat(_.map (_.range (1,results_json.input["number of sites"]+1), (d)=>"Codon " + d));
-  }
-  return opts;
-}
 
 /**
  * Returns an array of strings representing the color options for branches
