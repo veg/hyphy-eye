@@ -605,8 +605,7 @@ export function configureBranches(tree, results, options, params) {
  * @param {Object} [options] - Optional configuration options
  * @param {Function} [options.configureLabels] - Function to configure node labels
  * @param {Function} [options.configureNodeColors] - Function to configure node colors
- * @param {Function} [options.configureBranchColors] - Function to configure branch colors
- * @param {Function} [options.configureBranchShading] - Function to configure branch shading
+ * @param {Function} [options.configureBranches] - Function to configure branch colors and shading
  * @param {Function} [options.configureNodeDisplay] - Function to configure which nodes to display
  * @param {Object} [options.styleOptions] - Additional style options for the tree
  * @returns {phylotree.phylotree} - The configured and rendered tree object
@@ -646,14 +645,9 @@ export function configureTree(resultsJson, treeObj, treeDim, options = {}) {
         options.configureNodeColors(t, resultsJson);
     }
 
-    // Configure branch colors if provided
-    if (options.configureBranchColors) {
-        options.configureBranchColors(t, resultsJson);
-    }
-
-    // Configure branch shading if provided
-    if (options.configureBranchShading) {
-        options.configureBranchShading(t, resultsJson);
+    // Configure branches if provided
+    if (options.configureBranches) {
+        options.configureBranches(t, resultsJson);
     }
 
     // Update tree layout

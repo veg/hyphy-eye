@@ -337,129 +337,236 @@ export function displayTree(results_json, ev_threshold, index, T, options, treeD
     // Set the branch length accessor using the utility
     T.branch_length_accessor = phylotreeUtils.setBranchLengthAccessor(T, results_json, index, branch_length);
     
-    let alignTips = treeLabels.indexOf("align tips") >= 0;
-    
     // Configure the tree using the helper
     const t = phylotreeUtils.configureTree(results_json, T, treeDim, {
         height: dim && dim[0],
         width: dim && dim[1],
-        'align-tips': alignTips,
+        'align-tips': options.styleOptions?.alignTips || false,
         'show-scale': true,
         'is-radial': false,
         'left-right-spacing': 'fit-to-size',
         'top-bottom-spacing': 'fit-to-size',
         'node_circle_size': (n) => 0,
-        'internal-names': treeLabels.indexOf("show internal") >= 0
-    });
-    
-    // Add SVG definitions
-    phylotreeUtils.addSvgDefs(t.svg);
-    
-    // Sort nodes based on their depth
-    function sortNodes(asc) {
-        T.traverse_and_compute(function (n) {
-            var d = 1;
-            if (n.children && n.children.length) {
-                d += d3.max(n.children, function (d) { return d["count_depth"]; });
-            }
-            n["count_depth"] = d;
-        });
-        T.resortChildren(function (a, b) {
-            return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
-        });
-    }
-    
-    sortNodes(true);
-    
-    // Style nodes
-    t.style_nodes((e, n) => {
-        e.selectAll("text").style("font-family", "ui-monospace");
-        if (n.children && n.children.length) return;
-        e.selectAll("title").data([n.data.name]).join("title").text((d) => d);
-    });
-
-    // Branch coloring logic
-    let map2MH = {'Support for 2H' : "Evidence ratio for 2H", 'Support for 3H' : "Evidence ratio for 3H", 'Support for 2H+3H' : "Evidence ratio for 2H+3H"};
-    
-    if (color_branches === "Tested") {
-        t.style_edges((e, n) => {
-            const is_tested = results_json["tested"][index][n.target.data.name] === "test";
-            if (is_tested) {
-                e.style("stroke", "firebrick");
-            } else {
-                e.style("stroke", null);
-            }
-        });
-    } else if (color_branches === "Support for selection" || color_branches === "Error-sink support") {
-        let branch_values = {};
-        const es = color_branches === "Error-sink support";
-        let rate_class = es ? 0 : (test_omega.length - 1 + (has_error_sink ? 1 : 0));
-        let prior = es ? get_error_sink_rate("Test")["proportion"] : test_omega[test_omega.length-1].weight;
-        prior = prior / (1 - prior);
-        
-        T.traverse_and_compute((n) => {
-            let posteriors = results_json["branch attributes"][index][n.data.name];
-            if (posteriors && posteriors["Posterior prob omega class"]) {
-                posteriors = posteriors["Posterior prob omega class"][rate_class];
-                branch_values[n.data.name] = posteriors / (1 - posteriors) / prior;
-                if (branch_values[n.data.name] < 1) branch_values[n.data.name] = null;
-            }
-        });
-        
-        let color_scale = d3.scaleSequentialLog(d3.extent(_.map(branch_values, (d) => d)), [0.1, 1]);
-        t.style_edges((e, n) => {
-            const is_tested = branch_values[n.target.data.name];
-            if (is_tested) {
-                e.style("opacity", color_scale(is_tested))
-                    .style("stroke-width", "5")
-                    .style("stroke", "firebrick");
-                e.selectAll("title").data([is_tested]).join("title").text((d) => d);
-            } else {
-                e.style("stroke", null);
-            }
-        });
-    } else if (color_branches === "Substitutions") {
-        let labels = phylotreeUtils.subsByBranch(results_json, index);
-        let color_scale = d3.scaleSequential(d3.extent(_.map(labels, d => d)), d3.interpolateTurbo);
-        t.color_scale = color_scale;
-        t.color_scale_title = "Min # of nucleotide substitutions";
-        
-        t.style_edges((e, n) => {
-            const is_tested = labels[n.target.data.name];
+        'internal-names': options.styleOptions?.showInternalNames || false,
+        configureBranches: (tree, resultsJson) => {
+            // Add SVG definitions
+            phylotreeUtils.addSvgDefs(tree.svg);
             
-            if (is_tested) {
-                if (options["branch-labels"]) {
-                    phylotreeUtils.addBranchLabel(e, is_tested, t.font_size, t.svg.selectAll(".phylotree-container"));
-                }
-                e.style("stroke", color_scale(is_tested))
-                    .style("stroke-width", "4")
-                    .style("opacity", 1.0);
-                e.selectAll("title").data([is_tested]).join("title").text((d) => d);
-            } else {
-                e.style("stroke", null);
+            // Sort nodes based on their depth
+            function sortNodes(asc) {
+                T.traverse_and_compute(function (n) {
+                    var d = 1;
+                    if (n.children && n.children.length) {
+                        d += d3.max(n.children, function (d) { return d["count_depth"]; });
+                    }
+                    n["count_depth"] = d;
+                });
+                T.resortChildren(function (a, b) {
+                    return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
+                });
             }
-        });
-    } else if (map2MH[color_branches]) {
-        let branch_values = site_support_by_branch(index, map2MH[color_branches], ev_threshold);
-        let color_scale = d3.scaleSequentialLog(d3.extent(_.map(branch_values, (d) => d)), [0.2, 1]);
-        
-        t.style_edges((e, n) => {
-            const is_tested = branch_values[n.target.data.name];
-            if (is_tested) {
-                e.style("opacity", color_scale(is_tested))
-                    .style("stroke-width", "5")
-                    .style("stroke", "firebrick");
-                e.selectAll("title").data([is_tested]).join("title").text((d) => d);
-            } else {
-                e.style("stroke", null);
+            
+            sortNodes(true);
+            
+            // Branch coloring logic
+            if (color_branches === "Tested") {
+                tree.style_edges((e, n) => {
+                    const is_tested = resultsJson["tested"][index][n.target.data.name] === "test";
+                    if (is_tested) {
+                        e.style("stroke", "firebrick");
+                    } else {
+                        e.style("stroke", null);
+                    }
+                });
+            } else if (color_branches === "Support for selection" || color_branches === "Error-sink support") {
+                let branch_values = {};
+                const es = color_branches === "Error-sink support";
+                let rate_class = es ? 0 : (test_omega.length - 1 + (has_error_sink ? 1 : 0));
+                
+                T.traverse_and_compute((n) => {
+                    let posteriors = resultsJson["branch attributes"][index][n.data.name];
+                    if (posteriors && posteriors["Posterior prob omega class"]) {
+                        posteriors = posteriors["Posterior prob omega class"][rate_class];
+                        branch_values[n.data.name] = posteriors / (1 - posteriors);
+                        if (branch_values[n.data.name] < 1) branch_values[n.data.name] = null;
+                    }
+                });
+                
+                let color_scale = d3.scaleSequentialLog(d3.extent(_.map(branch_values, (d) => d)), [0.1, 1]);
+                tree.style_edges((e, n) => {
+                    const is_tested = branch_values[n.target.data.name];
+                    if (is_tested) {
+                        e.style("opacity", color_scale(is_tested))
+                            .style("stroke-width", "5")
+                            .style("stroke", es ? "black" : "firebrick");
+                        e.selectAll("title").data([is_tested]).join("title").text((d) => d);
+                    } else {
+                        e.style("stroke", null);
+                    }
+                });
+            } else if (color_branches === "Substitutions") {
+                let labels = phylotreeUtils.subsByBranch(resultsJson, index);
+                let color_scale = d3.scaleSequential(d3.extent(_.map(labels, d => d)), d3.interpolateTurbo);
+                tree.color_scale = color_scale;
+                tree.color_scale_title = "Min # of nucleotide substitutions";
+                
+                tree.style_edges((e, n) => {
+                    const is_tested = labels[n.target.data.name];
+                    if (is_tested) {
+                        e.style("stroke", color_scale(is_tested))
+                            .style("stroke-width", "4")
+                            .style("opacity", 1.0);
+                        e.selectAll("title").data([is_tested]).join("title").text((d) => d);
+                    } else {
+                        e.style("stroke", null);
+                    }
+                });
             }
-        });
-    }
+            
+            tree.placenodes();
+            tree.update();
+        }
+    });
     
-    t.placenodes();
-    t.update();
-    t.nwk = T.getNewick((n) => results_json["tested"][index][n.data.name] === "test" ? "{Foreground}" : "");
     return t;
+}
+
+export function displayTreeSite(resultsJson, partitionId, T, codonIndex, treeOptions, treeDim, treeLabels, branchLength, colorBranches, partitionSizes, testOmega, hasErrorSink) {
+    let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
+    
+    // Set the branch length accessor using the utility
+    T.branch_length_accessor = phylotreeUtils.setBranchLengthAccessor(T, resultsJson, partitionId, branchLength);
+    
+    let node_labels = phylotreeUtils.generateNodeLabels(T, resultsJson["substitutions"][partitionId][codonIndex - 1]);
+
+    let labelDomain = new Set();
+    let showAA = treeLabels.indexOf("amino-acids") >= 0;
+    let showCodons = treeLabels.indexOf("codons") >= 0;
+    let showSeqNames = treeLabels.indexOf("sequence names") >= 0;
+    let showOnlyMH = treeLabels.indexOf("show only multiple hits") >= 0;
+    let showOnlyNS = treeLabels.indexOf("show only non-synonymous changes") >= 0;
+    let alignTips = treeLabels.indexOf("align tips") >= 0;
+
+    // Configure the tree using the helper
+    const tree = phylotreeUtils.configureTree(resultsJson, T, treeDim, {
+        height: dim && dim[0],
+        width: dim && dim[1],
+        'show-scale': true,
+        'is-radial': false,
+        'align-tips': alignTips,
+        'left-right-spacing': 'fit-to-size',
+        'top-bottom-spacing': 'fit-to-size',
+        'node_circle_size': (n) => 0,
+        'internal-names': treeLabels.indexOf("show internal") >= 0,
+        configureNodeDisplay: (tree, resultsJson) => {
+            tree.style_nodes((e, n) => {
+                if (!n._display_me) {
+                    e.style("display", "none");
+                    return;
+                }
+                e.selectAll("title").data([n.data.name]).join("title").text((d) => d);
+            });
+        },
+        configureLabels: (tree, resultsJson) => {
+            tree.nodeLabel((n) => {
+                if (!n._display_me) {
+                    return "";
+                }
+                let label = "";
+                if (showCodons) {
+                    label = node_labels[n.data.name][0];
+                    if (showAA) label += "/";
+                }
+                if (showAA) {
+                    label += node_labels[n.data.name][1];
+                }
+                if (showSeqNames) {
+                    label += "\n" + n.data.name;
+                }
+                return label;
+            });
+        },
+        configureBranches: (tree, resultsJson) => {
+            // Add SVG definitions
+            phylotreeUtils.addSvgDefs(tree.svg);
+            
+            // Sort nodes based on their depth
+            function sortNodes(asc) {
+                T.traverse_and_compute(function (n) {
+                    var d = 1;
+                    if (n.children && n.children.length) {
+                        d += d3.max(n.children, function (d) { return d["count_depth"]; });
+                    }
+                    n["count_depth"] = d;
+                });
+                T.resortChildren(function (a, b) {
+                    return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
+                });
+            }
+            
+            sortNodes(true);
+            
+            // Branch coloring logic
+            if (colorBranches === "Tested") {
+                tree.style_edges((e, n) => {
+                    const is_tested = resultsJson["tested"][partitionId][n.target.data.name] === "test";
+                    if (is_tested) {
+                        e.style("stroke", "firebrick");
+                    } else {
+                        e.style("stroke", null);
+                    }
+                });
+            } else if (colorBranches === "Support for selection" || colorBranches === "Error-sink support") {
+                let branch_values = {};
+                const es = colorBranches === "Error-sink support";
+                let rate_class = es ? 0 : (testOmega.length - 1 + (hasErrorSink ? 1 : 0));
+                
+                T.traverse_and_compute((n) => {
+                    let posteriors = resultsJson["branch attributes"][partitionId][n.data.name];
+                    if (posteriors && posteriors["Posterior prob omega class"]) {
+                        posteriors = posteriors["Posterior prob omega class"][rate_class];
+                        branch_values[n.data.name] = posteriors / (1 - posteriors);
+                        if (branch_values[n.data.name] < 1) branch_values[n.data.name] = null;
+                    }
+                });
+                
+                let color_scale = d3.scaleSequentialLog(d3.extent(_.map(branch_values, (d) => d)), [0.1, 1]);
+                tree.style_edges((e, n) => {
+                    const is_tested = branch_values[n.target.data.name];
+                    if (is_tested) {
+                        e.style("opacity", color_scale(is_tested))
+                            .style("stroke-width", "5")
+                            .style("stroke", es ? "black" : "firebrick");
+                        e.selectAll("title").data([is_tested]).join("title").text((d) => d);
+                    } else {
+                        e.style("stroke", null);
+                    }
+                });
+            } else if (colorBranches === "Substitutions") {
+                let labels = phylotreeUtils.subsByBranch(resultsJson, partitionId);
+                let color_scale = d3.scaleSequential(d3.extent(_.map(labels, d => d)), d3.interpolateTurbo);
+                tree.color_scale = color_scale;
+                tree.color_scale_title = "Min # of nucleotide substitutions";
+                
+                tree.style_edges((e, n) => {
+                    const is_tested = labels[n.target.data.name];
+                    if (is_tested) {
+                        e.style("stroke", color_scale(is_tested))
+                            .style("stroke-width", "4")
+                            .style("opacity", 1.0);
+                        e.selectAll("title").data([is_tested]).join("title").text((d) => d);
+                    } else {
+                        e.style("stroke", null);
+                    }
+                });
+            }
+            
+            tree.placenodes();
+            tree.update();
+        }
+    });
+    
+    return tree;
 }
 
 function site_support_by_branch(results_json, i, key, er) {
@@ -475,221 +582,6 @@ function site_support_by_branch(results_json, i, key, er) {
     return counts;
 }
 
-
-export function displayTreeSite(results_json, index, T, s, options, treeDim, treeLabels, branch_length, color_branches, partition_sizes, test_omega, has_error_sink) {
-    let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
-    
-    // Set the branch length accessor using the utility
-    T.branch_length_accessor = phylotreeUtils.setBranchLengthAccessor(T, results_json, index, branch_length);
-    
-    let node_labels = phylotreeUtils.generateNodeLabels(T, results_json["substitutions"][index][s - 1]);
-    
-    let labelDomain = new Set();
-    let showAA = treeLabels.indexOf("amino-acids") >= 0;
-    let showCodons = treeLabels.indexOf("codons") >= 0;
-    let showSeqNames = treeLabels.indexOf("sequence names") >= 0;
-    let showOnlyMH = treeLabels.indexOf("show only multiple hits") >= 0;
-    let showOnlyNS = treeLabels.indexOf("show only non-synonymous changes") >= 0;
-    let alignTips = treeLabels.indexOf("align tips") >= 0;
-    
-    // Configure the tree using the helper
-    const t = phylotreeUtils.configureTree(results_json, T, treeDim, {
-        height: dim && dim[0],
-        width: dim && dim[1],
-        'show-scale': true,
-        'is-radial': false,
-        'align-tips': alignTips,
-        'left-right-spacing': 'fit-to-size',
-        'top-bottom-spacing': 'fit-to-size',
-        'node_circle_size': (n) => 0,
-        'internal-names': treeLabels.indexOf("show internal") >= 0
-    });
-    
-    // Add SVG definitions
-    phylotreeUtils.addSvgDefs(t.svg);
-    
-    // Configure node labels
-    t.nodeLabel((n) => {
-        if (!n._display_me) {
-            return "";
-        }
-        let label = "";
-        let extended_labels = phylotreeUtils.displayTreeHandleNeighbors (index,s,node_labels,T,options,results_json, partition_sizes[index]);
-        let has_extended_label = extended_labels[n.data.name] || node_labels[n.data.name];
-
-        n.data.color_on = "";
-        
-        if (showCodons) {
-            label = has_extended_label[0];
-            n.data.color_on = node_labels[n.data.name][0];
-            if (showAA) label += "/";
-        }
-        
-        if (showAA) {
-            label += has_extended_label[1];
-            n.data.color_on = node_labels[n.data.name][1];
-        }
-        
-        labelDomain.add(n.data.color_on);
-        if (showSeqNames) label += ":" + n.data.name;
-        return label;
-    });
-    
-    // Sort nodes based on their depth
-    function sortNodes(asc) {
-        T.traverse_and_compute(function (n) {
-            var d = 1;
-            if (n.children && n.children.length) {
-                d += d3.max(n.children, function (d) { return d["count_depth"]; });
-            }
-            n["count_depth"] = d;
-        });
-        T.resortChildren(function (a, b) {
-            return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
-        });
-    }
-    
-    // Configure node display
-    T.traverse_and_compute(function (n) {
-        n._display_me = !(showOnlyMH || showOnlyNS);
-        
-        if (!n._display_me) {
-            if (node_labels[n.data.name]) {
-                if (showOnlyMH && node_labels[n.data.name][3] > 1) n._display_me = true;
-                if (!n._display_me) {
-                    if (showOnlyNS) {
-                        if (n.parent) {
-                            const my_aa = node_labels[n.data.name][1];
-                            const parent_aa = node_labels[n.parent.data.name][1];
-                            if (my_aa != parent_aa && my_aa != '-' && parent_aa != '-') {
-                                n._display_me = true;
-                                
-                                if (showOnlyMH) n._display_me = node_labels[n.data.name][3] > 1;
-                            } else {
-                                n._display_me = false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (n._display_me && n.parent) {
-            n.parent._display_me = true;
-        }
-    }, "pre-order");
-    
-    sortNodes(true);
-    
-    // Style nodes
-    t.style_nodes((e, n) => {
-        e.selectAll("text").style("font-family", "ui-monospace");
-        e.selectAll("text").style("fill", LABEL_COLOR_SCALE(n.data.color_on));
-        e.selectAll("title").data([n.data.name]).join("title").text((d) => d);
-    });
-
-    // Branch coloring logic
-    let map2MH = {'Support for 2H' : "Evidence ratio for 2H", 'Support for 3H' : "Evidence ratio for 3H", 'Support for 2H+3H' : "Evidence ratio for 2H+3H"};
-    
-    if (color_branches === "Tested") {
-        t.style_edges((e, n) => {
-            const is_tested = results_json["tested"][index][n.target.data.name] === "test";
-            if (is_tested) {
-                e.style("stroke", "firebrick");
-            } else {
-                e.style("stroke", null);
-            }
-        });
-    } else if (color_branches === "Support for selection" || color_branches === "Error-sink support") {
-        let branch_values = {};
-        const es = color_branches === "Error-sink support";
-        let rate_class = es ? 0 : (test_omega.length - 1 + (has_error_sink ? 1 : 0));
-        let prior = es ? get_error_sink_rate("Test")["proportion"] : test_omega[test_omega.length-1].weight;
-        prior = prior / (1 - prior);
-        
-        T.traverse_and_compute((n) => {
-            let posteriors = results_json["branch attributes"][index][n.data.name];
-            if (posteriors && posteriors["Posterior prob omega class by site"]) {
-                posteriors = posteriors["Posterior prob omega class by site"][rate_class][s-1];
-                branch_values[n.data.name] = posteriors / (1 - posteriors) / prior;
-                if (branch_values[n.data.name] < 1) branch_values[n.data.name] = null;
-            }
-        });
-
-        let color_scale = d3.scaleSequentialLog(d3.extent(_.map(branch_values, (d) => d)), d3.interpolateTurbo);
-        t.color_scale = color_scale;
-        t.color_scale_title = "Empirical Bayes Factor";
-        
-        t.style_edges((e, n) => {
-            const is_tested = branch_values[n.target.data.name];
-            if (is_tested) {
-                e.style("stroke", color_scale(is_tested))
-                    .style("stroke-width", "5")
-                    .style("opacity", null);
-                e.selectAll("title").data([is_tested]).join("title").text((d) => d);
-                if (options["branch-labels"]) {
-                    add_branch_label(e, is_tested.toFixed(2), t.font_size, t.svg.selectAll(".phylotree-container"));
-                }
-            } else {
-                e.style("stroke", null);
-            }
-        });
-    } else if (color_branches === "Substitutions") {
-        let color_scale = d3.scaleOrdinal([0, 1, 2, 3], d3.schemePuOr[4]);
-        t.color_scale = color_scale;
-        t.color_scale_title = "Min # of nucleotide substitutions";
-        
-        t.style_edges((e, n) => {
-            const is_tested = node_labels[n.target.data.name];
-            if (is_tested && is_tested[3]) {
-                e.style("stroke", color_scale(is_tested[3]))
-                    .style("stroke-width", "5")
-                    .style("opacity", "1");
-                const subs = is_tested[2] + "→" + is_tested[0] + "(" + is_tested[3] + ")";
-                e.selectAll("title").data([is_tested]).join("title").text(subs);
-                if (options["branch-labels"]) {
-                    add_branch_label(e, is_tested[3], t.font_size, t.svg.selectAll(".phylotree-container"));
-                }
-            } else {
-                e.style("stroke", null);
-            }
-        });
-    } else if (map2MH[color_branches]) {
-        let branch_values = {};
-        T.traverse_and_compute((n) => {
-            let posteriors = results_json["branch attributes"][index][n.data.name];
-            if (posteriors && posteriors[map2MH[color_branches]]) {
-                let supp = _.find(posteriors[map2MH[color_branches]], (d) => d[0] == s-1);
-                if (supp) {
-                    branch_values[n.data.name] = supp[1];
-                }
-            }
-        });
-        
-        let color_scale = d3.scaleSequentialLog(d3.extent(_.map(branch_values, (d) => d)), d3.interpolateTurbo);
-        t.color_scale = color_scale;
-        t.color_scale_title = "Empirical Bayes Factor";
-        
-        t.style_edges((e, n) => {
-            const is_tested = branch_values[n.target.data.name];
-            if (is_tested) {
-                e.style("stroke", color_scale(is_tested))
-                    .style("stroke-width", "5")
-                    .style("opacity", "1");
-                e.selectAll("title").data([is_tested]).join("title").text((d) => d);
-                if (options["branch-labels"]) {
-                    add_branch_label(e, is_tested.toFixed(2), t.font_size, t.svg.selectAll(".phylotree-container"));
-                }
-            } else {
-                e.style("stroke", null);
-            }
-        });
-    }
-    
-    t.placenodes();
-    t.update();
-    LABEL_COLOR_SCALE.domain(labelDomain);
-    return t;
-}
 
 export function treeColorOptions(results_json) {
     const attrs = utils.getAttributes(results_json);
