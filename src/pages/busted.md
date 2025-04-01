@@ -200,7 +200,7 @@ function getFigure2() {
           let TT = plots.displayTreeSite(resultsJson, partitionId, treeObjects[partitionId], codonIndex, treeOptions, treeDim, treeLabels, branchLength, colorBranches, attrs.partitionSizes, testOmega, attrs.hasErrorSink);
           return TT;
       } 
-      let TT = plots.displayTree(resultsJson, evThreshold, index, treeObjects[index], treeOptions, treeDim, treeLabels, branchLength, colorBranches);
+      let TT = plots.displayTree(resultsJson, evThreshold, index, treeObjects[index], treeOptions, treeDim, treeLabels, branchLength, colorBranches, testOmega, attrs.hasErrorSink);
       return TT;
     }
     return null;
