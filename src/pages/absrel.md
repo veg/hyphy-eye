@@ -203,7 +203,7 @@ function getFig1data() {
 }
 const fig1data = getFig1data();
 const selectedBranches = new Set (_.map (rateTable, (d)=>d.branch));
-const branchOrder = _.filter (phylotreeUtils.treeNodeOrdering(resultsJson, treeObjects, 0), (d)=>attributes.profilableBranches.has (d) && selectedBranches.has (d));
+const branchOrder = _.filter (phylotreeUtils.treeNodeOrdering(treeObjects[0], resultsJson, false, false), (d)=>attributes.profilableBranches.has (d) && selectedBranches.has (d));
 ```
 
 ```js
