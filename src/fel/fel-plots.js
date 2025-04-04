@@ -4,6 +4,7 @@ import * as qq from "../components/qq-plot.js";
 import * as rateDist from "../components/rate-summary-plots/rate-densities.js";
 import * as rates from "../components/rate-summary-plots/rate-bars.js";
 import * as d3 from "d3";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
 
 const DYN_RANGE_CAP = 10;
 export const COLORS = {
@@ -319,52 +320,40 @@ function getAlphaBetaYrange(fig1data) {
  */
 export function displayTree(resultsJson, i, treeDim, treeObjects) {
     let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
- 
-    let T = treeObjects[i];
-    var t = T.render({
-        height: dim && dim[0] || 1024, 
+    
+    // Configure the tree using the helper
+    const t = phylotreeUtils.configureTree(treeObjects[i], treeDim, {
+        height: dim && dim[0] || 1024,
         width: dim && dim[1] || 600,
         'show-scale': true,
         'is-radial': false,
-        'left-right-spacing': 'fit-to-size', 
+        'left-right-spacing': 'fit-to-size',
         'top-bottom-spacing': 'fit-to-size',
-        'node_circle_size': (n) => 0
-    });
-      
-    function sortNodes(asc) {
-        T.traverse_and_compute(function(n) {
-            var d = 1;
-            if (n.children && n.children.length) {
-                d += d3.max(n.children, function(d) { return d["count_depth"]; });
-            } 
-            n["count_depth"] = d;
-        });
-        
-        T.resortChildren(function(a, b) {
-            return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
-        });
-    }
-
-    sortNodes(true);
-    
-    t.style_nodes((e, n) => {
-        if (n.children && n.children.length) return; 
-        e.selectAll("title").data([n.data.name]).join("title").text((d) => d);
-    });
-  
-    t.style_edges((e, n) => {
-        const isTested = resultsJson["tested"][i][n.target.data.name] == "test";
-        if (isTested) {
-            e.style("stroke", "firebrick"); 
-        } else {
-            e.style("stroke", null); 
+        'node_circle_size': (n) => 0,
+        configureBranches: (rawTree, renderedTree) => {
+            const configureBranchColors = phylotreeUtils.getConfigureBranchesFn(resultsJson, {
+                color_branches: "Tested",
+                branch_length: "Branch Length",
+                index: i,
+                use_site_specific_support: false,
+                use_turbo_color: false
+            }, null);
+            configureBranchColors(rawTree, renderedTree);
+        },
+        configureNodeDisplay: (rawTree, renderedTree) => {
+            const configureNodeDisplay = phylotreeUtils.getConfigureNodesFn(resultsJson.tested[i], null, {
+                showAA: false,
+                showCodons: false,
+                showSeqNames: true,
+                showOnlyMH: false,
+                showOnlyNS: false,
+                alignTips: false
+            });
+            configureNodeDisplay(rawTree, renderedTree);
         }
     });
     
-    t.placenodes();
-    t.update();
-    
-    return t;      
+    return t;
 }
 
 export function getPlotSpec(plotType, fig1data, pvalueThreshold, hasPasmt) {
