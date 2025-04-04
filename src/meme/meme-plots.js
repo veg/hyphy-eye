@@ -281,7 +281,7 @@ export function displayTree(results_json, i, treeDim, treeLabels, branch_length,
                 index: i,
                 use_site_specific_support: false,
                 use_turbo_color: false
-            }, treeViewOptions);
+            }, null);
             configureBranchColors(rawTree, renderedTree);
         },
         configureNodeDisplay: (rawTree, renderedTree) => {

@@ -41,7 +41,7 @@ export function getAttributes(resultsJson) {
     const hasErrorSink = utils.hasErrorSink(resultsJson);
     const hasErrorSinkNt = getHasErrorSinkNt(resultsJson, hasErrorSink, hasBackground);
     const omegaRateClasses = _.size(testOmega(resultsJson, hasErrorSink));
-    const srvDistribution = getRateDistribution(
+    const srvDistribution = utils.getRateDistribution(
         resultsJson, 
         hasErrorSink, 
         ["fits", "Unconstrained model", "Rate Distributions", "Synonymous site-to-site rates"], 
@@ -155,37 +155,6 @@ export function getTileSpecs(resultsJson, evThreshold, bsPositiveSelection, cont
 }
 
 /**
- * Retrieves and sorts rate distribution data from the results JSON.
- *
- * @param {Object} resultsJson - The JSON object containing the results
- * @param {boolean} hasErrorSink - A flag indicating if the error sink should be
- *   considered.
- * @param {Array} keys - The keys used to access the rate distribution data
- *   within the results JSON.
- * @param {Array} [tags=["omega", "proportion"]] - Optional tags to specify
- *   the fields for rate value and weight in the rate distribution data.
- *
- * @returns {Array|null} A sorted array of objects, each containing:
- *   - value: The rate value as specified by the first tag.
- *   - weight: The corresponding weight as specified by the second tag.
- *   The array is sorted by rate value. Returns null if no rate information
- *   is found.
- */
-function getRateDistribution(resultsJson, hasErrorSink, keys, tags) {
-    tags = tags || ["omega", "proportion"];
-    const rateInfo = _.get(resultsJson, keys);
-    if (rateInfo) {
-        let clipFirst = hasErrorSink && tags[0] == 'omega';
-
-        return _.sortBy(_.map(clipFirst ? _.chain(rateInfo).toPairs().filter((d) => d[0] != '0').fromPairs().value() : rateInfo, (d) => ({
-            "value": d[tags[0]],
-            "weight": d[tags[1]]
-        })), (d) => d.rate);
-    }
-    return null;
-}
-
-/**
  * Retrieves the rate distribution for the unconstrained model test from the results JSON.
  *
  * @param {Object} resultsJson - The JSON object containing the BUSTED analysis results.
@@ -198,7 +167,7 @@ function getRateDistribution(resultsJson, hasErrorSink, keys, tags) {
  */
 
 export function testOmega(resultsJson, hasErrorSink) {
-    return getRateDistribution (resultsJson, hasErrorSink, ["fits","Unconstrained model","Rate Distributions","Test"])
+    return utils.getRateDistribution (resultsJson, hasErrorSink, ["fits","Unconstrained model","Rate Distributions","Test"])
 }
 
 export function getErrorSinkRate(resultsJson, tag) {
@@ -320,18 +289,18 @@ export function getDistributionTable(resultsJson) {
       record['LogL'] = _.get (resultsJson,["fits",m,"Log Likelihood"]);
       record['AICc'] = _.get (resultsJson,["fits",m,"AIC-c"]);
       record['p'] = _.get (resultsJson,["fits",m,"estimated parameters"]);
-      record['dist'] = ["Tested", getRateDistribution (resultsJson, attrs.hasErrorSink, ["fits",m,"Rate Distributions","Test"]),"&omega;",m + " ω tested"];
+      record['dist'] = ["Tested", utils.getRateDistribution (resultsJson, attrs.hasErrorSink, ["fits",m,"Rate Distributions","Test"]),"&omega;",m + " ω tested"];
       record['plot'] = ["ω",record['dist'][1]];
       table.push (record);
       if (attrs.hasBackground) {
           record = {'Model' : m};
-          record['dist'] = ["Background", getRateDistribution(resultsJson, attrs.hasErrorSink, ["fits",m,"Rate Distributions","Background"]),"&omega;",m + " ω background" ];
+          record['dist'] = ["Background", utils.getRateDistribution(resultsJson, attrs.hasErrorSink, ["fits",m,"Rate Distributions","Background"]),"&omega;",m + " ω background" ];
           record['plot'] = ["ω",record['dist'][1]];
           table.push (record);
       }
       if (attrs.srvRateClasses) {
         record = {'Model' : m};
-        record['dist'] = ["Synonymous rates", getRateDistribution(resultsJson, attrs.hasErrorSink, ["fits",m,"Rate Distributions","Synonymous site-to-site rates"], ["rate", "proportion"]),"",m + " syn rates" ];
+        record['dist'] = ["Synonymous rates", utils.getRateDistribution(resultsJson, attrs.hasErrorSink, ["fits",m,"Rate Distributions","Synonymous site-to-site rates"], ["rate", "proportion"]),"",m + " syn rates" ];
         record['plot'] = ["",record['dist'][1]];
         table.push (record);
       }

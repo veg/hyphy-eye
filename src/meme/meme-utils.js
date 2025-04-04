@@ -342,15 +342,3 @@ export function computeER(prior, posterior) {
         return Infinity;
     }
 }
-
-export function getRateDistribution(resultsJson, keys, tags) {
-    tags = tags || ["omega", "proportion"];
-    const rateInfo = _.get (resultsJson, keys);
-    if (rateInfo) {
-      return _.sortBy (_.map (rateInfo, (d)=>({
-        "value" : d[tags[0]],
-        "weight" : d[tags[1]]
-      })), (d)=>d.rate);
-    }
-    return null;
-}

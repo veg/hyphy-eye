@@ -16,6 +16,7 @@ import * as vegaLiteApi from "npm:vega-lite-api";
 import * as utils from "../meme/meme-utils.js";
 import * as plots from "../meme/meme-plots.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as generalUtils from "../utils/general-utils.js";
 import * as statsSummary from "../stats/summaries.js";
 import * as omegaPlots from "../components/omega-plots.js";
 import * as tt from "../components/tile-table/tile-table.js";
@@ -76,7 +77,7 @@ const tileSpecs = utils.getTileSpecs(resultsJson, pvalueThreshold);
 const bsPositiveSelection = utils.getPosteriorsPerBranchSite(resultsJson);
 const countSites = utils.getCountSitesByPvalue(resultsJson, pvalueThreshold);
 const selectedBranchesPerSelectedSite = utils.getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
-const testOmega = utils.getRateDistribution(resultsJson, ["fits","Unconstrained model","Rate Distributions","Test"])
+const testOmega = generalUtils.getRateDistribution(resultsJson, null, ["fits","Unconstrained model","Rate Distributions","Test"])
 const treeViewOptions = phylotreeUtils.getTreeViewOptions(resultsJson, {
     onlyWithSubstitutions: true,
     includeMapping: true

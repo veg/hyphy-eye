@@ -52,7 +52,7 @@ export function getAttributes(resultsJson) {
     const pvalueThreshold = resultsJson["test results"]["P-value threshold"];
     const profilableBranches = new Set(_.chain(_.get(resultsJson, ["Site Log Likelihood", "tested"])).keys().value());
     const srvRateClasses = resultsJson["Synonymous site-posteriors"] ? resultsJson["Synonymous site-posteriors"].length : 0;
-    const srvDistribution = getRateDistribution(resultsJson, ["fits", "Full adaptive model", "Rate Distributions", "Synonymous site-to-site rates"], ["rate", "proportion"]);
+    const srvDistribution = utils.getRateDistribution(resultsJson, null, ["fits", "Full adaptive model", "Rate Distributions", "Synonymous site-to-site rates"], ["rate", "proportion"]);
     const omegaRateClasses = _.chain(resultsJson["branch attributes"])
         .map((d) => _.map(d, (dd) => _.size(dd["Rate Distributions"])))
         .map((d) => _.max(d))
@@ -346,37 +346,6 @@ export function getProfileBranchSites(resultsJson, treeObjects) {
 }
 
 /**
- * Retrieves and sorts rate distribution data from the results JSON.
- *
- * @param {Object} resultsJson - The JSON object containing the results
- * @param {Array} keys - The keys used to access the rate distribution data
- *   within the results JSON.
- * @param {Array} [tags=["omega", "proportion"]] - Optional tags to specify
- *   the fields for rate value and weight in the rate distribution data.
- *
- * @returns {Array|null} A sorted array of objects, each containing:
- *   - value: The rate value as specified by the first tag.
- *   - weight: The corresponding weight as specified by the second tag.
- *   The array is sorted by rate value. Returns null if no rate information
- *   is found.
- */
-
-function getRateDistribution(resultsJson, keys, tags) {
-    tags = tags || ["omega", "proportion"];
-    const rate_info = _.get (resultsJson, keys);
-
-    if (rate_info) { 
-      const rate_distribution = _.sortBy (_.map (rate_info, (d)=>({
-        "value" : d[tags[0]],
-        "weight" : d[tags[1]]
-      })), (d)=>d.rate);
-      return rate_distribution;
-    }
-
-    return null;
-}
-
-/**
  * Generates an array of arrays, where each sub-array contains the partition
  * index and site index for each site in the results. The partition index is
  * one-based, and the site index is zero-based.
@@ -405,7 +374,7 @@ export function getSiteIndexPartitionCodon(resultsJson) {
  *   is found.
  */
 export function test_omega(resultsJson, branch) {
-  return getRateDistribution (resultsJson, ["branch attributes","0",branch,"Rate Distributions"],["0","1"])
+    return utils.getRateDistributionByBranch(resultsJson, branch, ["branch attributes", "0"], ["0", "1"]);
 }
 
 /**
@@ -419,7 +388,7 @@ export function test_omega(resultsJson, branch) {
  *   null if no P-value information is found.
  */
 export function test_pv(resultsJson, branch) {
-    return _.get (resultsJson,["branch attributes","0",branch,"Corrected P-value"])
+    return utils.getBranchPvalue(resultsJson, branch, ["branch attributes", "0"]);
 }
 
 export function siteTableData(resultsJson, evThreshold, profileBranchSites) {

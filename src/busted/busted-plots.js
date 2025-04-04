@@ -353,11 +353,11 @@ export function displayTree(results_json, ev_threshold, index, T, options, treeD
                 color_branches: color_branches,
                 branch_length: branch_length,
                 index: index,
-                test_omega: test_omega,
                 has_error_sink: has_error_sink,
                 use_error_sink: true,
                 use_site_specific_support: false,
-                use_turbo_color: true
+                use_turbo_color: true,
+                test_omega: test_omega
             }, options)(rawTree, renderedTree);
         },
         configureNodeDisplay: (rawTree, renderedTree) => {
@@ -405,11 +405,11 @@ export function displayTreeSite(resultsJson, partitionId, T, codonIndex, treeOpt
                 branch_length: branchLength,
                 index: partitionId,
                 s: codonIndex,
-                test_omega: testOmega,
                 has_error_sink: hasErrorSink,
                 use_error_sink: true,
                 use_site_specific_support: true,
-                use_turbo_color: true
+                use_turbo_color: true,
+                test_omega: testOmega
             }, treeOptions)(rawTree, renderedTree);
         },
         configureNodeDisplay: (rawTree, renderedTree) => {

@@ -265,3 +265,84 @@ export function hasErrorSink(resultsJson) {
            resultsJson["analysis"]["settings"] && 
            resultsJson["analysis"]["settings"]["error-sink"]);
 }
+
+/**
+ * Retrieves and sorts rate distribution data from the results JSON.
+ * This function works with BUSTED, MEME, and aBSREL results formats.
+ *
+ * @param {Object} resultsJson - The JSON object containing the results
+ * @param {boolean} [hasErrorSink] - Whether to consider error sink in calculations
+ * @param {Array} keys - The path to access the rate distribution data
+ * @param {Array} [tags=["omega", "proportion"]] - The field names for rate and weight
+ *
+ * @returns {Array|null} A sorted array of objects, each containing:
+ *   - value: The rate value
+ *   - weight: The corresponding weight
+ *   The array is sorted by rate value. Returns null if no rate information is found.
+ */
+export function getRateDistribution(resultsJson, hasErrorSink, keys, tags = ["omega", "proportion"]) {
+    const rateInfo = _.get(resultsJson, keys);
+    if (!rateInfo) return null;
+
+    // Only handle error sink if hasErrorSink is explicitly provided as a boolean
+    let clipFirst = false;
+    if (typeof hasErrorSink === 'boolean' && hasErrorSink && tags[0] === 'omega') {
+        clipFirst = true;
+    }
+
+    let rateData;
+    if (clipFirst) {
+        // Filter out error sink rate (rate 0) for BUSTED and aBSREL
+        rateData = _.chain(rateInfo)
+            .toPairs()
+            .filter(([key]) => key !== '0')
+            .fromPairs()
+            .value();
+    } else {
+        rateData = rateInfo;
+    }
+
+    // Create rate distribution objects
+    const rateDistribution = _.map(rateData, (d) => ({
+        value: d[tags[0]],
+        weight: d[tags[1]]
+    }));
+
+    // Sort by rate value
+    return _.sortBy(rateDistribution, (d) => d.value);
+}
+
+/**
+ * Retrieves the rate distribution for a given branch in the results JSON.
+ * This function works with BUSTED, MEME, and aBSREL results formats.
+ *
+ * @param {Object} resultsJson - The JSON object containing the results
+ * @param {string} branch - The name of the branch to retrieve rate distribution for
+ * @param {Array} [keys] - The path to access the branch attributes
+ * @param {Array} [tags=["0", "1"]] - The field names for rate and weight
+ * @param {boolean} [hasErrorSink] - Whether to consider error sink in calculations
+ *
+ * @returns {Array|null} A sorted array of objects, each containing:
+ *   - value: The rate value
+ *   - weight: The corresponding weight
+ *   The array is sorted by rate value. Returns null if no rate information is found.
+ */
+export function getRateDistributionByBranch(resultsJson, branch, keys = ["branch attributes", "0"], tags = ["0", "1"], hasErrorSink) {
+    return getRateDistribution(resultsJson, hasErrorSink, [...keys, branch, "Rate Distributions"], tags);
+}
+
+/**
+ * Retrieves the corrected P-value for a given branch in the results JSON.
+ * This function works with BUSTED, MEME, and aBSREL results formats.
+ *
+ * @param {Object} resultsJson - The JSON object containing the results
+ * @param {string} branch - The name of the branch to retrieve p-value for
+ * @param {Array} [keys] - The path to access the branch attributes
+ * @param {string} [pvalueKey="Corrected P-value"] - The key for the p-value in the branch attributes
+ *
+ * @returns {number|null} The corrected P-value for the given branch, or
+ *   null if no P-value information is found.
+ */
+export function getBranchPvalue(resultsJson, branch, keys = ["branch attributes", "0"], pvalueKey = "Corrected P-value") {
+    return _.get(resultsJson, [...keys, branch, pvalueKey]);
+}
