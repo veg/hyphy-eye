@@ -56,7 +56,7 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.getAttributes(resultsJson);
+const attrs = utils.getBustedAttributes(resultsJson);
 ```
 
 <span style = 'font-size: 110%;'>Based on the likelihood ratio test, there **is ${resultsJson["test results"]["p-value"]>0.05 ? "no" : ""}** evidence of _episodic diversifying selection_ in this dataset (<tt>p=${floatFormat(resultsJson["test results"]["p-value"])}</tt>).
@@ -82,9 +82,6 @@ const contributingSites = utils.getContributingSites(siteTableData);
 const testOmega = utils.testOmega(resultsJson, attrs.hasErrorSink);
 const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
 const bsPositiveSelection = utils.getBSPositiveSelection(resultsJson, treeObjects, testOmega, attrs.hasErrorSink);
-console.log("bsPos", bsPositiveSelection)
-console.log("err_sink", attrs.hasErrorSink)
-console.log("omega", testOmega)
 const bsErrorSink = utils.getBSErrorSink(resultsJson, treeObjects, attrs.hasErrorSinkNT);
 const tileSpecs = utils.getTileSpecs(resultsJson, evThreshold, bsPositiveSelection, contributingSites);
 

@@ -16,7 +16,7 @@ function getColorMap(nodes) {
   return scale;
 }
 
-export function render(x, el, width = 1000, height = 1000) {
+export function renderForceBpNetwork(x, el, width = 1000, height = 1000) {
     var margin = { top: 20, right: 20, bottom: 30, left: 50 },
         innerWidth = width - margin.left - margin.right,
         innerHeight = height - margin.top - margin.bottom;

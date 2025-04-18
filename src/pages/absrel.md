@@ -58,7 +58,7 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attributes = utils.getAttributes(resultsJson);
+const attributes = utils.getAbsrelAttributes(resultsJson);
 ```
 
 Based on the likelihood ratio test, there **are ${attributes.positiveResults}** branches with evidence of _episodic diversifying selection_ in this dataset (<tt>p&leq;${floatFormat(attributes.pvalueThreshold || 0.05)}</tt>).

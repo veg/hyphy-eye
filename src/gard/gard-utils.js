@@ -23,7 +23,7 @@ const floatFormat = d3.format (".4g")
  *   - breakpointsProfile: {Array} An array of objects containing the breakpoint coordinates
  *   - siteSupport: {Array} An array of objects containing the site support for each breakpoint
  */
-export function getAttributes(resultsJson) {
+export function getGardAttributes(resultsJson) {
     // Extract common attributes
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
@@ -103,7 +103,7 @@ function getCaicImprovements(resultsJson) {
 }
 
 export function getTileSpecs(resultsJson) {
-    const attrs = getAttributes(resultsJson)
+    const attrs = getGardAttributes(resultsJson)
 
     // TODO: turn into an array of objects
     // will be used to populate the tile table

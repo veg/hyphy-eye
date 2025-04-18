@@ -8,7 +8,16 @@ const config = [
       format: 'es',
       sourcemap: true,
     },
-	  external: ['lodash-es', 'd3', 'phylotree'],
+	  external: [
+	    'lodash-es',
+	    'd3',
+	    'phylotree',
+	    '@observablehq/plot',
+	    '@observablehq/stdlib',
+	    'parse-svg-path',
+	    'htl',
+	    'gamma'
+	  ]
   },
   {
     input: 'src/index.d.ts',

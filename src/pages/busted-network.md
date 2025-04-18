@@ -41,7 +41,7 @@ const filteredData = {
     links: filteredLinks
 };
 
-const bpnetSvg = bpnet.render(filteredData, document.createElement("div"));
+const bpnetSvg = bpnet.renderBipartiteNetwork(filteredData, document.createElement("div"));
 ```
 
 <div>${bpnetSvg}</div>
@@ -64,7 +64,7 @@ my 2c, i dont currently think this is a primary result summary viz, but could be
 more exploratory one. it does seem fun though, something offered after we get the primary thing sorted.
 
 ```js
-const forceNet = forcenet.render(filteredData, document.createElement("div"));
+const forceNet = forcenet.renderForceBpNetwork(filteredData, document.createElement("div"));
 ```
 
 <div>${forceNet}</div>

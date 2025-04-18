@@ -18,7 +18,7 @@ import * as utils from "../utils/general-utils.js";
  *   - numberOfPartitions: {number} The number of partitions in the analysis
  *   - partitionSizes: {Array} Array of sizes for each partition
  */
-export function getAttributes(resultsJson) {
+export function getMultihitAttributes(resultsJson) {
     // Extract common attributes
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
@@ -49,7 +49,7 @@ export function getAttributes(resultsJson) {
  * @returns {Array} An array of objects containing specifications for dashboard tiles
  */
 export function getTileSpecs(resultsJson) {
-    const attrs = getAttributes(resultsJson);
+    const attrs = getMultihitAttributes(resultsJson);
 
     const tileTableInputs = [
         {

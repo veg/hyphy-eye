@@ -43,7 +43,7 @@ const floatFormat = d3.format (".2g")
  *   - numberOfPartitions: {number} The number of partitions in the analysis
  *   - partitionSizes: {Array} Array of sizes for each partition
  */
-export function getAttributes(resultsJson) {
+export function getAbsrelAttributes(resultsJson) {
     // Extract common attributes
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
@@ -105,7 +105,7 @@ export function getAttributes(resultsJson) {
  *       - color: {string} The color to use for the icon
  */
 export function getTileSpecs(resultsJson, evThreshold, distributionTable) {
-    const attrs = getAttributes(resultsJson)
+    const attrs = getAbsrelAttributes(resultsJson)
 
     const medianDH = _.size(attrs.mhRates['DH']) ? floatFormat (d3.median (_.map (attrs.mhRates['DH']))) : "N/A"
     const medianTH = _.size(attrs.mhRates['TH']) ? floatFormat (d3.median (_.map (attrs.mhRates['TH']))) : "N/A"
@@ -195,7 +195,7 @@ export function getTileSpecs(resultsJson, evThreshold, distributionTable) {
 export function getDistributionTable(resultsJson, evThreshold, treeObjects) {
   let table = [];
 
-  const attrs = getAttributes(resultsJson);
+  const attrs = getAbsrelAttributes(resultsJson);
   let site_er = getPosteriorsPerBranchSite(resultsJson, true, evThreshold, treeObjects);
   
   _.each (resultsJson["branch attributes"][0], (info, b)=> {
@@ -392,7 +392,7 @@ export function test_pv(resultsJson, branch) {
 }
 
 export function siteTableData(resultsJson, evThreshold, profileBranchSites) {
-    const attrs = getAttributes(resultsJson);
+    const attrs = getAbsrelAttributes(resultsJson);
     const siteIndexPartitionCodon = getSiteIndexPartitionCodon(resultsJson);
 
   let site_info = [];

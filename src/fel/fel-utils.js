@@ -36,7 +36,7 @@ const COLORS = {
  *     selection for each partition
  *   - variableSiteCount: {number} The number of sites with dS or dN > 0
  */
-export function getAttributes(resultsJson) {
+export function getFelAttributes(resultsJson) {
     // Extract common attributes
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
@@ -76,7 +76,7 @@ export function getAttributes(resultsJson) {
  *   above.
  */
 export function getTileSpecs(resultsJson, pvalueThreshold) {
-    const felAttrs = getAttributes(resultsJson);
+    const felAttrs = getFelAttributes(resultsJson);
     const sitesTable = getSitesTable(resultsJson, pvalueThreshold);
 
     return [
@@ -108,7 +108,7 @@ export function getTileSpecs(resultsJson, pvalueThreshold) {
  *   - {Array} headers: An array of headers for the table, including the classification header.
  */
 export function getSitesTable(resultsJson, pvalueThreshold) {
-    const felAttrs = getAttributes(resultsJson);
+    const felAttrs = getFelAttributes(resultsJson);
 
     const results    = [];
     const headers  = _.clone(resultsJson.MLE.headers);

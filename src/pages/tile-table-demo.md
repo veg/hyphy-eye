@@ -54,7 +54,7 @@ const trivialInputs = [
 
 ```js
 const resultsJson = await FileAttachment("../data/fel_test_data.json").json();
-const felAttrs = felUtils.getAttributes(resultsJson);
+const felAttrs = felUtils.getFelAttributes(resultsJson);
 const pvalueThreshold = 0.1;
 const tileSpecs = felUtils.getTileSpecs(resultsJson, pvalueThreshold);
 const sitesTable = felUtils.getSitesTable(resultsJson, pvalueThreshold);

@@ -1,6 +1,6 @@
-import * as Plot from "npm:@observablehq/plot";
-import { resize } from "npm:@observablehq/stdlib";
-import * as d3 from "npm:d3";
+import * as Plot from "@observablehq/plot";
+import { resize } from "@observablehq/stdlib";
+import * as d3 from "d3";
 
 export function weeklyPlot(usageData) {
   // Format the data for visualization

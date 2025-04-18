@@ -21,7 +21,7 @@ const floatFormat = d3.format (".4g")
  *   - numberOfPartitions: {number} The number of partitions in the analysis
  *   - partitionSizes: {Array} Array of sizes for each partition
  */
-export function getAttributes(resultsJson) {
+export function getNrmAttributes(resultsJson) {
     // Extract common attributes
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
@@ -154,7 +154,7 @@ export function getTestResult(resultsJson, m1, m2) {
  * @returns {Array} An array of tile specifications
  */
 export function getTileSpecs(resultsJson) {
-    const attrs = getAttributes(resultsJson);
+    const attrs = getNrmAttributes(resultsJson);
 
     const tileTableInputs = [
         {

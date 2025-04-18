@@ -60,7 +60,7 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.getAttributes(resultsJson);
+const attrs = utils.getMemeAttributes(resultsJson);
 ```
 
 <span style = 'font-size: 110%; color;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${countSites}** sites in this dataset (<tt>p≤${pvalueThreshold}</tt>).</span>

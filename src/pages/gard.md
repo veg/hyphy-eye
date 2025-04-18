@@ -58,7 +58,7 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.getAttributes(resultsJson);
+const attrs = utils.getGardAttributes(resultsJson);
 const tileSpecs = utils.getTileSpecs(resultsJson);
 const treeObjects = plots.getTreeObjects(resultsJson);
 const treeLengths = plots.getTreeLengths(treeObjects);

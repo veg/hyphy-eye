@@ -25,7 +25,7 @@ import {html} from "htl";
  *   - numberOfPartitions: {number} The number of partitions in the analysis
  *   - partitionSizes: {Array} Array of sizes for each partition
  */
-export function getAttributes(resultsJson, pvalueThreshold) {
+export function getMemeAttributes(resultsJson, pvalueThreshold) {
     // Extract common attributes
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
@@ -103,7 +103,7 @@ export function getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold)
 }
 
 export function getTileSpecs(resultsJson, pvalueThreshold) {
-    const attrs = getAttributes(resultsJson);
+    const attrs = getMemeAttributes(resultsJson);
     const countSites = getCountSitesByPvalue(resultsJson, pvalueThreshold);
     const selectedBranchesPerSelectedSite = getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
     
@@ -165,7 +165,7 @@ function generateSubstitutionLists(T, labels, test_set) {
     let subs = {};
     T.traverse_and_compute (function (n) {
         if (n.data.name in labels) {
-            L[n.data.name] = [labels[n.data.name], utils.translate_ambiguous_codon (labels[n.data.name]),'',0];
+            L[n.data.name] = [labels[n.data.name], utils.translateAmbiguousCodon (labels[n.data.name]),'',0];
             if (n.parent) {
               L[n.data.name][2] = L[n.parent.data.name][0];             
               _.each (L[n.data.name][0], (c,i)=> {
@@ -194,7 +194,7 @@ function generateSubstitutionLists(T, labels, test_set) {
             L[n.data.name][2] = L[n.data.name][0];
             L[n.data.name][3] = 0;
           } else {
-            L['root'] = [labels["root"], utils.translate_ambiguous_codon (labels["root"]), "", 0];
+            L['root'] = [labels["root"], utils.translateAmbiguousCodon (labels["root"]), "", 0];
           }
         }
     },"pre-order");

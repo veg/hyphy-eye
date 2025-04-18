@@ -30,7 +30,7 @@ const percentageFormat = d3.format (".2p")
  *   - hasErrorSinkNt {boolean} - Whether nucleotide-level error sink is available
  *   - mhRates {Object} - Rates for double-hit and triple-hit substitutions
  */
-export function getAttributes(resultsJson) {
+export function getBustedAttributes(resultsJson) {
     // Extract common attributes using the utility function
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
@@ -67,7 +67,7 @@ export function getAttributes(resultsJson) {
 }
 
 export function getTileSpecs(resultsJson, evThreshold, bsPositiveSelection, contributingSites) {
-    const attrs = getAttributes(resultsJson);
+    const attrs = getBustedAttributes(resultsJson);
     const subFractions = _.map (
         [
             "Fraction of subs rate at which 2 nucleotides are changed instantly within a single codon", 
@@ -212,7 +212,7 @@ export function getContributingSites(siteTableData) {
 }
 
 export function siteTableData(resultsJson) {
-    const attrs =  getAttributes(resultsJson);
+    const attrs =  getBustedAttributes(resultsJson);
     const siteIndexPartitionCodon = getSiteIndexPartitionCodon(resultsJson);
 
   let site_info = [];
@@ -280,7 +280,7 @@ export function distVar(d) {
 }
 
 export function getDistributionTable(resultsJson) {
-    const attrs =  getAttributes(resultsJson);
+    const attrs =  getBustedAttributes(resultsJson);
 
   let table = [];
   _.each (["Unconstrained model", "Constrained model"], (m)=> {

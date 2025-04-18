@@ -264,7 +264,7 @@ export function displayTreeSite(results_json, index, T, s, options, ev_threshold
  */
 
 export function treeColorOptions(results_json, ev_threshold) {
-  const attrs = utils.getAttributes(results_json, ev_threshold);
+  const attrs = utils.getAbsrelAttributes(results_json, ev_threshold);
 
   let options = ["Tested"];
   if (results_json.substitutions) {

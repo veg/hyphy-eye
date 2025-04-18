@@ -52,7 +52,7 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attributes = utils.getAttributes(resultsJson);
+const attributes = utils.getFelAttributes(resultsJson);
 ```
 
 Statistical significance is evaluated based on  ${resultsJson.simulated  ? "<tt>" + resultsJson.simulated + "</tt> site-level parametric bootstrap replicates"  : "the asymptotic chi-squared distribution"}. This analysis **${attributes.hasBackground? "included" : "does not include"}** site to site synonymous rate variation. ${attributes.hasCi ? "Profile approximate confidence intervals for site-level dN/dS ratios have been computed." : ""}

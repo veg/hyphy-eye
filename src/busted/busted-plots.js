@@ -33,7 +33,7 @@ export function getPlotDescription(plot_type, srv_hmm) {
 }
 
 export function getPlotOptions(results_json, bsPositiveSelection) {
-    const attrs = utils.getAttributes(results_json);
+    const attrs = utils.getBustedAttributes(results_json);
 
     const plot_options = [
         ["Evidence ratio for ω>1 (constrained)", (d)=>results_json["Evidence Ratios"]["constrained"]], 
@@ -189,7 +189,7 @@ console.log("bsPositiveSelection", bsPositiveSelection)
 
 
 export function countBranchesER(results_json, test_omega,  er) {
-    const attrs = utils.getAttributes(results_json);
+    const attrs = utils.getBustedAttributes(results_json);
 
     let prior = test_omega[attrs.omega_rate_classes-1].weight / (1-test_omega[attrs.omega_rate_classes-1].weight);
     let count = [];
@@ -428,7 +428,7 @@ export function displayTreeSite(resultsJson, partitionId, T, codonIndex, treeOpt
 }
 
 export function treeColorOptions(results_json) {
-    const attrs = utils.getAttributes(results_json);
+    const attrs = utils.getBustedAttributes(results_json);
 
     let options = ["Tested"];
     if (results_json.substitutions) {
