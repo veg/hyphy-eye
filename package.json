@@ -1,11 +1,14 @@
 {
   "name": "hyphy-eye",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "files": [
     "dist/hyphy-eye.js",
     "dist/hyphy-eye.js.map",
     "dist/hyphy-eye.d.ts",
+    "dist/registry.js",
+    "dist/registry.js.map",
+    "dist/registry.d.ts",
     "dist/glyphs/*"
   ],
   "main": "dist/hyphy-eye.js",
