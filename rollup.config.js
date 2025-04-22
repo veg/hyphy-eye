@@ -39,18 +39,23 @@ const config = [
   },
   {
     input: 'src/registry.ts',
-    output: [
-      {
-        file: 'dist/registry.js',
-        format: 'es',
-        sourcemap: true
-      },
-      {
-        file: 'dist/registry.d.ts',
-        format: 'es'
-      }
-    ],
-    plugins: [typescript(), dts()]
+    output: {
+      file: 'dist/registry.js',
+      format: 'es',
+      sourcemap: true
+    },
+    plugins: [typescript({
+      declaration: false,
+      declarationMap: false
+    })]
+  },
+  {
+    input: 'src/registry.ts',
+    output: {
+      file: 'dist/registry.d.ts',
+      format: 'es'
+    },
+    plugins: [dts()]
   }
 ];
 
