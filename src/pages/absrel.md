@@ -70,13 +70,13 @@ const evidenceThreshold = view(Inputs.text({label: html`<b>Evidence ratio thresh
 
 ```js
 const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
-const distributionTable = utils.getDistributionTable(resultsJson, evidenceThreshold, treeObjects);
-const tileSpecs = utils.getTileSpecs(resultsJson, evidenceThreshold, distributionTable);
-const profileBranchSites = utils.getProfileBranchSites(resultsJson, treeObjects);
-const siteTableData = utils.siteTableData(resultsJson, evidenceThreshold, profileBranchSites);
+const distributionTable = utils.getAbsrelDistributionTable(resultsJson, evidenceThreshold, treeObjects);
+const tileSpecs = utils.getAbsrelTileSpecs(resultsJson, evidenceThreshold, distributionTable);
+const profileBranchSites = utils.getAbsrelProfileBranchSites(resultsJson, treeObjects);
+const siteTableData = utils.getAbsrelSiteTableData(resultsJson, evidenceThreshold, profileBranchSites);
 const sitesTable = [{}, siteTableData[0], siteTableData[1]];
 // NOTE: doesnt look like this actually uses evidenceThreshold if doCounts is false anyhow..
-const branchSitePositiveSelection = utils.getPosteriorsPerBranchSite(resultsJson, false, evidenceThreshold, treeObjects);
+const branchSitePositiveSelection = utils.getAbsrelPosteriorsPerBranchSite(resultsJson, false, evidenceThreshold, treeObjects);
 ```
 
 <div>${tt.tileTable(tileSpecs)}</div>
@@ -123,7 +123,7 @@ const treeLabels = view(Inputs.checkbox(
 ```
 
 ```js
-const colorBranches =  view(Inputs.select(plots.treeColorOptions(resultsJson, evidenceThreshold),{value: "Support for selection", label: html`<b>Color branches </b>`}))
+const colorBranches =  view(Inputs.select(plots.getAbsrelTreeColorOptions(resultsJson, evidenceThreshold),{value: "Support for selection", label: html`<b>Color branches </b>`}))
 ```
 
 ```js
@@ -133,7 +133,7 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", label: "H x W (pix
 ```js
 // TODO: consider making a phylotreeProps object or similar for treeDim, treeLabels, branchLength and colorBranches
 function getFigure2() {
-  const siteIndexPartitionCodon = utils.getSiteIndexPartitionCodon(resultsJson);
+  const siteIndexPartitionCodon = utils.getAbsrelSiteIndexPartitionCodon(resultsJson);
 
     let toDisplay = selectedTree.split (" ");
     if (toDisplay.length > 1) {
@@ -182,10 +182,10 @@ if (figure2 && figure2.color_scale) {
 <link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
 <div id="tree_container">${figure2.show()}</div>
 
-**Figure 1**. ${plotType ? plots.getPlotDescription(plotType) : "No plotting options available"}
+**Figure 1**. ${plotType ? plots.getAbsrelPlotDescription(plotType) : "No plotting options available"}
 
 ```js
-const plotType =  view(Inputs.select(_.map (_.filter (plots.getPlotOptions(attributes.srvRateClasses, attributes.srvDistribution, branchSitePositiveSelection, profileBranchSites), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`, value : 'Evidence ratio alignment profile'}))
+const plotType =  view(Inputs.select(_.map (_.filter (plots.getAbsrelPlotOptions(attributes.srvRateClasses, attributes.srvDistribution, branchSitePositiveSelection, profileBranchSites), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`, value : 'Evidence ratio alignment profile'}))
 ```
 
 ```js
@@ -209,7 +209,7 @@ const branchOrder = _.filter (phylotreeUtils.treeNodeOrdering(treeObjects[0], re
 ```js
 let plotSpec;
 if (plotType) {
-  plotSpec = plots.getPlotSpec(plotType, resultsJson, fig1data, branchSitePositiveSelection, profileBranchSites, branchOrder, fig1Controls)
+  plotSpec = plots.getAbsrelPlotSpec(plotType, resultsJson, fig1data, branchSitePositiveSelection, profileBranchSites, branchOrder, fig1Controls)
 }
 ```
 <div>${vl.render({"spec": plotSpec})}</div>

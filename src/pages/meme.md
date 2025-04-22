@@ -72,11 +72,11 @@ const pvalueThreshold = view(Inputs.text({label: html`<b>p-value threshold</b>`,
 
 ```js
 const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
-const siteTableData = utils.siteTableData(resultsJson, tableOptions, pvalueThreshold, attrs.siteIndexPartitionCodon, treeObjects);
-const tileSpecs = utils.getTileSpecs(resultsJson, pvalueThreshold);
-const bsPositiveSelection = utils.getPosteriorsPerBranchSite(resultsJson);
-const countSites = utils.getCountSitesByPvalue(resultsJson, pvalueThreshold);
-const selectedBranchesPerSelectedSite = utils.getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
+const siteTableData = utils.getMemeSiteTableData(resultsJson, tableOptions, pvalueThreshold, attrs.siteIndexPartitionCodon, treeObjects);
+const tileSpecs = utils.getMemeTileSpecs(resultsJson, pvalueThreshold);
+const bsPositiveSelection = utils.getMemePosteriorsPerBranchSite(resultsJson);
+const countSites = utils.getMemeCountSitesByPvalue(resultsJson, pvalueThreshold);
+const selectedBranchesPerSelectedSite = utils.getMemeSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
 const testOmega = generalUtils.getRateDistribution(resultsJson, null, ["fits","Unconstrained model","Rate Distributions","Test"])
 const treeViewOptions = phylotreeUtils.getTreeViewOptions(resultsJson, {
     onlyWithSubstitutions: true,
@@ -84,7 +84,7 @@ const treeViewOptions = phylotreeUtils.getTreeViewOptions(resultsJson, {
   })
 // TODO: clean this up
 const sitesTable = [{
-    'class' : (d)=>html`<span style = "color:${plots.TABLE_COLORS[d]}">${d}</span>`, 
+    'class' : (d)=>html`<span style = "color:${plots.MEME_TABLE_COLORS[d]}">${d}</span>`, 
     'Substitutions' : (d)=>d.length == 0 ? "-" : _.map (d, (c)=>c[1] + " " + c[0]).join('   ,   '),
     'dN/dS' : (d)=>omegaPlots.renderNDiscreteDistributions ([d],{"height" : 20, "width" : 200, "scale" : "sqrt"})
     }, 

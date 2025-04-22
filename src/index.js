@@ -26,11 +26,18 @@ export * from "./utils/general-utils.js";
 export * from "./utils/phylotree-utils.js";
 export * from "./utils/plot-utils.js";
 
-// Export all get*Attributes functions
-export { getAbsrelAttributes } from "./absrel/absrel-utils.js";
-export { getBustedAttributes } from "./busted/busted-utils.js";
-export { getFelAttributes } from "./fel/fel-utils.js";
-export { getGardAttributes } from "./gard/gard-utils.js";
-export { getMemeAttributes } from "./meme/meme-utils.js";
-export { getMultihitAttributes } from "./multihit/multihit-utils.js";
-export { getNrmAttributes } from "./nrm/nrm-utils.js";
+// Export all method-specific utilities and plots
+export * from "./absrel/absrel-utils.js";
+export * from "./absrel/absrel-plots.js";
+export * from "./busted/busted-utils.js";
+export * from "./busted/busted-plots.js";
+export * from "./fel/fel-utils.js";
+export * from "./fel/fel-plots.js";
+export * from "./gard/gard-utils.js";
+export * from "./gard/gard-plots.js";
+export * from "./meme/meme-utils.js";
+export * from "./meme/meme-plots.js";
+export * from "./multihit/multihit-utils.js";
+export * from "./multihit/multihit-plots.js";
+export * from "./nrm/nrm-utils.js";
+export * from "./nrm/nrm-plots.js";

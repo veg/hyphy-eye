@@ -63,9 +63,9 @@ const pvalueThreshold = await view(Inputs.text({label: html`<b>p-value threshold
 ```
 
 ```js
-const sitesTable = utils.getSitesTable(resultsJson, pvalueThreshold);
+const sitesTable = utils.getFelSitesTable(resultsJson, pvalueThreshold);
 const siteTableData = _.filter(sitesTable[1], (x) => tableFilter.indexOf(x.class) >= 0);
-const tileSpecs = utils.getTileSpecs(resultsJson, pvalueThreshold)
+const tileSpecs = utils.getFelTileSpecs(resultsJson, pvalueThreshold)
 ```
 
 <div>${tt.tileTable(tileSpecs)}</div>
@@ -94,8 +94,8 @@ const plotType =  view(Inputs.select(_.map (_.filter (plots.getPlotOptions(attri
 ```
 
 ```js
-const plotDescription = plots.getPlotDescription(plotType, pvalueThreshold)
-const plotSpec = plots.getPlotSpec(plotType, fig1Data, pvalueThreshold, attributes.hasPasmt)
+const plotDescription = plots.getFelPlotDescription(plotType, pvalueThreshold)
+const plotSpec = plots.getFelPlotSpec(plotType, fig1Data, pvalueThreshold, attributes.hasPasmt)
 const treeObjects = phylotreeUtils.getTreeObjects(resultsJson)
 ```
 
@@ -130,7 +130,7 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", description: "Tree
 
 ```js
 function displayTree(i) {
-    return plots.displayTree(resultsJson, i, treeDim, treeObjects);
+    return plots.getFelDisplayTree(resultsJson, i, treeDim, treeObjects);
 }
 
 const treeId = phylotreeUtils.getTreeId(selectedTree);

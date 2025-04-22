@@ -59,9 +59,9 @@ window.addEventListener(
 
 ```js
 const attrs = utils.getGardAttributes(resultsJson);
-const tileSpecs = utils.getTileSpecs(resultsJson);
-const treeObjects = plots.getTreeObjects(resultsJson);
-const treeLengths = plots.getTreeLengths(treeObjects);
+const tileSpecs = utils.getGardTileSpecs(resultsJson);
+const treeObjects = plots.getGardTreeObjects(resultsJson);
+const treeLengths = plots.getGardTreeLengths(treeObjects);
 const gardResultTable = _.chain (resultsJson['siteBreakPointSupport']).toPairs().map ((d)=>{return {'site' : +d[0], 'support' : d[1]}}).value();
 ```
 
@@ -146,8 +146,8 @@ const variants = view(Inputs.select(
 
 ```js
 // TODO: this mess seems convoluted
-const displayedTrees = plots.getDisplayedTrees(treeObjects, variants)
-const treesHtml = plots.makeTreeDivs(treeObjects, displayedTrees)
+const displayedTrees = plots.getGardDisplayedTrees(treeObjects, variants)
+const treesHtml = plots.getGardTreeDivs(treeObjects, displayedTrees)
 const treesContainer = document.createElement("div")
 treesContainer.innerHTML = treesHtml;
 ```

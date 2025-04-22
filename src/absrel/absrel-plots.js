@@ -18,7 +18,7 @@ const LABEL_COLOR_SCALE = d3.scaleOrdinal([], d3.schemeCategory10)
  * @returns {string} A description of the plot type, or undefined if the plot type is not recognized.
  */
 
-export function getPlotDescription(plot_type) {
+export function getAbsrelPlotDescription(plot_type) {
     const plot_legends = ({
         "Synonymous rates" : "Posterior means for synonymous site-level substitution rates (α). ",
         "Support for positive selection" : "Empirical Bayes Factors for ω>1 at a particular branch and site (only tested branches with 2 or more rate classes are included).",
@@ -40,7 +40,7 @@ export function getPlotDescription(plot_type) {
  * @param {Array.<Object>} profileBranchSites - profiles of branch sites
  * @returns {Array.<Array.<string|function>>} The array of arrays described above
  */
-export function getPlotOptions(srv_rate_classes, srv_distribution, bsPositiveSelection, profileBranchSites) {
+export function getAbsrelPlotOptions(srv_rate_classes, srv_distribution, bsPositiveSelection, profileBranchSites) {
     const plot_options = [
         ["Synonymous rates", (d)=>srv_rate_classes > 0 && srv_distribution], 
         ["Support for positive selection", (d)=>bsPositiveSelection.length > 0],
@@ -62,7 +62,7 @@ export function getPlotOptions(srv_rate_classes, srv_distribution, bsPositiveSel
  * @param {string} fig1_controls - user input for what figure 1 should display
  * @returns {Object} The Vega-Lite spec for the specified plot type
  */
-export function getPlotSpec(
+export function getAbsrelPlotSpec(
   plot_type, 
   results_json, 
   fig1data, 
@@ -137,7 +137,7 @@ export function getPlotSpec(
  * @param {string} color_branches - option to color branches by
  * @return {object} - the rendered tree
  */
-export function displayTree(results_json, index, T, options, ev_threshold, treeDim, treeLabels, branch_length, color_branches) {
+export function getAbsrelTree(results_json, index, T, options, ev_threshold, treeDim, treeLabels, branch_length, color_branches) {
     let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
     
     // Set the branch length accessor
@@ -198,7 +198,7 @@ export function displayTree(results_json, index, T, options, ev_threshold, treeD
  * @param {Array} partition_sizes - partition sizes
  * @return {object} - the rendered tree
  */
-export function displayTreeSite(results_json, index, T, s, options, ev_threshold, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
+export function getAbsrelTreeSite(results_json, index, T, s, options, ev_threshold, treeDim, treeLabels, branch_length, color_branches, partition_sizes) {
     let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
     
     // Set the branch length accessor
@@ -263,7 +263,7 @@ export function displayTreeSite(results_json, index, T, s, options, ev_threshold
  * @returns {string[]} An array of strings representing the branch color options.
  */
 
-export function treeColorOptions(results_json, ev_threshold) {
+export function getAbsrelTreeColorOptions(results_json, ev_threshold) {
   const attrs = utils.getAbsrelAttributes(results_json, ev_threshold);
 
   let options = ["Tested"];

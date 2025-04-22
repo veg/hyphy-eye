@@ -22,7 +22,7 @@ export const COLORS = {
  * @param {boolean} hasPasmt - whether the data object has pasmt results
  * @returns {Array.<Array.<string|function>>} The array of arrays described above
  */
-export function getPlotOptions(hasPasmt) {
+export function getFelPlotOptions(hasPasmt) {
   const options = [
     ["Site-level dN/dS estimates",(d)=>d["confidence interval"]],
     ["alpha/beta site-level estimates", (d)=>1], 
@@ -44,7 +44,7 @@ export function getPlotOptions(hasPasmt) {
  * @param {number} pvalueThreshold - the threshold for significance
  * @returns {string} the description of the plot
  */
-export function getPlotDescription(plotType, pvalueThreshold) {
+export function getFelPlotDescription(plotType, pvalueThreshold) {
   const descriptions = {
     "Site-level dN/dS estimates" : "Maximum likelihood estimates of dN/dS at each site, together with estimated profile condifence intervals (if available). dN/dS = 1 (neutrality) is depicted as a horizontal gray line. Boundaries between partitions (if present) are shown as vertibal dashed lines.",
     "alpha/beta site-level estimates": "Maximum likelihood estimates of synonymous (α) and non-synonymous rates (β) at each site shown as bars. The line shows the estimates under the null model (α=β). Estimates above " + DYN_RANGE_CAP +" are censored at this value.",
@@ -57,7 +57,7 @@ export function getPlotDescription(plotType, pvalueThreshold) {
   return descriptions[plotType];
 }
 
-export function pvPlot(data, pvalueThreshold) {
+export function getFelPvPlot(data, pvalueThreshold) {
     let colorD = [];
     let colorR = [];
     _.each (COLORS, (v,c)=> {colorD.push (c); colorR.push (v);});
@@ -125,7 +125,7 @@ export function pvPlot(data, pvalueThreshold) {
    * @param {number} step - the number of codons to include in the plot
    * @returns {object} - a Vega-Lite specification for the plot
    */
-  export function dNdSWithCi(data, from, step) {
+  export function getFelDnDsPlot(data, from, step) {
     let colorD = [];
     let colorR = [];
     _.each (COLORS, (v,c)=> {colorD.push (c); colorR.push (v);});
@@ -205,7 +205,7 @@ export function pvPlot(data, pvalueThreshold) {
    * @param {array} yrange - the range of the y-axis
    * @returns {object} - a Vega-Lite specification for the plot
    */
-  export function alphaBetaPlot(data, from, step, yrange) {
+  export function getFelAlphaBetaPlot(data, from, step, yrange) {
     let colorD = [];
     let colorR = [];
     _.each (COLORS, (v,c)=> {colorD.push (c); colorR.push (v);});
@@ -286,7 +286,7 @@ export function pvPlot(data, pvalueThreshold) {
     };
   }
 
-function getAlphaBetaYrange(fig1data) {
+export function getFelAlphaBetaYrange(fig1data) {
   let min = _.chain (fig1data).map ("alpha").max ().value ();
   let max = _.chain (fig1data).map ("beta").max ().value ();
 
@@ -318,7 +318,7 @@ function getAlphaBetaYrange(fig1data) {
  * @param {Array} treeObjects - Array of tree objects
  * @returns {Object} The rendered tree object
  */
-export function displayTree(resultsJson, i, treeDim, treeObjects) {
+export function getFelTree(resultsJson, i, treeDim, treeObjects) {
     let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
     
     // Configure the tree using the helper
@@ -356,7 +356,7 @@ export function displayTree(resultsJson, i, treeDim, treeObjects) {
     return t;
 }
 
-export function getPlotSpec(plotType, fig1data, pvalueThreshold, hasPasmt) {
+export function getFelPlotSpec(plotType, fig1data, pvalueThreshold, hasPasmt) {
   const plotSpecs = {
     "Site-level dN/dS estimates" : {
       "width": 800, "height": 200, 

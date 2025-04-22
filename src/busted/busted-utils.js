@@ -66,7 +66,7 @@ export function getBustedAttributes(resultsJson) {
     };
 }
 
-export function getTileSpecs(resultsJson, evThreshold, bsPositiveSelection, contributingSites) {
+export function getBustedTileSpecs(resultsJson, evThreshold, bsPositiveSelection, contributingSites) {
     const attrs = getBustedAttributes(resultsJson);
     const subFractions = _.map (
         [
@@ -166,18 +166,18 @@ export function getTileSpecs(resultsJson, evThreshold, bsPositiveSelection, cont
  *   The array is sorted by rate value. Returns null if no rate information is found.
  */
 
-export function testOmega(resultsJson, hasErrorSink) {
+export function getBustedTestOmega(resultsJson, hasErrorSink) {
     return utils.getRateDistribution (resultsJson, hasErrorSink, ["fits","Unconstrained model","Rate Distributions","Test"])
 }
 
-export function getErrorSinkRate(resultsJson, tag) {
+export function getBustedErrorSinkRate(resultsJson, tag) {
     return _.get (resultsJson, ["fits","Unconstrained model","Rate Distributions", tag, "0"]);
 }
 
-function getHasErrorSinkNt(resultsJson, hasErrorSink, hasBackground){
+export function getBustedHasErrorSinkNt(resultsJson, hasErrorSink, hasBackground){
   if (hasErrorSink) {
-      if (getErrorSinkRate(resultsJson, "Test")["proportion"] > 0) return true;
-      if (hasBackground && getErrorSinkRate(resultsJson, "Background")["proportion"] > 0) return true;
+      if (getBustedErrorSinkRate(resultsJson, "Test")["proportion"] > 0) return true;
+      if (hasBackground && getBustedErrorSinkRate(resultsJson, "Background")["proportion"] > 0) return true;
       return false;
   }
   return false;
@@ -193,7 +193,7 @@ function getHasErrorSinkNt(resultsJson, hasErrorSink, hasBackground){
  * and returns the indices of these sites.
  */
 
-export function getContributingSites(siteTableData) {
+export function getBustedContributingSites(siteTableData) {
   let site_lr = _.sortBy (_.map (siteTableData, (d,i)=>[d["LR"],i]), (d)=>-d[0]);
   const lrs = d3.sum (site_lr, (d)=>d[0]);
   if (lrs > 2) {
@@ -211,9 +211,9 @@ export function getContributingSites(siteTableData) {
   return null;
 }
 
-export function siteTableData(resultsJson) {
+export function getBustedSiteTableData(resultsJson) {
     const attrs =  getBustedAttributes(resultsJson);
-    const siteIndexPartitionCodon = getSiteIndexPartitionCodon(resultsJson);
+    const siteIndexPartitionCodon = getBustedSiteIndexPartitionCodon(resultsJson);
 
   let site_info = [];
   let index = 0;
@@ -259,11 +259,11 @@ export function siteTableData(resultsJson) {
     }];
 }
 
-export function getSiteIndexPartitionCodon(resultsJson) {
+export function getBustedSiteIndexPartitionCodon(resultsJson) {
     return _.chain (resultsJson['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
 }
 
-export function distMean(d) {
+export function getBustedDistMean(d) {
     let m = 0;
     _.each (d, (r)=> {
         m += r['value'] * r['weight'];
@@ -271,7 +271,7 @@ export function distMean(d) {
     return m;
 }
 
-export function distVar(d) {
+export function getBustedDistVar(d) {
     let m2 = 0, m = distMean (d);
     _.each (d, (r)=> {
         m2 += r['value']*r['value'] * r['weight'];
@@ -279,7 +279,7 @@ export function distVar(d) {
     return m2 - m*m;
 }
 
-export function getDistributionTable(resultsJson) {
+export function getBustedDistributionTable(resultsJson) {
     const attrs =  getBustedAttributes(resultsJson);
 
   let table = [];
@@ -308,10 +308,10 @@ export function getDistributionTable(resultsJson) {
   return table;
 }
 
-export function getBSErrorSink(resultsJson, treeObjects, hasErrorSinkNt) {
+export function getBustedErrorSink(resultsJson, treeObjects, hasErrorSinkNt) {
   if (hasErrorSinkNt) {
-    let weight = getErrorSinkRate(resultsJson, "Test")["proportion"];
-    return posteriorsPerBranchSite (resultsJson, treeObjects, 0, weight / (1-weight));
+    let weight = getBustedErrorSinkRate(resultsJson, "Test")["proportion"];
+    return getBustedPosteriorsPerBranchSite (resultsJson, treeObjects, 0, weight / (1-weight));
   }
   return [];
 }
@@ -334,11 +334,11 @@ export function getBSErrorSink(resultsJson, treeObjects, hasErrorSinkNt) {
  *   site number, posterior probability and evidence ratio for each site that
  *   was detected as showing positive selection
  */
-export function getBSPositiveSelection(resultsJson, treeObjects, testOmega, hasErrorSink) {
+export function getBustedPositiveSelection(resultsJson, treeObjects, testOmega, hasErrorSink) {
     let w =  testOmega[testOmega.length - 1].weight;
     
     if (w < 1) {
-        return posteriorsPerBranchSite (resultsJson, treeObjects, testOmega.length - 1 + (hasErrorSink ? 1 :0),w / (1-w));
+        return getBustedPosteriorsPerBranchSite (resultsJson, treeObjects, testOmega.length - 1 + (hasErrorSink ? 1 :0),w / (1-w));
     }
 
     return [];
@@ -366,7 +366,7 @@ export function getBSPositiveSelection(resultsJson, treeObjects, testOmega, hasE
  *   - synSubs: The count of synonymous substitutions
  *   - nonsynSubs: The count of non-synonymous substitutions
  */
-function posteriorsPerBranchSite(resultsJson, treeObjects, rateClass, priorOdds) {
+export function getBustedPosteriorsPerBranchSite(resultsJson, treeObjects, rateClass, priorOdds) {
   let results = [];
   let offset = 0;
   _.each (resultsJson["branch attributes"], (data, partition) => {

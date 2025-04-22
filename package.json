@@ -5,10 +5,21 @@
   "files": [
     "dist/hyphy-eye.js",
     "dist/hyphy-eye.js.map",
-    "dist/hyphy-eye.d.ts"
+    "dist/hyphy-eye.d.ts",
+    "dist/glyphs/*"
   ],
   "main": "dist/hyphy-eye.js",
   "types": "dist/hyphy-eye.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/hyphy-eye.js",
+      "types": "./dist/hyphy-eye.d.ts"
+    },
+    "./registry": {
+      "import": "./dist/registry.js",
+      "types": "./dist/registry.d.ts"
+    }
+  },
   "scripts": {
     "clean": "rimraf src/.observablehq/cache",
     "clean-npm": "rimraf dist/*",
@@ -31,11 +42,14 @@
     "phylotree": "^2.0.1"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^12.1.2",
     "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.10",
     "rollup": "^4.28.1",
+    "rollup-plugin-copy": "^3.4.1",
     "rollup-plugin-dts": "^6.1.1",
-    "typescript": "^5.7.2"
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">=18"

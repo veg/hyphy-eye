@@ -13,7 +13,7 @@ import * as phylotree from "phylotree";
  * @returns {Array<Object>} An array of tree objects, where each tree object
  *   contains the breakpoint positions and a phylotree object.
  */
-export function getTreeObjects(results_json) {
+export function getGardTreeObjects(results_json) {
     const tree_objects = _.map (results_json.breakpointData, (bp)=> {return {
         'bps' : bp.bps[0],
         'tree' : new phylotree.phylotree (bp.tree)
@@ -34,7 +34,7 @@ export function getTreeObjects(results_json) {
  *   - `L`: The total branch length of the tree.
  */
 
-export function getTreeLengths(tree_objects) {
+export function getGardTreeLengths(tree_objects) {
     const tree_lengths = _.flatten(_.map (tree_objects, (t)=> {
         let L = phylotreeUtils.totalTreeLength (t.tree);
         return [{
@@ -50,7 +50,7 @@ export function getTreeLengths(tree_objects) {
     return tree_lengths;
 }
 
-export function makeTreeDivs(tree_objects, displayed_trees) {
+export function getGardTreeDivs(tree_objects, displayed_trees) {
     const svgSize = Math.max(phylotreeUtils.seqNames(tree_objects[0].tree).length * 10, 300);
 
     const container = document.createElement('div');
@@ -83,7 +83,7 @@ export function makeTreeDivs(tree_objects, displayed_trees) {
  * 
  * @returns {Array<Phylotree>} An array of the rendered trees.
  */
-export function getDisplayedTrees(tree_objects, variants) {
+export function getGardDisplayedTrees(tree_objects, variants) {
     const svgSize = Math.max(phylotreeUtils.seqNames (tree_objects[0].tree).length * 10, 300)
 
     return _.map (tree_objects, (tree_object,i)=> {

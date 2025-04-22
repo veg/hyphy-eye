@@ -75,7 +75,7 @@ export function getFelAttributes(resultsJson) {
  * @returns {Array.<Object>} An array of objects with the properties described
  *   above.
  */
-export function getTileSpecs(resultsJson, pvalueThreshold) {
+export function getFelTileSpecs(resultsJson, pvalueThreshold) {
     const felAttrs = getFelAttributes(resultsJson);
     const sitesTable = getSitesTable(resultsJson, pvalueThreshold);
 
@@ -107,7 +107,7 @@ export function getTileSpecs(resultsJson, pvalueThreshold) {
  *   - {Array} results: An array of objects, each representing a site with its data and classification.
  *   - {Array} headers: An array of headers for the table, including the classification header.
  */
-export function getSitesTable(resultsJson, pvalueThreshold) {
+export function getFelSitesTable(resultsJson, pvalueThreshold) {
     const felAttrs = getFelAttributes(resultsJson);
 
     const results    = [];

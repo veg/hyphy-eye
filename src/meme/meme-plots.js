@@ -9,7 +9,7 @@ import * as rateDist from "../components/rate-summary-plots/rate-densities.js";
 import * as rates from "../components/rate-summary-plots/rate-bars.js";
 import * as utils from "./meme-utils.js";
 
-export const TABLE_COLORS = ({
+export const MEME_TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
     'Neutral' : '#444',
     'Invariable' : '#CCC'
@@ -18,7 +18,7 @@ const label_color_scale = d3.scaleOrdinal([], d3.schemeCategory10);
 const DYN_RANGE_CAP = 10000;
 const OMEGA_RATE_CLASSES = 2;
 
-export function getPlotOptions(has_site_LRT, has_resamples, bsPositiveSelection) {
+export function getMemePlotOptions(has_site_LRT, has_resamples, bsPositiveSelection) {
     const plot_options = [
         ["p-values for selection", (d)=>true],
         ["p-values for variability", (d)=>has_site_LRT], 
@@ -32,7 +32,7 @@ export function getPlotOptions(has_site_LRT, has_resamples, bsPositiveSelection)
     return plot_options;
 }
 
-export function getPlotDescription(plot_type, has_resamples) {
+export function getMemePlotDescription(plot_type, has_resamples) {
     const plot_legends = ({
         "p-values for selection" : "P-values derived from the " + (has_resamples ? "parametric bootstrap" : "asymptotic mixture &Chi;<sup>2</sup> ")  + " test statistic for likelihood ratio tests for episodic diversifying selection. Solid line = user selected significance threshold.",
         "p-values for variability" : "P-values derived from the asymptotic mixture &Chi;<sup>2</sup><sub>2</sub> test statistic for likelihood ratio tests for variable &omega; at this site. Solid line = user selected significance threshold.",
@@ -46,7 +46,7 @@ export function getPlotDescription(plot_type, has_resamples) {
     return plot_legends[plot_type];
 }
 
-export function getTreeColorOptions(results_json) {
+export function getMemeTreeColorOptions(results_json) {
   let options = ["Tested"];
   if (results_json.substitutions) {
     options.push ("Support for selection");
@@ -55,7 +55,7 @@ export function getTreeColorOptions(results_json) {
   return options;
 }
 
-export function getPlotSpec(
+export function getMemePlotSpec(
     results_json, 
     plot_type, 
     bsPositiveSelection, 
@@ -164,10 +164,10 @@ export function getPlotSpec(
     return plot_specs[plot_type];
 }
 
-function alphaBetaPlot(data, from, step) {
+export function getMemeAlphaBetaPlot(data, from, step) {
   let color_d = [];
   let color_r = [];
-  _.each (TABLE_COLORS, (v,c)=> {color_d.push (c); color_r.push (v);});
+  _.each (MEME_TABLE_COLORS, (v,c)=> {color_d.push (c); color_r.push (v);});
   return {
       "width": {"step": 12},
       "data" : {"values" : _.map (
@@ -260,7 +260,7 @@ function alphaBetaPlot(data, from, step) {
   };
 }
 
-export function displayTree(results_json, i, treeDim, treeLabels, branch_length, color_branches, tree_objects) {
+export function getMemeTree(results_json, i, treeDim, treeLabels, branch_length, color_branches, tree_objects) {
     let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
     
     // Configure the tree using the helper
@@ -300,7 +300,7 @@ export function displayTree(results_json, i, treeDim, treeLabels, branch_length,
     return t;
 }
 
-export function displayTreeSite(results_json, i, s, treeDim, treeLabels, branch_length, color_branches, shade_branches, tree_objects, treeViewOptions) {
+export function getMemeTreeSite(results_json, i, s, treeDim, treeLabels, branch_length, color_branches, shade_branches, tree_objects, treeViewOptions) {
     let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
     
     let node_labels = phylotreeUtils.generateNodeLabels(tree_objects[i], results_json["substitutions"][i][s-1]);

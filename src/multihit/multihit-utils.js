@@ -48,7 +48,7 @@ export function getMultihitAttributes(resultsJson) {
  * @param {Object} resultsJson - The JSON object containing the Multihit results
  * @returns {Array} An array of objects containing specifications for dashboard tiles
  */
-export function getTileSpecs(resultsJson) {
+export function getMultihitTileSpecs(resultsJson) {
     const attrs = getMultihitAttributes(resultsJson);
 
     const tileTableInputs = [

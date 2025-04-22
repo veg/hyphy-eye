@@ -3,7 +3,7 @@ import * as _ from "lodash-es";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as d from "../stats/pairwise-distance.js";
 
-export function getBranchLengths(resultsJson, modelSummary, treeObjects) {
+export function getNrmBranchLengths(resultsJson, modelSummary, treeObjects) {
     const rootChildren = phylotreeUtils.rootChildren(treeObjects[0])
 
     let bl = [];
@@ -17,7 +17,7 @@ export function getBranchLengths(resultsJson, modelSummary, treeObjects) {
     return bl;
 }
 
-export function displayTree(resultsJson, i, treeDim, treeLabels, treeObjects, availableDistances, distanceFunction, modelForTree) {
+export function getNrmTree(resultsJson, i, treeDim, treeLabels, treeObjects, availableDistances, distanceFunction, modelForTree) {
     let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
  
       let T = treeObjects[i];

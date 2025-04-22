@@ -58,16 +58,16 @@ window.addEventListener(
 
 ```js
 const attrs = utils.getNrmAttributes(resultsJson);
-const tileSpecs = utils.getTileSpecs(resultsJson);
+const tileSpecs = utils.getNrmTileSpecs(resultsJson);
 ```
 
 <div>${tt.tileTable(tileSpecs)}</div>
 
 The best-fitting model (based on AIC-c) is **${attrs.bestModel}**. 
 
-Based on the comparison of the general reversible (GTR) and non-reversible models (NREV12), there ${utils.reportResult(utils.getTestResult(resultsJson, "GTR","NREV12"))} for the <b>non-reversibility of the evolutionary process</b>.
+Based on the comparison of the general reversible (GTR) and non-reversible models (NREV12), there ${utils.getNrmReportResult(utils.getNrmTestResult(resultsJson, "GTR","NREV12"))} for the <b>non-reversibility of the evolutionary process</b>.
 
-Based on the comparison of the non-reversible model which estimate root character frequencies (NREV12+F) and the model which assumes that these equal empirical frequencies (NREV12), there ${utils.reportResult(utils.getTestResult(resultsJson, "NREV12","NREV12+F"))} for the <b>difference in root character frequencies from the distribution implied by the sequences</b>.
+Based on the comparison of the non-reversible model which estimate root character frequencies (NREV12+F) and the model which assumes that these equal empirical frequencies (NREV12), there ${utils.getNrmReportResult(utils.getNrmTestResult(resultsJson, "NREV12","NREV12+F"))} for the <b>difference in root character frequencies from the distribution implied by the sequences</b>.
 
 ```js
 const table1 = view(Inputs.table (attrs.modelTableData, {
@@ -84,7 +84,7 @@ const modelForQ = view(Inputs.select(_.map (attrs.modelSummary, (d)=>d[0]), {val
 
 ```js
 // TODO: we do this a lot.. a helper function to produce standalone legends?
-const qMaxRate = utils.getQMaxRate(resultsJson, modelForQ)
+const qMaxRate = utils.getNrmQMaxRate(resultsJson, modelForQ)
 const schemeElement = document.createElement("div")
 const label = document.createElement("text")
 label.textContent = "Relative rate"
@@ -118,7 +118,7 @@ function sparkbar(max) {
     justify-content: end;">${x.toLocaleString("en")}`
 }
 
-const qMatrixTableData = utils.getQMatrixTable(resultsJson, modelForQ)
+const qMatrixTableData = utils.getNrmQMatrixTable(resultsJson, modelForQ)
 ```
 
 ```js
@@ -241,7 +241,7 @@ const distanceFunction = view(Inputs.select(availableDistances, {value: "Jensen 
 
 ```js
 const treeObjects = phylotreeUtils.getTreeObjects(resultsJson, modelForTree);
-const branchLengths = plots.getBranchLengths(resultsJson, attrs.modelSummary, treeObjects);
+const branchLengths = plots.getNrmBranchLengths(resultsJson, attrs.modelSummary, treeObjects);
 const figure2 = plots.displayTree(resultsJson, 0, treeDim, treeLabels, treeObjects, availableDistances, distanceFunction, modelForTree)
 // TODO: we do this a lot.. a helper function to produce standalone legends?
 const schemeElement2 = document.createElement("div")

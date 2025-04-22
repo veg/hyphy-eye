@@ -54,7 +54,7 @@ window.addEventListener(
 
 ```js
 const attrs = utils.getMultihitAttributes(resultsJson);
-const tileSpecs = utils.getTileSpecs(resultsJson);
+const tileSpecs = utils.getMultihitTileSpecs(resultsJson);
 ```
 
 <div>${tt.tileTable(tileSpecs)}</div>

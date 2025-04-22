@@ -104,7 +104,7 @@ export function getAbsrelAttributes(resultsJson) {
  *       - icon: {string} The CSS class for the icon associated with the number
  *       - color: {string} The color to use for the icon
  */
-export function getTileSpecs(resultsJson, evThreshold, distributionTable) {
+export function getAbsrelTileSpecs(resultsJson, evThreshold, distributionTable) {
     const attrs = getAbsrelAttributes(resultsJson)
 
     const medianDH = _.size(attrs.mhRates['DH']) ? floatFormat (d3.median (_.map (attrs.mhRates['DH']))) : "N/A"
@@ -192,7 +192,7 @@ export function getTileSpecs(resultsJson, evThreshold, distributionTable) {
    *     1. An empty string
    *     2. The second element of the dist array
    */
-export function getDistributionTable(resultsJson, evThreshold, treeObjects) {
+export function getAbsrelDistributionTable(resultsJson, evThreshold, treeObjects) {
   let table = [];
 
   const attrs = getAbsrelAttributes(resultsJson);
@@ -247,7 +247,7 @@ export function getDistributionTable(resultsJson, evThreshold, treeObjects) {
  *   - syn_subs: The count of synonymous substitutions
  *   - nonsyn_subs: The count of non-synonymous substitutions
  */
-export function getPosteriorsPerBranchSite(resultsJson, doCounts, er, treeObjects) {
+export function getAbsrelPosteriorsPerBranchSite(resultsJson, doCounts, er, treeObjects) {
   let results = doCounts ? {} : [];
   let offset = 0;
   const subs = _.get (resultsJson, ["substitutions","0"]);
@@ -312,7 +312,7 @@ export function getPosteriorsPerBranchSite(resultsJson, doCounts, er, treeObject
  *   - syn_subs: {number} The count of synonymous substitutions.
  *   - nonsyn_subs: {number} The count of non-synonymous substitutions.
 **/
-export function getProfileBranchSites(resultsJson, treeObjects) {
+export function getAbsrelProfileBranchSites(resultsJson, treeObjects) {
   let results = [];
   const unc = _.get (resultsJson, ["Site Log Likelihood","unconstrained","0"]);
   const subs = _.get (resultsJson, ["substitutions","0"]);
@@ -354,7 +354,7 @@ export function getProfileBranchSites(resultsJson, treeObjects) {
  * @returns {Array<Array<number>>} The array of arrays containing partition
  *   index and site index for each site
  */
-export function getSiteIndexPartitionCodon(resultsJson) {
+export function getAbsrelSiteIndexPartitionCodon(resultsJson) {
     return _.chain (resultsJson['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
 }
 
@@ -373,7 +373,7 @@ export function getSiteIndexPartitionCodon(resultsJson) {
  *   The array is sorted by rate value. Returns null if no rate information
  *   is found.
  */
-export function test_omega(resultsJson, branch) {
+export function getAbsrelTestOmega(resultsJson, branch) {
     return utils.getRateDistributionByBranch(resultsJson, branch, ["branch attributes", "0"], ["0", "1"]);
 }
 
@@ -387,11 +387,11 @@ export function test_omega(resultsJson, branch) {
  * @returns {number|null} The corrected P-value for the given branch, or
  *   null if no P-value information is found.
  */
-export function test_pv(resultsJson, branch) {
+export function getAbsrelTestPv(resultsJson, branch) {
     return utils.getBranchPvalue(resultsJson, branch, ["branch attributes", "0"]);
 }
 
-export function siteTableData(resultsJson, evThreshold, profileBranchSites) {
+export function getAbsrelSiteTableData(resultsJson, evThreshold, profileBranchSites) {
     const attrs = getAbsrelAttributes(resultsJson);
     const siteIndexPartitionCodon = getSiteIndexPartitionCodon(resultsJson);
 

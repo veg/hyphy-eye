@@ -68,22 +68,22 @@ ${resultsJson.analysis.version < 4.0 ? "<small><b>Some of the visualizations are
 ```
 
 ${resultsJson.analysis.version >= 4.5 && attrs.hasErrorSink ? "<br><small style = 'color:darkgreen'>This analysis was run with the error sink category enabled</small>" : ""}
-${attrs.hasErrorSinkNT? "<details><summary style='background-color: 0xCCC; color: firebrick; font-size: 0.75em;'>Possible alignment errors detected</summary><span style='background-color: 0xCCC; color: darkorange; font-size: 0.75em;'>A " +proportionFormat (utils.getErrorSinkRate ("Test")["proportion"]) + " fraction of the alignment (test branches" + (attrs.hasBackground ? ", and " + proportionFormat (utils.getErrorSinkRate ("Background")["proportion"]) + " of background branches)"  : ")" ) + " was placed in the <b>error sink</b> rate class, meaning that misalignment or other data quality issues may be present. You may use exploratory plots and other components on this page to further explore this.</span></details>" : ""}
+${attrs.hasErrorSinkNT? "<details><summary style='background-color: 0xCCC; color: firebrick; font-size: 0.75em;'>Possible alignment errors detected</summary><span style='background-color: 0xCCC; color: darkorange; font-size: 0.75em;'>A " +proportionFormat (utils.getBustedErrorSinkRate ("Test")["proportion"]) + " fraction of the alignment (test branches" + (attrs.hasBackground ? ", and " + proportionFormat (utils.getBustedErrorSinkRate ("Background")["proportion"]) + " of background branches)"  : ")" ) + " was placed in the <b>error sink</b> rate class, meaning that misalignment or other data quality issues may be present. You may use exploratory plots and other components on this page to further explore this.</span></details>" : ""}
 
 ```js
 const evThreshold = view(Inputs.text({label: html`<b>Evidence ratio threshold</b>`, value: "10", submit: "Update"}))
 ```
 
 ```js
-const siteTableData = utils.siteTableData(resultsJson, evThreshold);
+const siteTableData = utils.getBustedSiteTableData(resultsJson, evThreshold);
 const sitesTable = [{}, siteTableData[0], siteTableData[1]];
-const distributionTable = utils.getDistributionTable(resultsJson, evThreshold);
-const contributingSites = utils.getContributingSites(siteTableData);
-const testOmega = utils.testOmega(resultsJson, attrs.hasErrorSink);
+const distributionTable = utils.getBustedDistributionTable(resultsJson, evThreshold);
+const contributingSites = utils.getBustedContributingSites(siteTableData);
+const testOmega = utils.getBustedTestOmega(resultsJson, attrs.hasErrorSink);
 const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
-const bsPositiveSelection = utils.getBSPositiveSelection(resultsJson, treeObjects, testOmega, attrs.hasErrorSink);
-const bsErrorSink = utils.getBSErrorSink(resultsJson, treeObjects, attrs.hasErrorSinkNT);
-const tileSpecs = utils.getTileSpecs(resultsJson, evThreshold, bsPositiveSelection, contributingSites);
+const bsPositiveSelection = utils.getBustedPositiveSelection(resultsJson, treeObjects, testOmega, attrs.hasErrorSink);
+const bsErrorSink = utils.getBustedErrorSink(resultsJson, treeObjects, attrs.hasErrorSinkNT);
+const tileSpecs = utils.getBustedTileSpecs(resultsJson, evThreshold, bsPositiveSelection, contributingSites);
 
 ```
 
@@ -100,7 +100,7 @@ const rateTable = view(Inputs.table (distributionTable, {
     'dist' : (d)=>{
         return html`<b>${d[0] + " " + d[2]}</b><br><tt>
             ${_.map (d[1], (c,i)=> floatFormat(c.value) + " (" + proportionFormat (c.weight) + ") ")}
-            <br>Mean = <b>${floatFormat (utils.distMean (d[1]))}</b>, CoV = <b>${floatFormat (Math.sqrt (utils.distVar (d[1]))/utils.distMean (d[1]))}</b></tt>`},
+            <br>Mean = <b>${floatFormat (utils.distMean (d[1]))}</b>, CoV = <b>${floatFormat (Math.sqrt (utils.getBustedDistVar (d[1]))/utils.distMean (d[1]))}</b></tt>`},
      'plot' : (d)=>omegaPlots.renderDiscreteDistribution (d[1],{"height" : 50, "width" : 150, "scale" : "sqrt", "ref" : d[0].length == 0 ? [null] : [1]})
   },
   layout: "auto",
@@ -173,7 +173,7 @@ const treeLabels = view(Inputs.checkbox(
 ```
 
 ```js
-const colorBranches =  view(Inputs.select(plots.treeColorOptions(resultsJson, treeObjects),{value: "Support for selection", label: html`<b>Color branches </b>`}))
+const colorBranches =  view(Inputs.select(plots.getBustedTreeColorOptions(resultsJson, treeObjects),{value: "Support for selection", label: html`<b>Color branches </b>`}))
 ```
 
 ```js
@@ -192,7 +192,7 @@ function getFigure2() {
       };
       
       if (toDisplay[0] == "Codon") {  
-          let partitionId = utils.getSiteIndexPartitionCodon(resultsJson)[index][0]-1;
+          let partitionId = utils.getBustedSiteIndexPartitionCodon(resultsJson)[index][0]-1;
           let codonIndex = index - d3.sum (attrs.partitionSizes.slice (0,partitionId));
           let TT = plots.displayTreeSite(resultsJson, partitionId, treeObjects[partitionId], codonIndex, treeOptions, treeDim, treeLabels, branchLength, colorBranches, attrs.partitionSizes, testOmega, attrs.hasErrorSink);
           return TT;

@@ -6,7 +6,7 @@ import * as heat from "../components/posteriors-heatmap.js";
 import * as _ from "lodash-es";
 import * as d3 from "d3";
 
-export const TABLE_COLORS = ({
+export const BUSTED_TABLE_COLORS = ({
     'Diversifying' : '#e3243b',
     'Neutral' : '#444',
     'Purifying' : 'green',
@@ -16,7 +16,7 @@ export const TABLE_COLORS = ({
 const DYN_RANGE_CAP = 10000;
 const LABEL_COLOR_SCALE = d3.scaleOrdinal([], d3.schemeCategory10)
     
-export function getPlotDescription(plot_type, srv_hmm) {
+export function getBustedPlotDescription(plot_type, srv_hmm) {
     const plot_descriptions = ({
         "Evidence ratio for ω>1 (constrained)" : "Evidence ratios (site level likelihood ratios) for ω>1, comparing the unrestricted model with the model where max(ω) := 1, and all other parameters are kept at their maximum likelihood values. Solid line = user selected significance threshold. <small>Values capped at " + DYN_RANGE_CAP + " for readability</small>",
         "Evidence ratio for ω>1 (optimized)" : "Evidence ratios (site level likelihood ratios) for ω>1, comparing the unrestricted model with the optimized constrained model and all other parameters are kept at their maximum likelihood values. Solid line = user selected significance threshold. <small>Values capped at " + DYN_RANGE_CAP + " for readability</small>",
@@ -32,7 +32,7 @@ export function getPlotDescription(plot_type, srv_hmm) {
     return plot_descriptions[plot_type];
 }
 
-export function getPlotOptions(results_json, bsPositiveSelection) {
+export function getBustedPlotOptions(results_json, bsPositiveSelection) {
     const attrs = utils.getBustedAttributes(results_json);
 
     const plot_options = [
@@ -40,7 +40,7 @@ export function getPlotOptions(results_json, bsPositiveSelection) {
         ["Evidence ratio for ω>1 (optimized)", (d)=>results_json["Evidence Ratios"]["optimized null"]], 
         ["Synonymous rates", (d)=>attrs.srv_rate_classes > 0], 
         ["Support for positive selection", (d)=>bsPositiveSelection.length > 0], 
-        ["Error-sink support", (d)=>attrs.has_error_sink_nt && utils.get_error_sink_rate(results_json, "Test")["proportion"] > 0], 
+        ["Error-sink support", (d)=>attrs.has_error_sink_nt && utils.getBustedErrorSinkRate(results_json, "Test")["proportion"] > 0], 
         ["Site-level LR support", (d)=>results_json["Evidence Ratios"]["optimized null"]], 
         ["Support for 2H", (d)=>attrs.mhRates['DH']], 
         ["Support for 3H", (d)=>attrs.mhRates['TH']], 
@@ -50,7 +50,7 @@ export function getPlotOptions(results_json, bsPositiveSelection) {
     return plot_options
 }
 
-export function getPlotSpec(
+export function getBustedPlotSpec(
     plot_type, 
     results_json, 
     fig1data, 

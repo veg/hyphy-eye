@@ -69,7 +69,7 @@ export function getMemeAttributes(resultsJson, pvalueThreshold) {
  * @param {number} pvalueThreshold - The P-value threshold
  * @returns {number} The count of sites with p-values below the threshold
  */
-export function getCountSitesByPvalue(resultsJson, pvalueThreshold) {
+export function getMemeCountSitesByPvalue(resultsJson, pvalueThreshold) {
     const countSites = _.chain(resultsJson["MLE"]["content"])
         .mapValues((d) => _.filter(d, (r) => r[6] <= +pvalueThreshold).length)
         .values()
@@ -87,7 +87,7 @@ export function getCountSitesByPvalue(resultsJson, pvalueThreshold) {
  * @returns {string|number} The average number of selected branches per selected site,
  *                         or "N/A" if no sites are selected
  */
-export function getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold) {
+export function getMemeSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold) {
     const countSites = getCountSitesByPvalue(resultsJson, pvalueThreshold);
     const selectedBranchesPerSelectedSite = 
         countSites ? 
@@ -102,10 +102,10 @@ export function getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold)
     return selectedBranchesPerSelectedSite; 
 }
 
-export function getTileSpecs(resultsJson, pvalueThreshold) {
+export function getMemeTileSpecs(resultsJson, pvalueThreshold) {
     const attrs = getMemeAttributes(resultsJson);
-    const countSites = getCountSitesByPvalue(resultsJson, pvalueThreshold);
-    const selectedBranchesPerSelectedSite = getSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
+    const countSites = getMemeCountSitesByPvalue(resultsJson, pvalueThreshold);
+    const selectedBranchesPerSelectedSite = getMemeSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
     
     return [
         {
@@ -159,7 +159,7 @@ export function getTileSpecs(resultsJson, pvalueThreshold) {
     ]
 }
 
-function generateSubstitutionLists(T, labels, test_set) {
+export function getMemeSubstitutionLists(T, labels, test_set) {
     if (!labels) return [];
     let L = {};
     let subs = {};
@@ -201,7 +201,7 @@ function generateSubstitutionLists(T, labels, test_set) {
     return _.sortBy (_.toPairs (subs), d=>-d[1]);
 }
 
-export function siteTableData(resultsJson, tableOptions, pvalueThreshold, siteIndexPartitionCodon, treeObjects) {
+export function getMemeSiteTableData(resultsJson, tableOptions, pvalueThreshold, siteIndexPartitionCodon, treeObjects) {
   let siteInfo = [];
   let index = 0;
   let showDistribution = tableOptions.indexOf ('Distribution plot') >= 0;
@@ -223,7 +223,7 @@ export function siteTableData(resultsJson, tableOptions, pvalueThreshold, siteIn
               };
 
               if (showDistribution) {
-                   siteRecord['dN/dS'] = omegaPlot(mleData[i]);
+                   siteRecord['dN/dS'] = getMemeOmegaPlot(mleData[i]);
               }
               
               _.each (mleHeaders, (info, idx)=> {
@@ -247,7 +247,7 @@ export function siteTableData(resultsJson, tableOptions, pvalueThreshold, siteIn
               }
 
               if (showSubstitutions) {
-                    siteRecord['Substitutions'] = generateSubstitutionLists (treeObjects[partition],resultsJson["substitutions"][partition][i],resultsJson.tested[partition]);
+                    siteRecord['Substitutions'] = getMemeSubstitutionLists (treeObjects[partition],resultsJson["substitutions"][partition][i],resultsJson.tested[partition]);
               }
         
               siteRecord['class'] = siteClass;
@@ -286,7 +286,7 @@ export function siteTableData(resultsJson, tableOptions, pvalueThreshold, siteIn
     return [siteInfo, options,mleHeaders];
 }
 
-function omegaPlot(record){
+export function getMemeOmegaPlot(record) {
     const ratio = (beta, alpha)=> {
         if (alpha > 0) {
             return beta/alpha;
@@ -310,7 +310,7 @@ function omegaPlot(record){
 
 }
 
-export function getPosteriorsPerBranchSite(resultsJson, rateClass) {
+export function getMemePosteriorsPerBranchSite(resultsJson, rateClass) {
   rateClass = rateClass || 1;
   let results = [];
   let offset = 0;
@@ -332,7 +332,7 @@ export function getPosteriorsPerBranchSite(resultsJson, rateClass) {
   return results;
 }
 
-export function computeER(prior, posterior) {
+export function getMemeComputeER(prior, posterior) {
     if (prior < 1) prior = prior / (1-prior); else prior = Infinity;
     if (posterior < 1) posterior = posterior / (1-posterior); else posterior = Infinity;
     if (posterior > 0) {

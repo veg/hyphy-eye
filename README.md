@@ -80,9 +80,84 @@ const data = { /* example data */ };
 <div>${MyComponent(data)}</div>
 ```
 
+## HyPhy Methods Registry
+
+HyPhy-Eye includes a comprehensive registry of all supported HyPhy methods and their visualizations. The registry provides a structured way to discover and use available visualizations for each method.
+
+### Registry Structure
+
+The registry includes:
+
+- All supported HyPhy methods (BUSTED, aBSREL, FEL, MEME, GARD, NRM, MULTIHIT)
+- Available visualizations for each method (plots, tables, networks, trees)
+- Component paths for each visualization
+- Method-specific attribute getter functions
+- Default configuration options
+
+### Updating the Registry
+
+To add or update a method in the registry:
+
+1. Edit `src/registry.ts` to add/update the method definition
+2. Ensure the method includes:
+   - A clear name and description
+   - List of visualizations with:
+     - Name and description
+     - Component path (relative to `src/`)
+     - Visualization type (plot, table, network, or tree)
+     - Options object with default values
+   - Attribute getter function information with parameters
+
+Example of adding a new visualization:
+
+```typescript
+// Add a new visualization to an existing method
+FEL: {
+    name: 'FEL',
+    description: 'Fixed Effects Likelihood',
+    visualizations: [
+        {
+            name: 'New Visualization',
+            description: 'Description of the visualization',
+            component: 'new-component.js',
+            type: 'plot',
+            options: {
+                // Default options
+            }
+        }
+    ],
+    attributes: {
+        function: 'getFelAttributes',
+        parameters: {
+            resultsJson: 'Object'
+        }
+    }
+}
+```
+
+### Using the Registry
+
+The registry can be imported and used in two ways:
+
+```javascript
+// Import the registry
+import { HyPhyMethods } from 'hyphy-eye/registry';
+
+// Get available methods
+const methods = Object.values(HyPhyMethods);
+
+// Get visualizations for a specific method
+const felVisualizations = HyPhyMethods.FEL.visualizations;
+
+// Get the attribute getter function for a method
+const getBustedAttrs = HyPhyMethods.BUSTED.attributes.function;
+```
+
 ## Exporting as an npm Package
 
-All components, utilities, and functions are exported through `src/index.js`. To use HyPhy-Eye in another project:
+All components, utilities and functions are exported through `src/index.js`. The registry is also exported through `src/registry.js`.
+
+### To use HyPhy-Eye in another project:
 
 ```bash
 # Build the package

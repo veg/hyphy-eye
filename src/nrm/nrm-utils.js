@@ -61,7 +61,7 @@ export function getNrmAttributes(resultsJson) {
  *
  * @returns {number} The maximum rate value
  */
-export function getQMaxRate(resultsJson, model) {
+export function getNrmQMaxRate(resultsJson, model) {
     console.log("resultsJson", resultsJson)
     console.log("model", model)
     return d3.max(_.map(resultsJson["fits"][model]["Rate Distributions"], (d) => d3.max(d)))
@@ -75,7 +75,7 @@ export function getQMaxRate(resultsJson, model) {
  *
  * @returns {Array} A table (array of objects) containing the rate matrix Q, where each row and column corresponds to a nucleotide (A, C, G, T) and the value is the rate of substitution from the row nucleotide to the column nucleotide.
  */
-export function getQMatrixTable(resultsJson, model) {
+export function getNrmQMatrixTable(resultsJson, model) {
    let rates = [];
    let rm = resultsJson["fits"][model]["Rate Distributions"];
    const nucs = resultsJson["characters"][0];
@@ -101,7 +101,7 @@ export function getQMatrixTable(resultsJson, model) {
  *
  * @returns {Array} A table (array of objects) containing the model comparison data
  */
-export function getModelTableData(resultsJson, treeLengthByModel) {
+export function getNrmModelTableData(resultsJson, treeLengthByModel) {
   return _.chain (treeLengthByModel).map((i,d)=> {
       return {
         'Model' : d,
@@ -123,7 +123,7 @@ export function getModelTableData(resultsJson, treeLengthByModel) {
  *
  * @returns {string} A string indicating whether the p-value provides evidence for a hypothesis
  */
-export function reportResult(pvalue) {
+export function getNrmReportResult(pvalue) {
   let sup = "";
   if (pvalue <= 0.05) {
       sup = "<b>is</b> evidence";
@@ -142,7 +142,7 @@ export function reportResult(pvalue) {
  *
  * @returns {number} The test result
  */
-export function getTestResult(resultsJson, m1, m2) {
+export function getNrmTestResult(resultsJson, m1, m2) {
   return resultsJson["test results"][m1 + " vs " + m2]["Corrected P-value"];
 }
 
@@ -153,7 +153,7 @@ export function getTestResult(resultsJson, m1, m2) {
  *
  * @returns {Array} An array of tile specifications
  */
-export function getTileSpecs(resultsJson) {
+export function getNrmTileSpecs(resultsJson) {
     const attrs = getNrmAttributes(resultsJson);
 
     const tileTableInputs = [

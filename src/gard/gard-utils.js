@@ -66,7 +66,7 @@ export function getGardAttributes(resultsJson) {
  * @returns {Object[]} An array of objects containing the breakpoint coordinates
  *                     and the number of models the breakpoint is associated with.
  */
-function getGardBreakpoints(resultsJson) {
+export function getGardBreakpoints(resultsJson) {
   let bp = {};
   return _.chain(resultsJson.improvements).map((d) => {
       return _.map(d.breakpoints, (b) => {
@@ -90,7 +90,7 @@ function getGardBreakpoints(resultsJson) {
  *     - bp: {number} The number of breakpoints in the stage.
  *     - daic: {number} The adjusted deltaAICc value for the stage.
  */
-function getCaicImprovements(resultsJson) {
+export function getGardCaicImprovements(resultsJson) {
     let accumulator = 0;
     return _.map(resultsJson['improvements'], (d, i) => {
         let delta = d.deltaAICc;
@@ -102,7 +102,7 @@ function getCaicImprovements(resultsJson) {
     });
 }
 
-export function getTileSpecs(resultsJson) {
+export function getGardTileSpecs(resultsJson) {
     const attrs = getGardAttributes(resultsJson)
 
     // TODO: turn into an array of objects
