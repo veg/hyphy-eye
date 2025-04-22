@@ -19,6 +19,14 @@ const config = [
       'parse-svg-path',
       'htl',
       'gamma'
+    ],
+    plugins: [
+      copy({
+        targets: [{
+          src: 'src/glyphs/*.png',
+          dest: 'dist/glyphs'
+        }]
+      })
     ]
   },
   {
@@ -31,28 +39,19 @@ const config = [
   },
   {
     input: 'src/registry.ts',
-    output: {
-      file: 'dist/registry.js',
-      format: 'es',
-      sourcemap: true
-    },
-    plugins: [
-      typescript(),
-      copy({
-        targets: [{
-          src: 'src/glyphs/**',
-          dest: 'dist/glyphs'
-        }]
-      })
-    ]
-  },
-  {
-    input: 'src/registry.ts',
-    output: {
-      file: 'dist/registry.d.ts',
-      format: 'es'
-    },
-    plugins: [dts()]
-  }];
+    output: [
+      {
+        file: 'dist/registry.js',
+        format: 'es',
+        sourcemap: true
+      },
+      {
+        file: 'dist/registry.d.ts',
+        format: 'es'
+      }
+    ],
+    plugins: [typescript(), dts()]
+  }
+];
 
 export default config;
