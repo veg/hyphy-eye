@@ -63,7 +63,7 @@ const pvalueThreshold = await view(Inputs.text({label: html`<b>p-value threshold
 ```
 
 ```js
-const sitesTable = utils.getFelSitesTable(resultsJson, pvalueThreshold);
+const sitesTable = utils.getFelSiteTableData(resultsJson, pvalueThreshold);
 const siteTableData = _.filter(sitesTable[1], (x) => tableFilter.indexOf(x.class) >= 0);
 const tileSpecs = utils.getFelTileSpecs(resultsJson, pvalueThreshold)
 ```

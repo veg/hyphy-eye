@@ -3,6 +3,24 @@
 
 import * as _ from "lodash-es";
 import * as d3 from "d3";
+import { getBustedAttributes, getBustedSiteTableData } from '../busted/busted-utils.js';
+import { getAbsrelAttributes, getAbsrelSiteTableData } from '../absrel/absrel-utils.js';
+import { getFelAttributes, getFelSiteTableData } from '../fel/fel-utils.js';
+import { getMemeAttributes, getMemeSiteTableData } from '../meme/meme-utils.js';
+import { getGardAttributes } from '../gard/gard-utils.js';
+import { getNrmAttributes } from '../nrm/nrm-utils.js';
+import { getMultihitAttributes } from '../multihit/multihit-utils.js';
+
+// Shared mapping of HyPhy methods to their attribute and site-table functions
+const methodUtils = {
+    BUSTED: { attrsFn: getBustedAttributes, tableFn: getBustedSiteTableData },
+    aBSREL: { attrsFn: getAbsrelAttributes, tableFn: getAbsrelSiteTableData },
+    FEL: { attrsFn: getFelAttributes, tableFn: getFelSiteTableData },
+    MEME: { attrsFn: getMemeAttributes, tableFn: getMemeSiteTableData },
+    GARD: { attrsFn: getGardAttributes, tableFn: null },
+    NRM: { attrsFn: getNrmAttributes, tableFn: null },
+    MULTIHIT: { attrsFn: getMultihitAttributes, tableFn: null }
+};
 
 /**
  * Plot a bead plot of the given data, with an optional threshold marking. 
@@ -161,4 +179,48 @@ export function BeadPlot(
     }
 
     return spec;
+}
+
+// TODO: make this BeadPlotGenerator, work for all methods, reads from registry
+// Wrapper that takes HyPhy results JSON and prepares data for BeadPlot
+export function BeadPlotGenerator(resultsJson, method, threshold = 10, dyn_range_cap = 10000, options = {}) {
+    const finalOpts = { ...options };
+    // Lookup util functions centrally
+    const utilsFns = methodUtils[method];
+    if (!utilsFns) throw new Error(`No utilities defined for method: ${method}`);
+    const attrs = utilsFns.attrsFn(resultsJson);
+    // Evaluate any string options referencing attrs or results_json
+    Object.entries(finalOpts).forEach(([opt, val]) => {
+        if (typeof val === 'string' && /\battrs\b|\bresults_json\b/.test(val)) {
+            const fn = new Function('attrs', 'results_json', `return ${val}`);
+            finalOpts[opt] = fn(attrs, resultsJson);
+        }
+    });
+    // Build data via centralized table function
+    const siteRes = utilsFns.tableFn(resultsJson, threshold);
+    const data = Array.isArray(siteRes[0]) ? siteRes[0] : siteRes;
+    // Assemble arguments: data, from, step, then only defined finalOpts in order
+    const beadArgs = [data, 1, data.length];
+    const optOrder = [
+        'key', 'log_scale', 'dyn_range_cap', 'y_label',
+        'threshold', 'key2', 'color_data', 'color_label',
+        'string_color', 'rev_threshold_color'
+    ];
+    // Loop through options in order, pushing values or skipping as needed
+    for (const opt of optOrder) {
+        if (opt === 'threshold') {
+            beadArgs.push(threshold);
+            continue;
+        }
+        if (opt === 'dyn_range_cap') {
+            beadArgs.push(dyn_range_cap);
+            continue;
+        }
+        if (finalOpts[opt] !== undefined) {
+            beadArgs.push(finalOpts[opt]);
+        } else {
+            beadArgs.push(null);
+        }
+    }
+    return BeadPlot(...beadArgs);
 }

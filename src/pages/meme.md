@@ -72,7 +72,7 @@ const pvalueThreshold = view(Inputs.text({label: html`<b>p-value threshold</b>`,
 
 ```js
 const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
-const siteTableData = utils.getMemeSiteTableData(resultsJson, tableOptions, pvalueThreshold, attrs.siteIndexPartitionCodon, treeObjects);
+const siteTableData = utils.getMemeSiteTableData(resultsJson, pvalueThreshold, attrs.siteIndexPartitionCodon, treeObjects, tableOptions);
 const tileSpecs = utils.getMemeTileSpecs(resultsJson, pvalueThreshold);
 const bsPositiveSelection = utils.getMemePosteriorsPerBranchSite(resultsJson);
 const countSites = utils.getMemeCountSitesByPvalue(resultsJson, pvalueThreshold);
@@ -97,10 +97,10 @@ const sitesTable = [{
 #### Alignment-wide results
 
 ```js
-const plotType = view(Inputs.select(_.map (_.filter (plots.getPlotOptions(attrs.hasSiteLRT, attrs.hasResamples, bsPositiveSelection), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
+const plotType = view(Inputs.select(_.map (_.filter (plots.getMemePlotOptions(attrs.hasSiteLRT, attrs.hasResamples, bsPositiveSelection), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
-**Figure 1**. ${plotType ? plots.getPlotDescription(plotType, attrs.hasResamples) : "No plotting options available"}
+**Figure 1**. ${plotType ? plots.getMemePlotDescription(plotType, attrs.hasResamples) : "No plotting options available"}
 
 ```js
 function getFig1data() {
@@ -113,7 +113,7 @@ const fig1data = getFig1data();
 ```js
 let plot_spec;
 if (plotType) {
-  plot_spec = plots.getPlotSpec(resultsJson, plotType, bsPositiveSelection, fig1data, siteTableData, attrs.hasSiteLRT, attrs.hasResamples, pvalueThreshold, treeObjects)
+  plot_spec = plots.getMemePlotSpec(resultsJson, plotType, bsPositiveSelection, fig1data, siteTableData, attrs.hasSiteLRT, attrs.hasResamples, pvalueThreshold, treeObjects)
 }
 ```
 <div>${vl.render({"spec": plot_spec})}</div>
@@ -152,11 +152,11 @@ const treeLabels = view(Inputs.checkbox(
 ```
 
 ```js
-const colorBranches =  view(Inputs.select(plots.getTreeColorOptions(resultsJson),{value: "Support for selection", label: html`<b>Color branches </b>`}))
+const colorBranches =  view(Inputs.select(plots.getMemeTreeColorOptions(resultsJson),{value: "Support for selection", label: html`<b>Color branches </b>`}))
 ```
 
 ```js
-const shadeBranches =  view(Inputs.select(plots.getTreeColorOptions(resultsJson).concat ("None"),{value: "None", label: html`<b>Opaqueness of branches </b>`}))
+const shadeBranches =  view(Inputs.select(plots.getMemeTreeColorOptions(resultsJson).concat ("None"),{value: "None", label: html`<b>Opaqueness of branches </b>`}))
 ```
 
 ```js
@@ -171,10 +171,10 @@ function getFigure2() {
       if (toDisplay[0] == "Codon") {  
           const codonIndex = treeId;
           let partitionId = attrs.siteIndexPartitionCodon [codonIndex][0]-1;
-          let TT = plots.displayTreeSite(resultsJson, partitionId, codonIndex, treeDim, treeLabels, branchLength, colorBranches, shadeBranches, treeObjects, treeViewOptions);
+          let TT = plots.getMemeTreeSite(resultsJson, partitionId, codonIndex, treeDim, treeLabels, branchLength, colorBranches, shadeBranches, treeObjects, treeViewOptions);
           return TT;
       } 
-      let TT = plots.displayTree(resultsJson, treeId, treeDim, treeLabels, branchLength, colorBranches, treeObjects);
+      let TT = plots.getMemeTree(resultsJson, treeId, treeDim, treeLabels, branchLength, colorBranches, treeObjects);
       return TT;
     }
 

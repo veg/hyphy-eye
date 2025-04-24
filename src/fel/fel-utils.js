@@ -77,7 +77,7 @@ export function getFelAttributes(resultsJson) {
  */
 export function getFelTileSpecs(resultsJson, pvalueThreshold) {
     const felAttrs = getFelAttributes(resultsJson);
-    const sitesTable = getSitesTable(resultsJson, pvalueThreshold);
+    const sitesTable = getFelSiteTableData(resultsJson, pvalueThreshold);
 
     return [
         {number: felAttrs.numberOfSequences, description: "sequences in the alignment", icon: "icon-options-vertical icons", color: "asbestos"}, 
@@ -107,7 +107,7 @@ export function getFelTileSpecs(resultsJson, pvalueThreshold) {
  *   - {Array} results: An array of objects, each representing a site with its data and classification.
  *   - {Array} headers: An array of headers for the table, including the classification header.
  */
-export function getFelSitesTable(resultsJson, pvalueThreshold) {
+export function getFelSiteTableData(resultsJson, pvalueThreshold) {
     const felAttrs = getFelAttributes(resultsJson);
 
     const results    = [];

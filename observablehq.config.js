@@ -20,6 +20,13 @@ export default {
       ]
     },
     {
+      name: "Registry",
+      open: true,
+      pages: [
+        {name: "Test Registry", path: "pages/test-registry"}
+      ]
+    },
+    {
       name: "Usage",
       open: true,
       pages: [

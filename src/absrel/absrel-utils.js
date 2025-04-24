@@ -70,7 +70,7 @@ export function getAbsrelAttributes(resultsJson) {
             .value())
     };
     const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
-    const profileBranchSites = getProfileBranchSites(resultsJson, treeObjects);
+    const profileBranchSites = getAbsrelProfileBranchSites(resultsJson, treeObjects);
 
     return {
         positiveResults,
@@ -393,10 +393,14 @@ export function getAbsrelTestPv(resultsJson, branch) {
 
 export function getAbsrelSiteTableData(resultsJson, evThreshold, profileBranchSites) {
     const attrs = getAbsrelAttributes(resultsJson);
-    const siteIndexPartitionCodon = getSiteIndexPartitionCodon(resultsJson);
+    const siteIndexPartitionCodon = getAbsrelSiteIndexPartitionCodon(resultsJson);
 
   let site_info = [];
   let index = 0;
+  if (!profileBranchSites) {
+    const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+    profileBranchSites = getAbsrelProfileBranchSites(resultsJson, treeObjects);
+  }
   let bySite = _.groupBy (profileBranchSites, (d)=>d.site);
   _.each (resultsJson["data partitions"], (pinfo, partition)=> {
       _.each (pinfo["coverage"][0], (ignore, i)=> {

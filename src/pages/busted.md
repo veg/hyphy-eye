@@ -140,7 +140,7 @@ const fig1data = getFig1data()
 ```js
 let plotSpec;
 if (plotType) {
-  plotSpec = plots.getPlotSpec(plotType, resultsJson, fig1data, bsPositiveSelection, bsErrorSink, evThreshold, attrs.srvHMM, treeObjects, attrs.testedBranchCount, fig1Controls)
+  plotSpec = plots.getBustedPlotSpec(plotType, resultsJson, fig1data, bsPositiveSelection, bsErrorSink, evThreshold, attrs.srvHMM, treeObjects, attrs.testedBranchCount, fig1Controls)
 }
 ```
 <div>${vl.render({"spec": plotSpec})}</div>

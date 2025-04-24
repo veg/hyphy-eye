@@ -16,24 +16,20 @@ export interface Visualization {
 export interface HyPhyMethod {
     name: string;
     visualizations: Visualization[];
-    attributes: {
-        function: string;
-        parameters?: Record<string, any>;
-    };
 }
 
 // Mapping of glyph names to their file paths
 const GLYPH_PATHS = {
-    'lollipop': 'glyphs/lollipop.png',
-    'table': 'glyphs/table.png',
-    'network': 'glyphs/network.png',
-    'tree': 'glyphs/tree.png',
-    'tile': 'glyphs/tile.png',
-    'viz-table': 'glyphs/viz-table.png',
-    'scatter': 'glyphs/scatter.png',
-    'heatmap': 'glyphs/heatmap.png',
-    'bar': 'glyphs/bar.png',
-    'density': 'glyphs/density.png'
+    'lollipop': 'lollipop.png',
+    'table': 'table.png',
+    'network': 'network.png',
+    'tree': 'tree.png',
+    'tile': 'tile.png',
+    'viz-table': 'viz-table.png',
+    'scatter': 'scatter.png',
+    'heatmap': 'heatmap.png',
+    'bar': 'bar.png',
+    'density': 'density.png'
 };
 
 // Define visualization categories that are consistent across methods
@@ -81,12 +77,27 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Evidence Ratio for ω>1',
                 description: 'Heatmap showing evidence ratios for positive selection',
-                component: 'bead-plot.js',
+                component: 'BeadPlot',
                 glyph: GLYPH_PATHS.lollipop,
                 options: {
-                    key: 'ER (optimized null)',
+                    key: 'ER (constrained)',
                     log_scale: false,
                     y_label: null
+                },
+                category: 'codon'
+            },
+            {
+                name: 'Synonymous Rates',
+                description: 'Posterior means for synonymous site-level substitution rates',
+                component: 'BeadPlot',
+                glyph: GLYPH_PATHS.lollipop,
+                options: {
+                    key: 'SRV posterior mean',
+                    log_scale: false,
+                    y_label: null,
+                    key2: 'attrs.srv_hmm ? "SRV viterbi" : null', 
+                    color_data: 'results_json["Evidence Ratios"]["constrained"]', 
+                    color_label: "ER (constrained)"
                 },
                 category: 'codon'
             },
@@ -123,13 +134,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'codon'
             }
         ],
-        attributes: {
-            function: 'getBustedAttributes',
-            parameters: {
-                resultsJson: 'Object',
-                evThreshold: 'number'
-            }
-        }
+        // removed attributes and siteTableData; handled by generator
     },
     aBSREL: {
         name: 'aBSREL',
@@ -151,9 +156,14 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Synonymous Rates',
                 description: 'Posterior means for synonymous site-level substitution rates',
-                component: 'absrel-plots.js',
+                component: 'BeadPlot',
                 glyph: GLYPH_PATHS.lollipop,
-                category: 'codon'
+                category: 'codon',
+                options: {
+                    key: 'SRV posterior mean',
+                    log_scale: false,
+                    y_label: null
+                }
             },
             {
                 name: 'Support for Positive Selection',
@@ -193,13 +203,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'codon'
             }
         ],
-        attributes: {
-            function: 'getAbsrelAttributes',
-            parameters: {
-                resultsJson: 'Object',
-                evThreshold: 'number'
-            }
-        }
+        // removed attributes and siteTableData; handled by generator
     },
     FEL: {
         name: 'FEL',
@@ -244,12 +248,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'summary'
             }
         ],
-        attributes: {
-            function: 'getFelAttributes',
-            parameters: {
-                resultsJson: 'Object'
-            }
-        }
+        // removed siteTableData; handled by generator
     },
     MEME: {
         name: 'MEME',
@@ -264,9 +263,16 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'p-values for positive selection',
                 description: 'p-values for selection by site',
-                component: 'meme-plots.js',
+                component: 'BeadPlot',
                 glyph: GLYPH_PATHS.lollipop,
-                category: 'codon'
+                category: 'codon',
+                options: {
+                    key: 'p-value',
+                    log_scale: false,
+                    y_label: "log",
+                    string_color: "black",
+                    rev_threshold_color: true
+                }
             },
             {
                 name: 'support for positive selection',
@@ -321,13 +327,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'codon'
             }
         ],
-        attributes: {
-            function: 'getMemeAttributes',
-            parameters: {
-                resultsJson: 'Object',
-                pvalueThreshold: 'number'
-            }
-        }
+        // removed siteTableData; handled by generator
     },
     GARD: {
         name: 'GARD',
@@ -359,12 +359,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'summary'
             }
         ],
-        attributes: {
-            function: 'getGardAttributes',
-            parameters: {
-                resultsJson: 'Object'
-            }
-        }
+        // removed siteTableData; handled by generator
     },
     NRM: {
         name: 'NRM',
@@ -410,12 +405,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'model'
             }
         ],
-        attributes: {
-            function: 'getNrmAttributes',
-            parameters: {
-                resultsJson: 'Object'
-            }
-        }
+        // removed siteTableData; handled by generator
     },
     MULTIHIT: {
         name: 'MULTIHIT',
@@ -449,12 +439,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'summary'
             }
         ],
-        attributes: {
-            function: 'getMultihitAttributes',
-            parameters: {
-                resultsJson: 'Object'
-            }
-        }
+        // removed siteTableData; handled by generator
     }
 };
 

@@ -33,14 +33,14 @@ const percentageFormat = d3.format (".2p")
 export function getBustedAttributes(resultsJson) {
     // Extract common attributes using the utility function
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
-    
+
     // BUSTED-specific attributes
     const srvRateClasses = _.size(resultsJson.fits["Unconstrained model"]["Rate Distributions"]["Synonymous site-to-site rates"]);
     const hasBackground = utils.hasBackground(resultsJson);
     const hasSrvHmm = "Viterbi synonymous rate path" in resultsJson;
     const hasErrorSink = utils.hasErrorSink(resultsJson);
-    const hasErrorSinkNt = getHasErrorSinkNt(resultsJson, hasErrorSink, hasBackground);
-    const omegaRateClasses = _.size(testOmega(resultsJson, hasErrorSink));
+    const hasErrorSinkNt = getBustedHasErrorSinkNt(resultsJson, hasErrorSink, hasBackground);
+    const omegaRateClasses = _.size(getBustedTestOmega(resultsJson, hasErrorSink));
     const srvDistribution = utils.getRateDistribution(
         resultsJson, 
         hasErrorSink, 
@@ -234,7 +234,7 @@ export function getBustedSiteTableData(resultsJson) {
                   _.each (attrs.srvDistribution, (d,i)=> {
                        site_srv.push ({'value' : d.value, 'weight' : resultsJson["Synonymous site-posteriors"][i][index]});
                   });
-                  site_record['SRV posterior mean'] = distMean (site_srv);
+                  site_record['SRV posterior mean'] = getBustedDistMean (site_srv);
                   if (attrs.hasSrvHmm) {
                       site_record['SRV viterbi'] = attrs.srvDistribution[resultsJson["Viterbi synonymous rate path"][0][index]].value;
                   }
@@ -272,7 +272,7 @@ export function getBustedDistMean(d) {
 }
 
 export function getBustedDistVar(d) {
-    let m2 = 0, m = distMean (d);
+    let m2 = 0, m = getBustedDistMean (d);
     _.each (d, (r)=> {
         m2 += r['value']*r['value'] * r['weight'];
     });

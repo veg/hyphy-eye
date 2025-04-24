@@ -2,20 +2,18 @@ import * as d3 from "d3";
 import * as _ from "lodash-es";
 import * as utils from "../utils/general-utils.js";
 import {html} from "htl";
+import { getAbsrelAttributes } from "../absrel/absrel-utils.js";
 
 /**
  * Extracts some summary attributes from MEME results that are used later in the
  * visualization.
  *
  * @param {Object} resultsJson - The JSON object containing the MEME results
- * @param {number} pvalueThreshold - The P-value threshold used for counting sites with variation
  *
  * @returns {Object} An object with the following attributes:
  *   - testedBranchCount: {number} The median number of branches tested for
  *     selection for each partition
  *   - hasResamples: {number} The number of resamples used in the analysis
- *   - countSitesWithVariation: {number|string} The number of sites with variation
- *     p-value below the threshold, or "N/A" if site LRT is not available
  *   - hasSubstitutions: {boolean} Whether substitution information is available
  *   - hasSiteLRT: {boolean} Whether site-level LRT information is available
  *   - hasBackground: {boolean} Whether background rate distributions are available
@@ -25,7 +23,7 @@ import {html} from "htl";
  *   - numberOfPartitions: {number} The number of partitions in the analysis
  *   - partitionSizes: {Array} Array of sizes for each partition
  */
-export function getMemeAttributes(resultsJson, pvalueThreshold) {
+export function getMemeAttributes(resultsJson) {
     // Extract common attributes
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
@@ -33,14 +31,6 @@ export function getMemeAttributes(resultsJson, pvalueThreshold) {
     const hasResamples = _.get(resultsJson, ["MLE", "LRT"]) ? _.sample(_.get(resultsJson, ["MLE", "LRT"])["0"]).length : 0;
     const hasSubstitutions = !!_.get(resultsJson, ["substitutions"]);
     const hasSiteLRT = !!_.find(_.get(resultsJson, ["MLE", "headers"]), (d) => d[0] == "Variation p");
-    const countSitesWithVariation = 
-        hasSiteLRT ? 
-        _.chain(resultsJson["MLE"]["content"])
-            .mapValues((d) => _.filter(d, (r) => r[11] <= +pvalueThreshold).length)
-            .values()
-            .sum()
-            .value() 
-        : "N/A";
     const hasBackground = utils.hasBackground(resultsJson);
     const siteIndexPartitionCodon = _.chain(resultsJson['data partitions'])
         .map((d, k) => _.map(d['coverage'][0], (site) => [+k+1, site+1]))
@@ -50,7 +40,6 @@ export function getMemeAttributes(resultsJson, pvalueThreshold) {
     return {
         testedBranchCount: commonAttrs.testedBranchCount,
         hasResamples,
-        countSitesWithVariation,
         hasSubstitutions,
         hasSiteLRT,
         hasBackground,
@@ -88,7 +77,7 @@ export function getMemeCountSitesByPvalue(resultsJson, pvalueThreshold) {
  *                         or "N/A" if no sites are selected
  */
 export function getMemeSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold) {
-    const countSites = getCountSitesByPvalue(resultsJson, pvalueThreshold);
+    const countSites = getMemeCountSitesByPvalue(resultsJson, pvalueThreshold);
     const selectedBranchesPerSelectedSite = 
         countSites ? 
         (_.chain(resultsJson["MLE"]["content"])
@@ -106,6 +95,14 @@ export function getMemeTileSpecs(resultsJson, pvalueThreshold) {
     const attrs = getMemeAttributes(resultsJson);
     const countSites = getMemeCountSitesByPvalue(resultsJson, pvalueThreshold);
     const selectedBranchesPerSelectedSite = getMemeSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
+    // Compute count of sites with ω variation below p-value threshold
+    const variationCount = attrs.hasSiteLRT ?
+        _.chain(resultsJson['MLE']['content'])
+            .mapValues(d => _.filter(d, r => r[11] <= +pvalueThreshold).length)
+            .values()
+            .sum()
+            .value()
+        : 'N/A';
     
     return [
         {
@@ -151,7 +148,7 @@ export function getMemeTileSpecs(resultsJson, pvalueThreshold) {
             icon: "icon-share icons"
         },
         {
-            number: attrs.countSitesWithVariation, 
+            number: variationCount, 
             color: "midnight_blue", 
             description: "sites with variable &omega; across branches", 
             icon: "icon-energy icons"
@@ -201,9 +198,15 @@ export function getMemeSubstitutionLists(T, labels, test_set) {
     return _.sortBy (_.toPairs (subs), d=>-d[1]);
 }
 
-export function getMemeSiteTableData(resultsJson, tableOptions, pvalueThreshold, siteIndexPartitionCodon, treeObjects) {
+export function getMemeSiteTableData(resultsJson, pvalueThreshold, siteIndexPartitionCodon, treeObjects, tableOptions) {
   let siteInfo = [];
   let index = 0;
+  if (!tableOptions) {
+    tableOptions = [];
+  }
+  if (!siteIndexPartitionCodon) {
+    siteIndexPartitionCodon = getMemeAttributes(resultsJson).siteIndexPartitionCodon;
+  }
   let showDistribution = tableOptions.indexOf ('Distribution plot') >= 0;
   let showQValues = tableOptions.indexOf ('Show q-values') >= 0;
   let showSubstitutions = tableOptions.indexOf ('Show substitutions (tested branches)') >= 0;
@@ -247,7 +250,10 @@ export function getMemeSiteTableData(resultsJson, tableOptions, pvalueThreshold,
               }
 
               if (showSubstitutions) {
-                    siteRecord['Substitutions'] = getMemeSubstitutionLists (treeObjects[partition],resultsJson["substitutions"][partition][i],resultsJson.tested[partition]);
+                if (!treeObjects){
+                    treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+                }
+                siteRecord['Substitutions'] = getMemeSubstitutionLists (treeObjects[partition],resultsJson["substitutions"][partition][i],resultsJson.tested[partition]);
               }
         
               siteRecord['class'] = siteClass;
@@ -321,7 +327,7 @@ export function getMemePosteriorsPerBranchSite(resultsJson, rateClass) {
           if (perBranch ["Posterior prob omega class by site"]) {
             _.each (perBranch ["Posterior prob omega class by site"][rateClass], (p,i)=> {
                 let prior = resultsJson['MLE']['content'][partition][i][4];
-                results.push ({'Branch' : branch, 'Codon' : i + offset + 1, 'Posterior' : p, 'ER' : computeER (prior, p)});
+                results.push ({'Branch' : branch, 'Codon' : i + offset + 1, 'Posterior' : p, 'ER' : getMemeComputeER (prior, p)});
             });     
             partitionSize = perBranch ["Posterior prob omega class by site"][rateClass].length;
           }

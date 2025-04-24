@@ -77,9 +77,9 @@ export function getMemePlotSpec(
                   fig1data, 
                   d, 
                   70, 
-                  siteTableData[2][6][2], 
-                  "p-value for selection", 
-                  true, 
+                  "p-value", 
+                  false,
+                  DYN_RANGE_CAP, 
                   "log", 
                   pvalue_threshold,
                   null,
@@ -111,7 +111,7 @@ export function getMemePlotSpec(
         "Site rates" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return alphaBetaPlot (fig1data, d, 70)
+                return getMemeAlphaBetaPlot (fig1data, d, 70)
             })
         },
         "Rate density plots" : rateDist.RateDensities(
