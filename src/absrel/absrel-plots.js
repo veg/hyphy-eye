@@ -81,7 +81,7 @@ export function getAbsrelPlotSpec(
       size_field = "nonsyn_subs";
       break;
   }
-  
+ console.log("bsPositiveSelection", bsPositiveSelection) 
   const plot_specs = ({
         "Synonymous rates" : {
             "width": 800, "height": 150, 

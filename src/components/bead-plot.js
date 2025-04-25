@@ -3,23 +3,97 @@
 
 import * as _ from "lodash-es";
 import * as d3 from "d3";
-import { getBustedAttributes, getBustedSiteTableData } from '../busted/busted-utils.js';
-import { getAbsrelAttributes, getAbsrelSiteTableData } from '../absrel/absrel-utils.js';
-import { getFelAttributes, getFelSiteTableData } from '../fel/fel-utils.js';
-import { getMemeAttributes, getMemeSiteTableData } from '../meme/meme-utils.js';
-import { getGardAttributes } from '../gard/gard-utils.js';
-import { getNrmAttributes } from '../nrm/nrm-utils.js';
-import { getMultihitAttributes } from '../multihit/multihit-utils.js';
+import { 
+    getBustedAttributes, 
+    getBustedTileSpecs, 
+    getBustedErrorSink, 
+    getBustedSiteTableData, 
+    getBustedPositiveSelection 
+} from '../busted/busted-utils.js';
+import { 
+    getAbsrelAttributes, 
+    getAbsrelProfileBranchSites, 
+    getAbsrelTileSpecs, 
+    getAbsrelSiteTableData, 
+    getAbsrelBSPositiveSelection 
+} from '../absrel/absrel-utils.js';
+import { getFelAttributes, getFelTileSpecs, getFelSiteTableData } from '../fel/fel-utils.js';
+import { 
+    getMemeAttributes, 
+    getMemeTileSpecs, 
+    getMemeSiteTableData, 
+    getMemePosteriorsPerBranchSite 
+} from '../meme/meme-utils.js';
+import { getGardAttributes, getGardTileSpecs } from '../gard/gard-utils.js';
+import { getNrmAttributes, getNrmTileSpecs } from '../nrm/nrm-utils.js';
+import { getMultihitAttributes, getMultihitTileSpecs } from '../multihit/multihit-utils.js';
+import { mutliHitER } from "../busted/busted-plots.js";
 
-// Shared mapping of HyPhy methods to their attribute and site-table functions
-const methodUtils = {
-    BUSTED: { attrsFn: getBustedAttributes, tableFn: getBustedSiteTableData },
-    aBSREL: { attrsFn: getAbsrelAttributes, tableFn: getAbsrelSiteTableData },
-    FEL: { attrsFn: getFelAttributes, tableFn: getFelSiteTableData },
-    MEME: { attrsFn: getMemeAttributes, tableFn: getMemeSiteTableData },
-    GARD: { attrsFn: getGardAttributes, tableFn: null },
-    NRM: { attrsFn: getNrmAttributes, tableFn: null },
-    MULTIHIT: { attrsFn: getMultihitAttributes, tableFn: null }
+// Shared mapping of HyPhy methods to their attribute, site-table, and posterior functions
+export const methodUtils = {
+    BUSTED: { 
+        attrsFn: getBustedAttributes, 
+        tableFn: getBustedSiteTableData, 
+        tileFn: getBustedTileSpecs,
+        bsPositiveSelectionFn: getBustedPositiveSelection,
+        errorSinkFn: getBustedErrorSink,
+        multiHitFn: mutliHitER,
+        profileBranchSitesFn: null
+    },
+    aBSREL: { 
+        attrsFn: getAbsrelAttributes, 
+        tableFn: getAbsrelSiteTableData,
+        tileFn: getAbsrelTileSpecs, 
+        bsPositiveSelectionFn: getAbsrelBSPositiveSelection,
+        errorSinkFn: null,
+        multiHitFn: null,
+        profileBranchSitesFn: getAbsrelProfileBranchSites
+    },
+    FEL: { 
+        attrsFn: getFelAttributes, 
+        tableFn: getFelSiteTableData, 
+        tileFn: getFelTileSpecs,
+        bsPositiveSelectionFn: null,
+        errorSinkFn: null,
+        multiHitFn: null,
+        profileBranchSitesFn: null
+    },
+    MEME: { 
+        attrsFn: getMemeAttributes, 
+        tableFn: getMemeSiteTableData,
+        tileFn: getMemeTileSpecs, 
+        bsPositiveSelectionFn: getMemePosteriorsPerBranchSite,
+        errorSinkFn: null,
+        multiHitFn: null,
+        profileBranchSitesFn: null
+    },
+    GARD: { 
+        attrsFn: getGardAttributes, 
+        tableFn: null, 
+        tileFn: getGardTileSpecs, 
+        bsPositiveSelectionFn: null,
+        errorSinkFn: null,
+        multiHitFn: null,
+        profileBranchSitesFn: null
+    },
+    NRM: { 
+        attrsFn: getNrmAttributes, 
+        tableFn: null, 
+        tileFn: getNrmTileSpecs, 
+        bsPositiveSelectionFn: null,
+        errorSinkFn: null,
+        multiHitFn: null,
+        profileBranchSitesFn: null
+    },
+    MULTIHIT: { 
+        attrsFn: getMultihitAttributes, 
+        tableFn: null, 
+        tileFn: getMultihitTileSpecs, 
+        bsPositiveSelectionFn: null,
+        errorSinkFn: null,
+        multiHitFn: null,
+        profileBranchSitesFn: null
+    }
 };
 
 /**
@@ -221,6 +295,20 @@ export function BeadPlotGenerator(resultsJson, method, threshold = 10, dyn_range
         } else {
             beadArgs.push(null);
         }
+    }
+
+    // If too many codons, split into multiple vconcat plots
+    const maxCodons = 70;
+    if (data.length > maxCodons) {
+        const specs = [];
+        for (let i = 0; i < data.length; i += maxCodons) {
+            const subFrom = i + 1;
+            const subStep = Math.min(maxCodons, data.length - i);
+            // reuse options args (after data/from/step)
+            const restArgs = beadArgs.slice(3);
+            specs.push(BeadPlot(data, subFrom, subStep, ...restArgs));
+        }
+        return { vconcat: specs };
     }
     return BeadPlot(...beadArgs);
 }

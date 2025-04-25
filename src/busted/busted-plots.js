@@ -80,7 +80,7 @@ export function getBustedPlotSpec(
         size_field = null;
         break;
     }
-console.log("bsPositiveSelection", bsPositiveSelection)
+
     const plot_specs = ({
         "Evidence ratio for ω>1 (constrained)" : {
             "width": 800, "height": 150, 

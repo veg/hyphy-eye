@@ -4,6 +4,8 @@
  * an icon and a description
  */
 
+import { methodUtils } from '../bead-plot.js';
+
 // @ts-check
 
 /**
@@ -43,6 +45,13 @@ export function tileTable(table_spec, columns = 3) {
     head.appendChild(link);
     head.appendChild(style);
     return table;
+}
+
+export function TileTableGenerator(resultsJson, method, options = {}) {
+    const utilsFns = methodUtils[method];
+    if (!utilsFns) throw new Error(`No utilities defined for method: ${method}`);
+    const tableSpec = utilsFns.tileFn(resultsJson);
+    return tileTable(tableSpec, options.columns || 3);
 }
 
 /**

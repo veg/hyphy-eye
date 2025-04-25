@@ -186,7 +186,7 @@ export function getAbsrelTileSpecs(resultsJson, evThreshold, distributionTable) 
    *     branch
    *   - dist: An array of three elements:
    *     1. The string "&omega;"
-   *     2. The result of the test_omega function for this branch
+   *     2. The result of the getAbsrelTestOmega function for this branch
    *     3. An empty string
    *   - plot: An array of two elements:
    *     1. An empty string
@@ -196,7 +196,7 @@ export function getAbsrelDistributionTable(resultsJson, evThreshold, treeObjects
   let table = [];
 
   const attrs = getAbsrelAttributes(resultsJson);
-  let site_er = getPosteriorsPerBranchSite(resultsJson, true, evThreshold, treeObjects);
+  let site_er = getAbsrelPosteriorsPerBranchSite(resultsJson, true, evThreshold, treeObjects);
   
   _.each (resultsJson["branch attributes"][0], (info, b)=> {
     let row = {'branch' : b};
@@ -212,7 +212,7 @@ export function getAbsrelDistributionTable(resultsJson, evThreshold, treeObjects
         row['sites'] = null;
     }
     row['rates'] = info['Rate classes'];
-    row ['dist'] = ["&omega;",test_omega(resultsJson, b),""];
+    row ['dist'] = ["&omega;",getAbsrelTestOmega(resultsJson, b),""];
     row['plot'] = ["",row['dist'][1]];
     table.push (row);
   });
@@ -220,6 +220,13 @@ export function getAbsrelDistributionTable(resultsJson, evThreshold, treeObjects
   return table;
 }
 
+export function getAbsrelBSPositiveSelection(resultsJson, treeObjects) {
+    if (!treeObjects) {
+        treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+    }
+
+    return getAbsrelPosteriorsPerBranchSite(resultsJson, false, null, treeObjects);
+}
 
 // TODO: this may need to be two functions. I dont like it returns different things
 // under different circumstances, uses different params, etc.
@@ -248,6 +255,9 @@ export function getAbsrelDistributionTable(resultsJson, evThreshold, treeObjects
  *   - nonsyn_subs: The count of non-synonymous substitutions
  */
 export function getAbsrelPosteriorsPerBranchSite(resultsJson, doCounts, er, treeObjects) {
+    if (!treeObjects) {
+        treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+    }
   let results = doCounts ? {} : [];
   let offset = 0;
   const subs = _.get (resultsJson, ["substitutions","0"]);
@@ -257,7 +267,7 @@ export function getAbsrelPosteriorsPerBranchSite(resultsJson, doCounts, er, tree
       let subs_per_site = {};
       _.each (data, (per_branch, branch)=> {
           if (per_branch ["posterior"]) {
-            const prior_d = test_omega (resultsJson, branch);
+            const prior_d = getAbsrelTestOmega (resultsJson, branch);
             let prior_odds = prior_d[prior_d.length-1].weight;
             const rate_class = prior_d.length-1;
             if (prior_odds < 1 && prior_odds > 0) {
@@ -313,6 +323,9 @@ export function getAbsrelPosteriorsPerBranchSite(resultsJson, doCounts, er, tree
  *   - nonsyn_subs: {number} The count of non-synonymous substitutions.
 **/
 export function getAbsrelProfileBranchSites(resultsJson, treeObjects) {
+    if (!treeObjects) {
+        treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+    }
   let results = [];
   const unc = _.get (resultsJson, ["Site Log Likelihood","unconstrained","0"]);
   const subs = _.get (resultsJson, ["substitutions","0"]);

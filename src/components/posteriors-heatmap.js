@@ -1,4 +1,7 @@
 import * as _ from 'lodash-es';
+import * as plotUtils from "../utils/plot-utils.js";
+import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import { methodUtils } from "./bead-plot.js";
 
 // TODO: change this color scheme to something from crameri
 // i think we want linear, fewer hues?
@@ -27,6 +30,15 @@ export function PosteriorsHeatmap(
   color_label = "ER",
   color_scheme = "redyellowblue"
 ) {
+
+  console.log("data", data);
+  console.log("from", from);
+  console.log("step", step);
+  console.log("branch_order", branch_order);
+  console.log("size_field", size_field);
+  console.log("color_label", color_label);
+  console.log("color_scheme", color_scheme);
+
   let N = branch_order.length;
   let box_size = 10; 
   let font_size = 8;
@@ -92,4 +104,81 @@ export function PosteriorsHeatmap(
         );
   }
   return spec;
+}
+
+/**
+ * Generator for posterior heatmaps across methods.
+ * @param {Object} resultsJson - HyPhy JSON.
+ * @param {String} method - Method key (e.g. 'BUSTED', 'aBSREL', 'MEME').
+ * @param {number} threshold - p-value or evidence ratio threshold.
+ * @param {Object} options - Optional settings: flavor override, size_field, color_label, color_scheme.
+ * @returns {Object} Vega-Lite spec for a vconcat of posterior heatmaps.
+ */
+export function HeatmapGenerator(resultsJson, method, threshold, options = {}) {
+    // Evaluate dynamic string options referencing attrs or results_json
+    const finalOpts = { ...options };
+    const utilsFns = methodUtils[method];
+    if (!utilsFns) throw new Error(`No utilities defined for method: ${method}`);
+    const attrs = utilsFns.attrsFn(resultsJson);
+    Object.entries(finalOpts).forEach(([opt, val]) => {
+        if (typeof val === 'string' && /\battrs\b|\bresults_json\b/.test(val)) {
+            const fn = new Function('attrs', 'results_json', `return ${val}`);
+            finalOpts[opt] = fn(attrs, resultsJson);
+        }
+    });
+    const { 
+      data = "bsPositiveSelection", 
+      size_field = null, 
+      color_label = "ER", 
+      color_scheme = "redyellowblue" 
+    } = finalOpts;
+    const key = method;
+    const fn = methodUtils[key]?.[data];
+    if (!fn) throw new Error(`No ${data} function for ${key}`);
+    // Use raw data override if provided
+    const posteriorData = fn(resultsJson);
+    console.log("posteriorData", posteriorData);
+    const step = plotUtils.er_step_size(resultsJson);
+    const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+    const branch_order = phylotreeUtils.treeNodeOrdering(treeObjects[0], resultsJson.tested[0], false, false);
+
+    const numCodons = _.chain(posteriorData)
+        .map(d => 
+            d.Codon != null
+                ? d.Codon
+                : (d.Key ? +d.Key.split("|")[1] : undefined)
+        )
+        .max()
+  .value();
+    // split into vconcat if many sites
+    if (numCodons > step) {
+        const specs = [];
+        // split into chunks by codon indices
+        for (let fromCodon = 1; fromCodon <= numCodons; fromCodon += step) {
+            const count = Math.min(step, numCodons - fromCodon + 1);
+            specs.push(
+                PosteriorsHeatmap(
+                    posteriorData,
+                    fromCodon,
+                    count,
+                    branch_order,
+                    size_field,
+                    color_label,
+                    color_scheme
+                )
+            );
+        }
+        // debug: inspect generated specs array
+        console.log('vconcat specs', { numCodons, step, specsCount: specs.length, firstSpec: specs[0] });
+        return { vconcat: specs };
+    }
+    return PosteriorsHeatmap(
+        posteriorData,
+        1,
+        posteriorData.length,
+        branch_order,
+        size_field,
+        color_label,
+        color_scheme
+    );
 }

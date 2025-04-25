@@ -145,10 +145,10 @@ function getFigure2() {
       if (toDisplay[0] == "Codon") {  
           const codonIndex = (+toDisplay[1]);
           let partitionId = siteIndexPartitionCodon[codonIndex-1][0]-1;
-          let TT = plots.displayTreeSite (resultsJson, partitionId, treeObjects[0], codonIndex, treeOptions, evidenceThreshold, treeDim, treeLabels, branchLength, colorBranches, attributes.partitionSizes);
+          let TT = plots.getAbsrelTreeSite (resultsJson, partitionId, treeObjects[0], codonIndex, treeOptions, evidenceThreshold, treeDim, treeLabels, branchLength, colorBranches, attributes.partitionSizes);
           return TT;
       } 
-      let TT = plots.displayTree(resultsJson, 0, treeObjects[0], treeOptions, evidenceThreshold, treeDim, treeLabels, branchLength, colorBranches);
+      let TT = plots.getAbsrelTree(resultsJson, 0, treeObjects[0], treeOptions, evidenceThreshold, treeDim, treeLabels, branchLength, colorBranches);
       return TT;
     }
     return null;

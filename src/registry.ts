@@ -63,7 +63,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Tile Table',
                 description: 'Summary statistics in a tile format',
-                component: 'tile-table.js',
+                component: 'TileTable',
                 glyph: GLYPH_PATHS.tile,
                 category: 'summary'
             },
@@ -76,7 +76,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             },
             {
                 name: 'Evidence Ratio for ω>1',
-                description: 'Heatmap showing evidence ratios for positive selection',
+                description: 'Lollipop plot showing evidence ratios for positive selection',
                 component: 'BeadPlot',
                 glyph: GLYPH_PATHS.lollipop,
                 options: {
@@ -100,6 +100,28 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                     color_label: "ER (constrained)"
                 },
                 category: 'codon'
+            },
+            {
+                name: 'Support for Positive Selection',
+                description: 'Heatmap showing support for positive selection',
+                component: 'PosteriorsHeatmap',
+                glyph: GLYPH_PATHS.heatmap,
+                category: 'codon',
+                options: {
+                    data: "bsPositiveSelectionFn",
+                    size_field: "subs"
+                }
+            },
+                        {
+                name: 'Error-Sink Support',
+                description: 'Heatmap showing support for error-sink',
+                component: 'PosteriorsHeatmap',
+                glyph: GLYPH_PATHS.heatmap,
+                category: 'codon',
+                options: {
+                    data: "errorSinkFn",
+                    size_field: "subs"
+                }
             },
             {
                 name: 'Force-Directed Network',
@@ -142,7 +164,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Tile Table',
                 description: 'Summary statistics in a tile format',
-                component: 'tile-table.js',
+                component: 'TileTable',
                 glyph: GLYPH_PATHS.tile,
                 category: 'summary'
             },
@@ -162,22 +184,34 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 options: {
                     key: 'SRV posterior mean',
                     log_scale: false,
-                    y_label: null
+                    y_label: null,
+                    threshold: false,
+                    string_color: "gray"
                 }
             },
             {
                 name: 'Support for Positive Selection',
                 description: 'Heatmap showing support for positive selection',
-                component: 'absrel-plots.js',
+                component: 'PosteriorsHeatmap',
                 glyph: GLYPH_PATHS.heatmap,
-                category: 'codon'
+                category: 'codon',
+                options: {
+                    data: "bsPositiveSelectionFn",
+                    size_field: "subs",
+                    color_label: "EBF"
+                }
             },
             {
                 name: 'Evidence Ratio Alignment Profile',
                 description: 'Evidence ratios for ω>1 at a particular branch and site',
-                component: 'absrel-plots.js',
+                component: 'PosteriorsHeatmap',
                 glyph: GLYPH_PATHS.heatmap,
-                category: 'codon'
+                category: 'codon',
+                options: {
+                    data: "profileBranchSitesFn",
+                    size_field: "subs",
+                    color_label: "ER"
+                }
             },
             {
                 name: 'Phylogenetic Tree',
@@ -211,7 +245,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Tile Table',
                 description: 'Summary statistics in a tile format',
-                component: 'tile-table.js',
+                component: 'TileTable',
                 glyph: GLYPH_PATHS.tile,
                 category: 'summary'
             },
@@ -256,7 +290,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Tile Table',
                 description: 'Summary statistics in a tile format',
-                component: 'tile-table.js',
+                component: 'TileTable',
                 glyph: GLYPH_PATHS.tile,
                 category: 'summary'
             },
@@ -277,9 +311,14 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'support for positive selection',
                 description: 'Empirical Bayes Factors for ω>1 at a particular branch and site',
-                component: 'meme-plots.js',
+                component: 'PosteriorsHeatmap',
                 glyph: GLYPH_PATHS.heatmap,
-                category: 'codon'
+                category: 'codon',
+                options: {
+                    data: "bsPositiveSelectionFn",
+                    color_label: "ER",
+                    color_scheme: "redblue"
+                }
             },
             {
                 name: 'Rate Density Plots',
@@ -354,7 +393,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Tile Table',
                 description: 'Summary statistics in a tile format',
-                component: 'tile-table.js',
+                component: 'TileTable',
                 glyph: GLYPH_PATHS.tile,
                 category: 'summary'
             }
@@ -367,7 +406,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Tile Table',
                 description: 'Summary statistics in a tile format',
-                component: 'tile-table.js',
+                component: 'TileTable',
                 glyph: GLYPH_PATHS.tile,
                 category: 'summary'
             },
@@ -434,7 +473,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Tile Table',
                 description: 'Summary statistics in a tile format',
-                component: 'tile-table.js',
+                component: 'TileTable',
                 glyph: GLYPH_PATHS.tile,
                 category: 'summary'
             }

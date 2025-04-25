@@ -167,6 +167,10 @@ export function getBustedTileSpecs(resultsJson, evThreshold, bsPositiveSelection
  */
 
 export function getBustedTestOmega(resultsJson, hasErrorSink) {
+    if (!hasErrorSink) {
+        hasErrorSink = getBustedAttributes(resultsJson).hasErrorSink;
+    }
+
     return utils.getRateDistribution (resultsJson, hasErrorSink, ["fits","Unconstrained model","Rate Distributions","Test"])
 }
 
@@ -309,11 +313,19 @@ export function getBustedDistributionTable(resultsJson) {
 }
 
 export function getBustedErrorSink(resultsJson, treeObjects, hasErrorSinkNt) {
-  if (hasErrorSinkNt) {
-    let weight = getBustedErrorSinkRate(resultsJson, "Test")["proportion"];
-    return getBustedPosteriorsPerBranchSite (resultsJson, treeObjects, 0, weight / (1-weight));
-  }
-  return [];
+    if (!treeObjects) {
+        treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+    }
+    if (!hasErrorSinkNt) {
+        attrs = getBustedAttributes(resultsJson);
+        hasErrorSinkNt = attrs.hasErrorSinkNT;
+    }
+    
+    if (hasErrorSinkNt) {
+        let weight = getBustedErrorSinkRate(resultsJson, "Test")["proportion"];
+        return getBustedPosteriorsPerBranchSite (resultsJson, treeObjects, 0, weight / (1-weight));
+    }
+    return [];
 }
 
 /**
@@ -335,6 +347,16 @@ export function getBustedErrorSink(resultsJson, treeObjects, hasErrorSinkNt) {
  *   was detected as showing positive selection
  */
 export function getBustedPositiveSelection(resultsJson, treeObjects, testOmega, hasErrorSink) {
+    if (!treeObjects) {
+        treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+    }
+    if (!hasErrorSink) {
+        hasErrorSink = getBustedAttributes(resultsJson).hasErrorSink;
+    }
+    if (!testOmega) {
+        testOmega = getBustedTestOmega(resultsJson, hasErrorSink);
+    }
+    
     let w =  testOmega[testOmega.length - 1].weight;
     
     if (w < 1) {
@@ -367,6 +389,10 @@ export function getBustedPositiveSelection(resultsJson, treeObjects, testOmega, 
  *   - nonsynSubs: The count of non-synonymous substitutions
  */
 export function getBustedPosteriorsPerBranchSite(resultsJson, treeObjects, rateClass, priorOdds) {
+    if (!treeObjects) {
+        treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+    }
+    
   let results = [];
   let offset = 0;
   _.each (resultsJson["branch attributes"], (data, partition) => {
