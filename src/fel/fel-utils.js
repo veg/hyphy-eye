@@ -86,8 +86,8 @@ export function getFelTileSpecs(resultsJson, pvalueThreshold) {
         {number: felAttrs.testedBranchCount, description: "median branches/partition used for testing", icon: "icon-share icons", color: "asbestos"}, 
         {number: felAttrs.variableSiteCount, description: "non-invariant sites tested", icon: "icon-check icons", color: "asbestos"},
         {number: resultsJson.simulated || "N/A", description: "parametric bootstrap replicates", icon: "icon-layers icons", color: "asbestos"},
-        {number: _.filter (sitesTable[1], (d)=>d.class == "Diversifying").length, description: "sites under diversifying positive selection at p≤"+pvalueThreshold, icon: "icon-plus icons", color: "midnight_blue"},
-        {number: _.filter (sitesTable[1], (d)=>d.class == "Purifying").length, description: "sites under purifying negative selection at p≤"+pvalueThreshold, icon: "icon-minus icons", color: "midnight_blue"}
+        {number: _.filter (sitesTable[0], (d)=>d.class == "Diversifying").length, description: "sites under diversifying positive selection at p≤"+pvalueThreshold, icon: "icon-plus icons", color: "midnight_blue"},
+        {number: _.filter (sitesTable[0], (d)=>d.class == "Purifying").length, description: "sites under purifying negative selection at p≤"+pvalueThreshold, icon: "icon-minus icons", color: "midnight_blue"}
     ]
 }
 
@@ -156,5 +156,5 @@ export function getFelSiteTableData(resultsJson, pvalueThreshold) {
        
         
     });
-    return [format, results, headers];
+    return [results, headers, format];
 }

@@ -47,10 +47,10 @@ export function tileTable(table_spec, columns = 3) {
     return table;
 }
 
-export function TileTableGenerator(resultsJson, method, options = {}) {
+export function TileTableGenerator(resultsJson, method, threshold, options = {}) {
     const utilsFns = methodUtils[method];
     if (!utilsFns) throw new Error(`No utilities defined for method: ${method}`);
-    const tableSpec = utilsFns.tileFn(resultsJson);
+    const tableSpec = utilsFns.tileFn(resultsJson, threshold);
     return tileTable(tableSpec, options.columns || 3);
 }
 

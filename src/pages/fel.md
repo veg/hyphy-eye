@@ -64,7 +64,7 @@ const pvalueThreshold = await view(Inputs.text({label: html`<b>p-value threshold
 
 ```js
 const sitesTable = utils.getFelSiteTableData(resultsJson, pvalueThreshold);
-const siteTableData = _.filter(sitesTable[1], (x) => tableFilter.indexOf(x.class) >= 0);
+const siteTableData = _.filter(sitesTable[0], (x) => tableFilter.indexOf(x.class) >= 0);
 const tileSpecs = utils.getFelTileSpecs(resultsJson, pvalueThreshold)
 ```
 
@@ -107,14 +107,14 @@ const treeObjects = phylotreeUtils.getTreeObjects(resultsJson)
 ```js
 const table1 = view(Inputs.table (siteTableData, {
   rows : 15,
-  format: sitesTable[0]
+  format: sitesTable[2]
 }));
 ```
 
 <details>
   <summary><b>Table column definitions</b></small></summary>
   <small><dl>
-    ${_.map (sitesTable[2], (d)=>html`<dt><tt>${d[0]}</tt></dt><dd>${d[1]}</dd>`)}
+    ${_.map (sitesTable[1], (d)=>html`<dt><tt>${d[0]}</tt></dt><dd>${d[1]}</dd>`)}
   </dl></small>
 </details>
 

@@ -335,9 +335,10 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                     omega: false,
                     rateLabels: [
                         {data_key:"&alpha;",display_label:"α"},
-            {data_key:"&beta;<sup>1</sup>",display_label:"β-"},
-            {data_key:"&beta;<sup>+</sup>",display_label:"β+"}
-                    ]
+                        {data_key:"&beta;<sup>1</sup>",display_label:"β-"},
+                        {data_key:"&beta;<sup>+</sup>",display_label:"β+"}
+                    ],
+                    autoXScale: true
                 },
             },
             {

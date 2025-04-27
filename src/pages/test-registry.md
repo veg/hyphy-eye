@@ -64,16 +64,16 @@ for (const method of methods) {
         if (viz.component === "BeadPlot") {
           spec = BeadPlotGenerator(json, method, thresholds[method], dynCaps[method], opts);
         } else if (viz.component === "PosteriorsHeatmap") {
-          spec = HeatmapGenerator(json, method, opts.threshold || 0, opts);
+          spec = HeatmapGenerator(json, method, thresholds[method], opts);
         } else if (viz.component === "TileTable") {
-          spec = TileTableGenerator(json, method, opts);
+          spec = TileTableGenerator(json, method, thresholds[method], opts);
           vizContainer.appendChild(spec);
           btn.remove();
           return;
         } else if (viz.component === "RateDensities") {
-          spec = RateDensitiesGenerator(json, method, opts);
+          spec = RateDensitiesGenerator(json, method, thresholds[method], opts);
         } else if (viz.component === "RateBarPlots") {
-          spec = RateBarPlotsGenerator(json, method, opts);
+          spec = RateBarPlotsGenerator(json, method, thresholds[method], opts);
         } else {
           const p = document.createElement("p");
           p.textContent = `${viz.component} not supported yet`;

@@ -38,13 +38,14 @@ import { methodUtils } from "../../utils/method-utils.js";
  * 
  * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
  * @param {string} method - The method name (e.g., "BUSTED", "MEME", "ABSREL")
+ * @param {number} threshold - The threshold for significance
  * @param {Object} opts - Additional options for the visualization
  * @returns {Object} A Vega-Lite specification for the chart
  */
-export function RateBarPlotsGenerator(resultsJson, method, opts = {}) {
+export function RateBarPlotsGenerator(resultsJson, method, threshold, opts = {}) {
   // Build data via centralized table function
-    const siteRes = methodUtils[method].tableFn(resultsJson);
-    const data = Array.isArray(siteRes[1]) ? siteRes[1] : siteRes;
+    const siteRes = methodUtils[method].tableFn(resultsJson, threshold);
+    const data = Array.isArray(siteRes[0]) ? siteRes[0] : siteRes;
   // Use rate labels from opts if provided, otherwise use defaults
   const rateLabels = opts.rateLabels || [
     {data_key: "alpha", display_label: "α"},
