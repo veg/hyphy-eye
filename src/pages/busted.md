@@ -100,7 +100,7 @@ const rateTable = view(Inputs.table (distributionTable, {
     'dist' : (d)=>{
         return html`<b>${d[0] + " " + d[2]}</b><br><tt>
             ${_.map (d[1], (c,i)=> floatFormat(c.value) + " (" + proportionFormat (c.weight) + ") ")}
-            <br>Mean = <b>${floatFormat (utils.distMean (d[1]))}</b>, CoV = <b>${floatFormat (Math.sqrt (utils.getBustedDistVar (d[1]))/utils.distMean (d[1]))}</b></tt>`},
+            <br>Mean = <b>${floatFormat (utils.getBustedDistMean (d[1]))}</b>, CoV = <b>${floatFormat (Math.sqrt (utils.getBustedDistVar (d[1]))/utils.getBustedDistMean (d[1]))}</b></tt>`},
      'plot' : (d)=>omegaPlots.renderDiscreteDistribution (d[1],{"height" : 50, "width" : 150, "scale" : "sqrt", "ref" : d[0].length == 0 ? [null] : [1]})
   },
   layout: "auto",
@@ -113,7 +113,7 @@ const distComparisonPlot = rateTable.length == 2 ? omegaPlots.renderTwoDiscreteD
 ```
 
 ```js
-const plotType =  view(Inputs.select(_.map (_.filter (plots.getPlotOptions(resultsJson, bsPositiveSelection), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
+const plotType =  view(Inputs.select(_.map (_.filter (plots.getBustedPlotOptions(resultsJson, bsPositiveSelection), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
 ```js
@@ -127,7 +127,7 @@ const plotExtras = ({
 const fig1Controls = view(plotExtras[plotType] || Inputs.text({label: "Plot options", value: "None", disabled: true}))
 ```
 
-**Figure 1**. ${plotType ? plots.getPlotDescription(plotType, attrs.srvHMM) : "No plotting options available"}`
+**Figure 1**. ${plotType ? plots.getBustedPlotDescription(plotType, attrs.srvHMM) : "No plotting options available"}`
 
 ```js
 function getFig1data() {

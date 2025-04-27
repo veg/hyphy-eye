@@ -1,7 +1,7 @@
 import * as _ from 'lodash-es';
 import * as plotUtils from "../utils/plot-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
-import { methodUtils } from "./bead-plot.js";
+import { methodUtils } from '../utils/method-utils.js';
 
 // TODO: change this color scheme to something from crameri
 // i think we want linear, fewer hues?

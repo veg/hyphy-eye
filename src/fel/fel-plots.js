@@ -361,14 +361,14 @@ export function getFelPlotSpec(plotType, fig1data, pvalueThreshold, hasPasmt) {
     "Site-level dN/dS estimates" : {
       "width": 800, "height": 200, 
       "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-        return dNdSWithCi (fig1data, d, 70)
+        return getFelDnDsPlot (fig1data, d, 70)
       })},
     "alpha/beta site-level estimates" : {
       "width": 800, "height": 200, 
       "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-        return alphaBetaPlot (fig1data, d, 70, getAlphaBetaYrange (fig1data))
+        return getFelAlphaBetaPlot (fig1data, d, 70, getFelAlphaBetaYrange (fig1data))
       })},
-    "Bootstrap vs asymptotic p-value": pvPlot (fig1data, pvalueThreshold),
+    "Bootstrap vs asymptotic p-value": getFelPvPlot (fig1data, pvalueThreshold),
     "Rate density plots" : 
       rateDist.RateDensities(
         fig1data, 

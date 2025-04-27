@@ -12,6 +12,8 @@ import * as registry from "../registry.js";
 import { BeadPlotGenerator } from "../components/bead-plot.js";
 import { HeatmapGenerator } from "../components/posteriors-heatmap.js";
 import { TileTableGenerator } from "../components/tile-table/tile-table.js";
+import { RateDensitiesGenerator } from "../components/rate-summary-plots/rate-densities.js";
+import { RateBarPlotsGenerator } from "../components/rate-summary-plots/rate-bars.js";
 
 const vl = vegaLiteApi.register(vega, vegaLite);
 
@@ -28,7 +30,7 @@ const attachments = {
 
 const methods = ["BUSTED","aBSREL","FEL","MEME","GARD","NRM","MULTIHIT"];
 const thresholds = {BUSTED:10,aBSREL:0.1,FEL:0.1,MEME:0.1,GARD:0.1,NRM:0.1,MULTIHIT:0.1};
-const dynCaps = {BUSTED:10000,aBSREL:10000,FEL:10000,MEME:10000,GARD:10000,NRM:10000,MULTIHIT:10000};
+const dynCaps = {BUSTED:10000,aBSREL:10000,FEL:10,MEME:10000,GARD:10000,NRM:10000,MULTIHIT:10000};
 
 // Use the main notebook container
 const root = document.getElementById("observablehq-main");
@@ -64,10 +66,14 @@ for (const method of methods) {
         } else if (viz.component === "PosteriorsHeatmap") {
           spec = HeatmapGenerator(json, method, opts.threshold || 0, opts);
         } else if (viz.component === "TileTable") {
-          const tileTable = TileTableGenerator(json, method, opts);
-          vizContainer.appendChild(tileTable);
+          spec = TileTableGenerator(json, method, opts);
+          vizContainer.appendChild(spec);
           btn.remove();
           return;
+        } else if (viz.component === "RateDensities") {
+          spec = RateDensitiesGenerator(json, method, opts);
+        } else if (viz.component === "RateBarPlots") {
+          spec = RateBarPlotsGenerator(json, method, opts);
         } else {
           const p = document.createElement("p");
           p.textContent = `${viz.component} not supported yet`;
@@ -85,3 +91,4 @@ for (const method of methods) {
     });
   }
 }
+```

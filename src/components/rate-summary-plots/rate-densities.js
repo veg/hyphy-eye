@@ -1,4 +1,5 @@
 import * as _ from "lodash-es";
+import { methodUtils } from "../../utils/method-utils.js";
 
 // @ts-check
 
@@ -23,6 +24,60 @@ import * as _ from "lodash-es";
  * will scale from 0 to dyn_range_cap. If true, scales by the max value across all panels/ rates. Defaults to false.
  * @returns {object} - a Vega-Lite specification for the chart
  */
+/**
+ * Generator function for RateDensities that follows the standard pattern
+ * of taking resultsJson, method, and opts parameters
+ * 
+ * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
+ * @param {string} method - The method name (e.g., "BUSTED", "MEME", "ABSREL")
+ * @param {Object} opts - Additional options for the visualization
+ * @returns {Object} A Vega-Lite specification for the chart
+ */
+export function RateDensitiesGenerator(resultsJson, method, opts = {}) {
+    // Build data via centralized table function
+    const siteRes = methodUtils[method].tableFn(resultsJson);
+    const data = Array.isArray(siteRes[1]) ? siteRes[1] : siteRes;
+    
+    // Use rate labels from opts if provided, otherwise use defaults
+    const rateLabels = opts.rateLabels || [
+        {data_key: "alpha", display_label: "α"},
+        {data_key: "beta", display_label: "β"}
+    ];
+    
+    // Extract options from opts or use defaults
+    const omega = opts.omega !== undefined ? opts.omega : true;
+    const dynRangeCap = opts.dynRangeCap || 10000;
+    const bandwidth = opts.bandwidth || 0;
+    const autoXScale = opts.autoXScale || false;
+    
+    // Call the underlying RateDensities function
+    return RateDensities(
+        data,
+        rateLabels,
+        omega,
+        dynRangeCap,
+        bandwidth,
+        autoXScale
+    );
+}
+
+/**
+ * Create a Vega-Lite specification for a collection of density plots. Each plot panel in the 
+ * collection represents a different rate as specified by the rate_labels parameter. The density
+ * plots represent the distribution of that rate across all sites.
+ *
+ * @param {array} data - an array of objects, with properties defined by the rate_labels parameter
+ * @param {RateDataSpec[]} rate_labels - an object defining what properties in `data` to build
+ * density plots for, and what labels to use for them in the plot panels.
+ * @param {boolean} omega - optional boolean indicating whether to calculate dN/dS. If true, requires `data`
+ * to have properties `alpha` and `beta`. Defaults to true.
+ * @param {number} dyn_range_cap - optional number indicating where to cap data values. Defauts to 10,000.
+ * @param {number} bandwidth - optional number for the bandwidth (standard deviation) of the Gaussian kernel. 
+ * If set to zero, the bandwidth value is automatically estimated from the input data using Scott's rule.
+ * @param {boolean} auto_x_scale - optional boolean indicating whether to auto-scale the x-axis. If false,
+ * will scale from 0 to dyn_range_cap. If true, scales by the max value across all panels/ rates. Defaults to false.
+ * @returns {object} - a Vega-Lite specification for the chart
+ */
 export function RateDensities(
     data, 
     rate_labels = [{data_key: "alpha", display_label: "α"},{data_key: "beta", display_label: "β"}],
@@ -31,6 +86,12 @@ export function RateDensities(
     bandwidth = 0,
     auto_x_scale = false
 ) {
+    console.log("RateDensities called with data:", data);
+    console.log("RateDensities called with rate_labels:", rate_labels);
+    console.log("RateDensities called with omega:", omega);
+    console.log("RateDensities called with dyn_range_cap:", dyn_range_cap);
+    console.log("RateDensities called with bandwidth:", bandwidth);
+    console.log("RateDensities called with auto_x_scale:", auto_x_scale);
     // cap columns in data matching data_keys at dyn_range_cap
     data = _.map(data, (d)=> {
         let dd = _.clone (d);

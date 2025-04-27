@@ -4,7 +4,7 @@
  * an icon and a description
  */
 
-import { methodUtils } from '../bead-plot.js';
+import { methodUtils } from '../../utils/method-utils.js';
 
 // @ts-check
 

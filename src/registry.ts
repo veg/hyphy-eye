@@ -68,13 +68,6 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'summary'
             },
             {
-                name: 'Rate Distributions',
-                description: 'Graphical table of rate distributions',
-                component: 'rate-densities.js',
-                glyph: GLYPH_PATHS['viz-table'],
-                category: 'model'
-            },
-            {
                 name: 'Evidence Ratio for ω>1',
                 description: 'Lollipop plot showing evidence ratios for positive selection',
                 component: 'BeadPlot',
@@ -169,13 +162,6 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'summary'
             },
             {
-                name: 'Rate Distributions By Branch',
-                description: 'Graphical table of rate distributions',
-                component: 'rate-densities.js',
-                glyph: GLYPH_PATHS['viz-table'],
-                category: 'model'
-            },
-            {
                 name: 'Synonymous Rates',
                 description: 'Posterior means for synonymous site-level substitution rates',
                 component: 'BeadPlot',
@@ -259,16 +245,35 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Rate Density Plots',
                 description: 'Density plots for synonymous and non-synonymous rates',
-                component: 'fel-plots.js',
+                component: 'RateDensities',
                 glyph: GLYPH_PATHS.density,
-                category: 'model'
+                category: 'model',
+                options: {
+                    omega: true,
+                    rateLabels: [
+                        {data_key: "alpha", display_label: "α"},
+                        {data_key: "beta", display_label: "β"}
+                    ],
+                    bandwidth: 0.2,
+                    dynRangeCap: 10,
+                    
+                },
             },
             {
                 name: 'Rates by Site',
                 description: 'Maximum likelihood estimates for synonymous and non-synonymous rates',
-                component: 'fel-plots.js',
+                component: 'RateBarPlots',
                 glyph: GLYPH_PATHS.bar,
-                category: 'codon'
+                category: 'codon',
+                options: {
+                    yScale: 'linear',
+                    rateLabels: [
+                        {data_key: "alpha", display_label: "α"},
+                        {data_key: "beta", display_label: "β"},
+                        {data_key: "p-value", display_label: "p-value"}
+                    ],
+                    dynRangeCap: 10
+                },
             },
             {
                 name: 'Phylogenetic Tree',
@@ -323,16 +328,35 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Rate Density Plots',
                 description: 'Density plots for synonymous and non-synonymous rates',
-                component: 'meme-plots.js',
+                component: 'RateDensities',
                 glyph: GLYPH_PATHS.density,
-                category: 'model'
+                category: 'model',
+                options: {
+                    omega: false,
+                    rateLabels: [
+                        {data_key:"&alpha;",display_label:"α"},
+            {data_key:"&beta;<sup>1</sup>",display_label:"β-"},
+            {data_key:"&beta;<sup>+</sup>",display_label:"β+"}
+                    ]
+                },
             },
             {
                 name: 'Rates by Site',
                 description: 'Maximum likelihood estimates for synonymous and non-synonymous rates',
-                component: 'meme-plots.js',
+                component: 'RateBarPlots',
                 glyph: GLYPH_PATHS.bar,
-                category: 'codon'
+                category: 'codon',
+                options: {
+                    yScale: 'log',
+                    rateLabels: [
+                        {data_key:"&alpha;",display_label:"α"},
+                        {data_key:"&beta;<sup>1</sup>",display_label:"β-"},
+                        {data_key:"p<sup>1</sup>",display_label:"p-"},
+                        {data_key:"&beta;<sup>+</sup>",display_label:"β+"},
+                        {data_key:"p<sup>+</sup>",display_label:"p+"},
+                        {data_key:"p-value",display_label:"p-value"}
+                    ]
+                },
             },
             {
                 name: 'Site Details',

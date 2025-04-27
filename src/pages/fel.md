@@ -90,7 +90,7 @@ const fig1Data = getFig1Data();
 ```
 
 ```js
-const plotType =  view(Inputs.select(_.map (_.filter (plots.getPlotOptions(attributes.hasPasmt), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
+const plotType =  view(Inputs.select(_.map (_.filter (plots.getFelPlotOptions(attributes.hasPasmt), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
 ```js
@@ -130,7 +130,7 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", description: "Tree
 
 ```js
 function displayTree(i) {
-    return plots.getFelDisplayTree(resultsJson, i, treeDim, treeObjects);
+    return plots.getFelTree(resultsJson, i, treeDim, treeObjects);
 }
 
 const treeId = phylotreeUtils.getTreeId(selectedTree);

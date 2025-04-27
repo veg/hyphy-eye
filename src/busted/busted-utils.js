@@ -22,7 +22,6 @@ const percentageFormat = d3.format (".2p")
  *   - testedBranchCount {number} - The median number of branches tested for selection across partitions
  *   - srvRateClasses {number} - The number of rate classes for the synonymous site-to-site rate distribution
  *   - srvDistribution {Array} - The distribution of synonymous site-to-site rates
- *   - omegaRateClasses {number} - The number of rate classes for the omega distribution
  *   - partitionSizes {Array} - Array of sizes for each partition
  *   - hasBackground {boolean} - Whether background rate distributions are available
  *   - hasSrvHmm {boolean} - Whether Viterbi synonymous rate path is present
@@ -33,14 +32,13 @@ const percentageFormat = d3.format (".2p")
 export function getBustedAttributes(resultsJson) {
     // Extract common attributes using the utility function
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
-
+console.log(resultsJson);
     // BUSTED-specific attributes
     const srvRateClasses = _.size(resultsJson.fits["Unconstrained model"]["Rate Distributions"]["Synonymous site-to-site rates"]);
     const hasBackground = utils.hasBackground(resultsJson);
     const hasSrvHmm = "Viterbi synonymous rate path" in resultsJson;
     const hasErrorSink = utils.hasErrorSink(resultsJson);
     const hasErrorSinkNt = getBustedHasErrorSinkNt(resultsJson, hasErrorSink, hasBackground);
-    const omegaRateClasses = _.size(getBustedTestOmega(resultsJson, hasErrorSink));
     const srvDistribution = utils.getRateDistribution(
         resultsJson, 
         hasErrorSink, 
@@ -56,7 +54,6 @@ export function getBustedAttributes(resultsJson) {
         testedBranchCount: commonAttrs.testedBranchCount,
         srvRateClasses,
         srvDistribution,
-        omegaRateClasses,
         partitionSizes: commonAttrs.partitionSizes,
         hasBackground,
         hasSrvHmm,
@@ -75,6 +72,7 @@ export function getBustedTileSpecs(resultsJson, evThreshold, bsPositiveSelection
         ], 
         (d)=>resultsJson["fits"]["Unconstrained model"]["Rate Distributions"][d]
     );
+    const omegaRateClasses = _.size(getBustedTestOmega(resultsJson, attrs.hasErrorSink));
 
     const tileTableInputs = [
         {
@@ -102,7 +100,7 @@ export function getBustedTileSpecs(resultsJson, evThreshold, bsPositiveSelection
             color: "asbestos"
         },
         {
-            number: attrs.omegaRateClasses + " classes",
+            number: omegaRateClasses + " classes",
             description: "non-synonymous rate variation",
             icon: "icon-grid icons",
             color: "asbestos"
@@ -317,7 +315,7 @@ export function getBustedErrorSink(resultsJson, treeObjects, hasErrorSinkNt) {
         treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
     }
     if (!hasErrorSinkNt) {
-        attrs = getBustedAttributes(resultsJson);
+        const attrs = getBustedAttributes(resultsJson);
         hasErrorSinkNt = attrs.hasErrorSinkNT;
     }
     
@@ -424,6 +422,31 @@ export function getBustedPosteriorsPerBranchSite(resultsJson, treeObjects, rateC
           }
       });
       offset += partitionSize;
+  });
+  return results;
+}
+
+/**
+ * Extracts multi-hit evidence ratios from BUSTED results JSON
+ *
+ * @param {Object} resultsJson - The JSON object containing the BUSTED results
+ * @param {string} key - The key to extract from branch attributes
+ * @returns {Array<Object>} An array of objects with Key and ER properties
+ */
+export function getBustedMultiHitER(resultsJson, key) {
+  let results = [];
+  let offset = 0;
+  _.each (resultsJson["branch attributes"], (data, partition) => {
+      let partition_size = 0;
+      _.each (data, (per_branch, branch)=> {
+          if (key in per_branch) {
+            _.each (per_branch [key], (p,i)=> {
+                results.push ({'Key' : branch + "|" + p[0] + offset, 'ER' : p[1]});
+            });     
+            partition_size = resultsJson["data partitions"][partition]["coverage"][0].length;
+          }
+      });
+      offset += partition_size;
   });
   return results;
 }

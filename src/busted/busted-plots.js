@@ -1,7 +1,8 @@
 import * as utils from "./busted-utils.js"
 import * as plotUtils from "../utils/plot-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js"
-import * as beads from "../components/bead-plot.js";
+// Import only the BeadPlot function to avoid circular dependency
+import { BeadPlot } from "../components/bead-plot.js";
 import * as heat from "../components/posteriors-heatmap.js";
 import * as _ from "lodash-es";
 import * as d3 from "d3";
@@ -62,9 +63,9 @@ export function getBustedPlotSpec(
     tested_branch_count, 
     fig1_controls
 ) {
-    const twoHBranchSite = mutliHitER(results_json, "Evidence ratio for 2H")
-    const threeHBranchSite = mutliHitER(results_json, "Evidence ratio for 3H")
-    const multiHBranchSite = mutliHitER(results_json, "Evidence ratio for 2H+3H")
+    const twoHBranchSite = utils.getBustedMultiHitER(results_json, "Evidence ratio for 2H")
+    const threeHBranchSite = utils.getBustedMultiHitER(results_json, "Evidence ratio for 3H")
+    const multiHBranchSite = utils.getBustedMultiHitER(results_json, "Evidence ratio for 2H+3H")
     const step_size = plotUtils.er_step_size(results_json)
     const branch_order = phylotreeUtils.treeNodeOrdering(tree_objects[0], results_json.tested[0], false, false);
     let size_field = "subs";
@@ -85,7 +86,7 @@ export function getBustedPlotSpec(
         "Evidence ratio for ω>1 (constrained)" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return beads.BeadPlot(
+                return BeadPlot(
                   fig1data, 
                   d, 
                   70, 
@@ -100,7 +101,7 @@ export function getBustedPlotSpec(
         "Evidence ratio for ω>1 (optimized)" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return beads.BeadPlot(
+                return BeadPlot(
                   fig1data, 
                   d, 
                   70, 
@@ -115,7 +116,7 @@ export function getBustedPlotSpec(
         "Synonymous rates" : {
             "width": 800, "height": 150, 
             "vconcat" : _.map (_.range (1, fig1data.length + 1, 70), (d)=> {
-                return beads.BeadPlot (
+                return BeadPlot(
                   fig1data, 
                   d, 
                   70, 
@@ -242,23 +243,7 @@ export function codonComposition(results_json, tree_objects, filter, diff_mode) 
 }
 
 
-export function mutliHitER(results_json, key) {
-  let results = [];
-  let offset = 0;
-  _.each (results_json["branch attributes"], (data, partition) => {
-      let partition_size = 0;
-      _.each (data, (per_branch, branch)=> {
-          if (key in per_branch) {
-            _.each (per_branch [key], (p,i)=> {
-                results.push ({'Key' : branch + "|" + p[0] + offset, 'ER' : p[1]});
-            });     
-            partition_size = results_json["data partitions"][partition]["coverage"][0].length;
-          }
-      });
-      offset += partition_size;
-  });
-  return results;
-}
+// mutliHitER function moved to busted-utils.js
 
 function cdsQuant(data, key1, title) {
   
@@ -427,7 +412,7 @@ export function displayTreeSite(resultsJson, partitionId, T, codonIndex, treeOpt
     return t;
 }
 
-export function treeColorOptions(results_json) {
+export function getBustedTreeColorOptions(results_json) {
     const attrs = utils.getBustedAttributes(results_json);
 
     let options = ["Tested"];
