@@ -27,6 +27,19 @@ export default {
       ]
     },
     {
+      name: "Legacy Notebooks",
+      open: false,
+      pages: [
+        {name: "BUSTED", path: "pages/busted"},
+        {name: "aBSREL", path: "pages/absrel"},
+        {name: "GARD", path: "pages/gard"},
+        {name: "FEL", path: "pages/fel"},
+        {name: "MEME", path: "pages/meme"},
+        {name: "NRM", path: "pages/nrm"},
+        {name: "MULTI-HIT", path: "pages/multi-hit"}
+      ]
+    },
+    {
       name: "Usage",
       open: true,
       pages: [

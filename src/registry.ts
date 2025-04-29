@@ -477,30 +477,16 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'summary'
             },
             {
-                name: 'Model Summary',
-                description: 'Summary of model fit, overall tree lengths (subs/site), and corresponding equilibrium frequencies (EF) for each model.',
-                component: 'nrm-plots.js',
-                glyph: GLYPH_PATHS.table,
-                category: 'model'
-            },
-            {
-                name: 'Rate Matrix',
-                description: 'Matrix of rates for each model',
-                component: 'nrm-plots.js',
-                glyph: GLYPH_PATHS['viz-table'],
-                category: 'model'
-            },
-            {
                 name: 'Branch Length Comparisons',
                 description: 'Comparisons of branch lengths for each model',
-                component: 'nrm-plots.js',
+                component: 'NrmBranchLengthComparisonPlot',
                 glyph: GLYPH_PATHS.scatter,
                 category: 'model'
             },
             {
                 name: 'Phylogenetic Tree',
                 description: 'Show how differences in base frequencies are distributed over branches',
-                component: 'nrm-plots.js',
+                component: 'NrmTreePlot',
                 glyph: GLYPH_PATHS.tree,
                 options: {
                     availableDistances: [],

@@ -1,10 +1,3 @@
----
-sidebar: false
-header: false
-footer: false
-pager: false
----
-
 ```js
 import * as d3 from "d3";
 import * as Plot from "npm:@observablehq/plot";
@@ -213,11 +206,3 @@ if (figure2 && figure2.color_scale) {
 
 <br>
 <p><tt>${resultsJson.analysis["citation"]}</tt></p>
-
-<hr>
-
-## hyphy-eye
-
-<br>
-
-View _more_ results at [hyphy-eye](/)!!

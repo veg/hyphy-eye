@@ -38,7 +38,7 @@ export function getNrmAttributes(resultsJson) {
         .value();
     const bestModel = modelSummary[0][0];
     const bestModelTreeLength = floatFormat(treeLengthByModel[bestModel]);
-    const modelTableData = getModelTableData(resultsJson, treeLengthByModel);
+    const modelTableData = getNrmModelTableData(resultsJson, treeLengthByModel);
     
     return {
         numberOfSequences: commonAttrs.numberOfSequences,
@@ -62,8 +62,6 @@ export function getNrmAttributes(resultsJson) {
  * @returns {number} The maximum rate value
  */
 export function getNrmQMaxRate(resultsJson, model) {
-    console.log("resultsJson", resultsJson)
-    console.log("model", model)
     return d3.max(_.map(resultsJson["fits"][model]["Rate Distributions"], (d) => d3.max(d)))
 }
 
@@ -182,13 +180,13 @@ export function getNrmTileSpecs(resultsJson) {
             "color": "asbestos",
         },
         {
-            "number": floatFormat(getTestResult (resultsJson, "GTR", "NREV12")),
+            "number": floatFormat(getNrmTestResult (resultsJson, "GTR", "NREV12")),
             "description": "p-value non-reversible",
             "icon": "icon-info icons",
             "color": "midnight_blue",
         },
         {
-            "number": floatFormat(getTestResult (resultsJson, "NREV12", "NREV12+F")),
+            "number": floatFormat(getNrmTestResult (resultsJson, "NREV12", "NREV12+F")),
             "description": "p-value root frequencies",
             "icon": "icon-info icons",
             "color": "midnight_blue",

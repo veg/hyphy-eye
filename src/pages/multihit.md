@@ -1,10 +1,3 @@
----
-sidebar: false
-header: false
-footer: false
-pager: false
----
-
 ```js
 import * as d3 from "d3";
 import * as _ from "lodash-es";
@@ -79,11 +72,3 @@ const fig2 = plots.MultihitSiteLogLikelihoodPlotGenerator(resultsJson);
 const fig3 = plots.MultihitTimerBarPlotGenerator(resultsJson);
 ```
 <div>${vl.render({ spec: fig3 })}</div>
-
-<hr>
-
-## hyphy-eye
-
-<br>
-
-View _more_ results at [hyphy-eye](/)!!

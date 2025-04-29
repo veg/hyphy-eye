@@ -1,10 +1,3 @@
----
-sidebar: false
-header: false
-footer: false
-pager: false
----
-
 ```js
 import * as d3 from "d3";
 import * as _ from "lodash-es";
@@ -145,14 +138,3 @@ const figure2 = displayTree(treeId).show()
 
 <br>
 <p><tt>${resultsJson.analysis["citation"]}</tt></p>
-
-<hr>
-
-## hyphy-eye
-
-<br>
-
-View _more_ results at [hyphy-eye](/)!!
-
-```js
-const svgSize = 700

@@ -26,6 +26,11 @@ import {
   MultihitSiteLogLikelihoodPlotGenerator, 
   MultihitTimerBarPlotGenerator 
 } from "../multihit/multihit-plots.js";
+import { 
+  NrmTreePlotGenerator,
+  NrmBranchLengthComparisonPlotGenerator 
+} from "../nrm/nrm-plots.js";
+
 
 const vl = vegaLiteApi.register(vega, vegaLite);
 
@@ -102,6 +107,13 @@ for (const method of methods) {
           spec = MultihitSiteLogLikelihoodPlotGenerator(json);
         } else if (viz.component === "MultihitTimerBarPlot") {
           spec = MultihitTimerBarPlotGenerator(json);
+        } else if (viz.component === "NrmBranchLengthComparisonPlot") {
+          spec = NrmBranchLengthComparisonPlotGenerator(json);
+        } else if (viz.component === "NrmTreePlot") {
+          spec = NrmTreePlotGenerator(json);
+          vizContainer.appendChild(spec);
+          btn.remove();
+          return;
         } else {
           const p = document.createElement("p");
           p.textContent = `${viz.component} not supported yet`;

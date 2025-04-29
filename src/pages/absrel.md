@@ -1,10 +1,3 @@
----
-sidebar: false
-header: false
-footer: false
-pager: false
----
-
 ```js
 import * as d3 from "d3";
 import * as Plot from "npm:@observablehq/plot";
@@ -275,11 +268,3 @@ const table3 = view(Inputs.table (table3Data,
 
 <br>
 <p><tt>${resultsJson.analysis["citation"]}</tt></p>
-
-<hr>
-
-## hyphy-eye
-
-<br>
-
-View _more_ results at [hyphy-eye](/)!!
