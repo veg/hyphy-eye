@@ -14,6 +14,13 @@ import { HeatmapGenerator } from "../components/posteriors-heatmap.js";
 import { TileTableGenerator } from "../components/tile-table/tile-table.js";
 import { RateDensitiesGenerator } from "../components/rate-summary-plots/rate-densities.js";
 import { RateBarPlotsGenerator } from "../components/rate-summary-plots/rate-bars.js";
+import { FelAlphaBetaPlotGenerator } from "../fel/fel-plots.js";
+import { MemeAlphaBetaPlotGenerator } from "../meme/meme-plots.js";
+import { 
+  GardBreakpointPlotGenerator, 
+  GardSupportPlotGenerator, 
+  GardTreeLengthPlotGenerator 
+} from "../gard/gard-plots.js";
 
 const vl = vegaLiteApi.register(vega, vegaLite);
 
@@ -74,6 +81,16 @@ for (const method of methods) {
           spec = RateDensitiesGenerator(json, method, thresholds[method], opts);
         } else if (viz.component === "RateBarPlots") {
           spec = RateBarPlotsGenerator(json, method, thresholds[method], opts);
+        } else if (viz.component === "FelAlphaBetaPlot") {
+          spec = FelAlphaBetaPlotGenerator(json, method, thresholds[method], opts);
+        } else if (viz.component === "MemeAlphaBetaPlot") {
+          spec = MemeAlphaBetaPlotGenerator(json, method, thresholds[method], opts);
+        } else if (viz.component === "GardBreakpointPlot") {
+          spec = GardBreakpointPlotGenerator(json, opts);
+        } else if (viz.component === "GardSupportPlot") {
+          spec = GardSupportPlotGenerator(json, opts);
+        } else if (viz.component === "GardTreeLengthPlot") {
+          spec = GardTreeLengthPlotGenerator(json, opts);
         } else {
           const p = document.createElement("p");
           p.textContent = `${viz.component} not supported yet`;

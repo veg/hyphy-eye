@@ -117,13 +117,6 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 }
             },
             {
-                name: 'Force-Directed Network',
-                description: 'Force-directed layout of branch-codon relationships',
-                component: 'force-bp-net.js',
-                glyph: GLYPH_PATHS.network,
-                category: 'network'
-            },
-            {
                 name: 'Phylogenetic Tree',
                 description: 'Tree visualization with branch support values',
                 component: 'busted-plots.js',
@@ -238,7 +231,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'alpha/beta site-level estimates',
                 description: 'Plot of alpha/beta rate estimates',
-                component: 'fel-plots.js',
+                component: 'FelAlphaBetaPlot',
                 glyph: GLYPH_PATHS.bar,
                 category: 'codon'
             },
@@ -362,7 +355,7 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Site Details',
                 description: 'Detailed site-level information and results',
-                component: 'meme-plots.js',
+                component: 'MemeAlphaBetaPlot',
                 glyph: GLYPH_PATHS.table,
                 category: 'codon'
             },
@@ -409,11 +402,25 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                 category: 'summary'
             },
             {
-                name: 'Support for Breakpoints',
-                description: 'Strip plots showing support for breakpoints',
-                component: 'gard-plots.js',
-                glyph: GLYPH_PATHS['viz-table'],
-                category: 'codon'
+                name: 'Breakpoint Placement',
+                description: 'Breakpoint placement and c-AIC improvements',
+                component: 'GardBreakpointPlot',
+                glyph: GLYPH_PATHS.scatter,
+                category: 'summary'
+            },
+            {
+                name: 'Model-averaged support',
+                description: 'Support for breakpoint placement',
+                component: 'GardSupportPlot',
+                glyph: GLYPH_PATHS.scatter,
+                category: 'summary'
+            },
+            {
+                name: 'Total Tree Length',
+                description: 'Total tree length by partition',
+                component: 'GardTreeLengthPlot',
+                glyph: GLYPH_PATHS.scatter,
+                category: 'summary'
             },
             {
                 name: 'Tile Table',

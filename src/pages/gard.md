@@ -67,69 +67,26 @@ const gardResultTable = _.chain (resultsJson['siteBreakPointSupport']).toPairs()
 
 <div>${tt.tileTable(tileSpecs)}</div>
 
-**Figure 1**. Left: the best placement of breakpoints inferred by the algorithm for each number of breakpoints considered. Right: the improvement in the c-AIC score between successive breakpoint numbers (log scale).
+**Figure 1**. Breakpoint placement and c-AIC improvements
 
 ```js
-// TODO: move these plots into gard-plots.js
-const fig1={
-  hconcat: [
-    {
-      width: 650,
-      height: attrs.stages*12,
-      "data": {"values": attrs.breakpointsProfile},
-      "mark": {type: "point", tooltip : true, filled : true},
-      "encoding": {
-        "x": {"field": "bp", "type": "quantitative", "axis" : {"grid" : false, "title" : "Coordinate"}},
-        "y": {"field": "model", "type": "ordinal", "axis" : {title: "# breakpoints"}},
-        "size" : {"condition": {"test": "datum['span'] >= " + attrs.stages/2, "value": "64"}, "value": "16"},
-        "color" : {"condition": {"test": "datum['span'] >= " + attrs.stages/2, "value": "firebrick"}, "value": "gray"}
-      }
-    },
-    {
-      width: 120,
-      height: attrs.stages*12,
-      "data": {"values": attrs.caicImprovements},
-      "mark": {type: "line", tooltip : true, filled : false, points: true},
-      "encoding": {
-        "x": {"field": "daic", "type": "quantitative", "axis" : {"grid" : false, "title" : "Delta c-AIC"}, scale : {"type" : "log"}},
-        "y": {"field": "bp", "type": "ordinal", "axis" : null},
-      }
-    }
-  ]}
+const fig1 = plots.GardBreakpointPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig1})}</div>
+<div>${vl.render({ spec: fig1 })}</div>
 
-**Figure 2**. Model-averaged support for breakpoint placement
+**Figure 2**. Model-averaged support
 
 ```js
-const fig2={
-  width: 800,
-  height: 200,
-  "data": {"values": attrs.siteSupport},
-  "mark": {type: "rule", tooltip : true},
-  "encoding": {
-    "x": {"field": "bp", "type": "quantitative",  "axis" : {"grid" : false, title : "coordinate"}},
-    "y": {"field": "support", "type": "quantitative",  "axis" : {"grid" : false, title : "Model averaged support"}},
-  }
-}
+const fig2 = plots.GardSupportPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig2})}</div>
+<div>${vl.render({ spec: fig2 })}</div>
 
-**Figure 3**. Total tree length by partition
+**Figure 3**. Total tree length
 
 ```js
-const fig3= {
-  width: 800,
-  height: 200,
-  "data": {"values": treeLengths},
-  "mark": {type: "line", tooltip : true,  point : false},
-  "encoding": {
-    "x": {"field": "x", "type": "quantitative",  "axis" : {"grid" : false, title : "Coordinate"}},
-    "y": {"field": "L", "type": "quantitative",  "axis" : {"grid" : false, title : "Total tree length"}, "scale" : {"type" :"sqrt"}},
-  }
-}
+const fig3 = plots.GardTreeLengthPlotGenerator(treeLengths);
 ```
-<div>${vl.render({"spec": fig3})}</div>
+<div>${vl.render({ spec: fig3 })}</div>
 
 **Figure 4.** Trees for individial fragments
 

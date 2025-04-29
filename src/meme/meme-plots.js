@@ -340,3 +340,16 @@ export function getMemeTreeSite(results_json, i, s, treeDim, treeLabels, branch_
     
     return t;
 }
+
+// Generator for MEME alpha/beta site-level plots
+export function MemeAlphaBetaPlotGenerator(resultsJson, method, threshold, opts = {}) {
+  if (method !== "MEME") console.warn(`MemeAlphaBetaPlotGenerator called with method ${method}, expected "MEME"`);
+  const siteRes = utils.getMemeSiteTableData(resultsJson, threshold);
+  const data = siteRes[0];
+  const step = opts.step || 70;
+  return {
+    width: 800,
+    height: 200,
+    vconcat: _.map(_.range(1, data.length + 1, step), d => getMemeAlphaBetaPlot(data, d, step))
+  };
+}

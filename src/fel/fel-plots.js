@@ -5,6 +5,7 @@ import * as rateDist from "../components/rate-summary-plots/rate-densities.js";
 import * as rates from "../components/rate-summary-plots/rate-bars.js";
 import * as d3 from "d3";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as utils from "./fel-utils.js";
 
 const DYN_RANGE_CAP = 10;
 export const COLORS = {
@@ -285,6 +286,42 @@ export function getFelPvPlot(data, pvalueThreshold) {
         ]
     };
   }
+
+/**
+ * Generator function for FEL Alpha/Beta plots that follows the standard pattern
+ * of taking resultsJson, method, threshold, and opts parameters
+ * 
+ * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
+ * @param {string} method - The method name (should be "FEL")
+ * @param {number} threshold - The threshold for significance
+ * @param {Object} opts - Additional options for the visualization
+ * @returns {Object} A Vega-Lite specification for the chart
+ */
+export function FelAlphaBetaPlotGenerator(resultsJson, method, threshold, opts = {}) {
+  // Verify this is being called with the FEL method
+  if (method !== "FEL") {
+    console.warn(`FelAlphaBetaPlotGenerator called with method ${method}, expected "FEL"`); 
+  }
+  
+  // Get site data from the FEL-specific function
+  const siteRes = utils.getFelSiteTableData(resultsJson, threshold);
+  const data = siteRes[0]; // First element contains the site data
+  
+  // Calculate the y-range for the plot
+  const yrange = getFelAlphaBetaYrange(data);
+  
+  // Extract options or use defaults
+  const step = opts.step || 70;
+  
+  // Create a concatenated plot for all sites
+  return {
+    "width": 800, 
+    "height": 200,
+    "vconcat": _.map(_.range(1, data.length + 1, step), (d) => {
+      return getFelAlphaBetaPlot(data, d, step, yrange);
+    })
+  };
+}
 
 export function getFelAlphaBetaYrange(fig1data) {
   let min = _.chain (fig1data).map ("alpha").max ().value ();

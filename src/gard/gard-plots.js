@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import * as _ from "lodash-es";
 import * as phylotreeUtils from "../utils/phylotree-utils.js"
 import * as phylotree from "phylotree";
+import * as utils from "./gard-utils.js";
 
 /**
  * Converts the breakpoint data in the results JSON into an array of tree
@@ -140,4 +141,68 @@ export function getGardDisplayedTrees(tree_objects, variants) {
         t.update();
          return t;      
     });
+}
+
+// Generator for breakpoint placement and c-AIC improvements
+export function GardBreakpointPlotGenerator(resultsJson, opts = {}) {
+  const attrs = utils.getGardAttributes(resultsJson);
+  const {breakpointsProfile, caicImprovements, stages} = attrs;
+  return {
+    hconcat: [
+      {
+        width: opts.width || 650,
+        height: stages * (opts.rowHeight || 12),
+        data: {values: breakpointsProfile},
+        mark: {type: "point", tooltip: true, filled: true},
+        encoding: {
+          x: {field: "bp", type: "quantitative", axis:{grid:false,title:"Coordinate"}},
+          y: {field: "model", type: "ordinal", axis:{title:"# breakpoints"}},
+          size: {condition:{test:`datum['span'] >= ${stages/2}`,value:64},value:16},
+          color: {condition:{test:`datum['span'] >= ${stages/2}`,value:"firebrick"},value:"gray"}
+        }
+      },
+      {
+        width: opts.caicWidth || 120,
+        height: stages * (opts.rowHeight || 12),
+        data: {values: caicImprovements},
+        mark: {type:"line",tooltip:true,filled:false,points:true},
+        encoding: {
+          x: {field:"daic",type:"quantitative",axis:{grid:false,title:"Delta c-AIC"},scale:{type:"log"}},
+          y: {field:"bp",type:"ordinal",axis:null}
+        }
+      }
+    ]
+  };
+}
+
+// Generator for model-averaged support for breakpoint placement
+export function GardSupportPlotGenerator(resultsJson, opts = {}) {
+  const attrs = utils.getGardAttributes(resultsJson);
+  return {
+    width: opts.width || 800,
+    height: opts.height || 200,
+    data: {values: attrs.siteSupport},
+    mark: {type:"rule",tooltip:true},
+    encoding: {
+      x: {field:"bp",type:"quantitative",axis:{grid:false,title:"coordinate"}},
+      y: {field:"support",type:"quantitative",axis:{grid:false,title:"Model averaged support"}}
+    }
+  };
+}
+
+// Generator for total tree length by partition
+export function GardTreeLengthPlotGenerator(resultsJson, opts = {}) {
+  // Accept resultsJson, compute treeLengths internally
+  const treeObjects = getGardTreeObjects(resultsJson);
+  const lengths = getGardTreeLengths(treeObjects);
+  return {
+    width: opts.width || 800,
+    height: opts.height || 200,
+    data: {values: lengths},
+    mark: {type:"line",tooltip:true,point:false},
+    encoding: {
+      x: {field:"x",type:"quantitative",axis:{grid:false,title:"Coordinate"}},
+      y: {field:"L",type:"quantitative",axis:{grid:false,title:"Total tree length"},scale:{type:"sqrt"}}
+    }
+  };
 }

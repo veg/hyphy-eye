@@ -33,7 +33,7 @@ export function getGardAttributes(resultsJson) {
     const modelsConsidered = resultsJson.totalModelCount;
     const deltaAICcBaseline = floatFormat(resultsJson.baselineScore - resultsJson.bestModelAICc);
     const deltaAICcSingle = floatFormat(resultsJson.singleTreeAICc - resultsJson.bestModelAICc);
-    const caicImprovements = getCaicImprovements(resultsJson);
+    const caicImprovements = getGardCaicImprovements(resultsJson);
     const breakpointsProfile = getGardBreakpoints(resultsJson);
     const siteSupport = _.chain(resultsJson["siteBreakPointSupport"])
         .toPairs()
