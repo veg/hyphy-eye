@@ -21,6 +21,11 @@ import {
   GardSupportPlotGenerator, 
   GardTreeLengthPlotGenerator 
 } from "../gard/gard-plots.js";
+import { 
+  MultihitEvidenceRatiosPlotGenerator, 
+  MultihitSiteLogLikelihoodPlotGenerator, 
+  MultihitTimerBarPlotGenerator 
+} from "../multihit/multihit-plots.js";
 
 const vl = vegaLiteApi.register(vega, vegaLite);
 
@@ -91,6 +96,12 @@ for (const method of methods) {
           spec = GardSupportPlotGenerator(json, opts);
         } else if (viz.component === "GardTreeLengthPlot") {
           spec = GardTreeLengthPlotGenerator(json, opts);
+        } else if (viz.component === "MultihitEvidenceRatiosPlot") {
+          spec = MultihitEvidenceRatiosPlotGenerator(json);
+        } else if (viz.component === "MultihitSiteLogLikelihoodPlot") {
+          spec = MultihitSiteLogLikelihoodPlotGenerator(json);
+        } else if (viz.component === "MultihitTimerBarPlot") {
+          spec = MultihitTimerBarPlotGenerator(json);
         } else {
           const p = document.createElement("p");
           p.textContent = `${viz.component} not supported yet`;
@@ -108,4 +119,3 @@ for (const method of methods) {
     });
   }
 }
-```

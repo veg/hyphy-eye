@@ -62,60 +62,23 @@ const tileSpecs = utils.getMultihitTileSpecs(resultsJson);
 **Figure 1**. Evidence Ratios.
 
 ```js
-const fig1={
-  width: 400,
-  height: 200,
-  "data": {"values": attrs.evidenceRatios},
-  "mark": {type: "rule", tooltip : true},
-  "encoding": {
-    "facet": {
-      "field": "model",
-      "type": "ordinal",
-      "columns": 2
-    },
-    "x": {"field": "site", "type": "quantitative",  "axis" : {"grid" : false, title : "site"}},
-    "y": {"field": "er", "type": "quantitative",  "axis" : {"grid" : false, title : "Evidence Ratio"}},
-  }
-}
+const fig1 = plots.MultihitEvidenceRatiosPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig1})}</div>
+<div>${vl.render({ spec: fig1 })}</div>
 
 **Figure 2**. Site Log-Likelihood
 
 ```js
-const fig2={
-  width: 400,
-  height: 200,
-  "data": {"values": attrs.siteLogLikelihood},
-  "mark": {type: "point", tooltip : true},
-  "encoding": {
-    "facet": {
-      "field": "model",
-      "type": "ordinal",
-      "columns": 2
-    },
-    "x": {"field": "site", "type": "quantitative",  "axis" : {"grid" : false, title : "site"}},
-    "y": {"field": "siteLogLikelihood", "type": "quantitative",  "axis" : {"grid" : false, title : "Site Log-Likelihood"}},
-  }
-}
+const fig2 = plots.MultihitSiteLogLikelihoodPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig2})}</div>
+<div>${vl.render({ spec: fig2 })}</div>
 
 **Figure 3**. Model Fitting Benchmarks
 
 ```js
-const fig3={
-  width: 800,
-  height: 200,
-  "data": {"values": attrs.timers},
-  "mark": {type: "bar", tooltip : true,  point : false},
-  "encoding": {
-    "y": {"field": "model", "type": "ordinal",  "axis" : {"grid" : false, title : "Model"}, "sort": "-x"},
-    "x": {"field": "time", "type": "quantitative",  "axis" : {"grid" : false, title : "Time (seconds)"}, "scale" : {"type" :"sqrt"}},
-  }
-}
+const fig3 = plots.MultihitTimerBarPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig3})}</div>
+<div>${vl.render({ spec: fig3 })}</div>
 
 <hr>
 

@@ -386,6 +386,40 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
         ],
         // removed siteTableData; handled by generator
     },
+    MULTIHIT: {
+        name: 'MULTIHIT',
+        visualizations: [
+            {
+                name: 'Tile Table',
+                description: 'Summary statistics in a tile format',
+                component: 'TileTable',
+                glyph: GLYPH_PATHS.tile,
+                category: 'summary'
+            },
+            {
+                name: 'Evidence Ratios',
+                description: 'Evidence ratios by site across models',
+                component: 'MultihitEvidenceRatiosPlot',
+                glyph: GLYPH_PATHS.bar,
+                category: 'codon'
+            },
+            {
+                name: 'Site Log-Likelihood',
+                description: 'Site log-likelihood by model',
+                component: 'MultihitSiteLogLikelihoodPlot',
+                glyph: GLYPH_PATHS.scatter,
+                category: 'codon'
+            },
+            {
+                name: 'Model Fitting Benchmarks',
+                description: 'Model fitting time benchmarks',
+                component: 'MultihitTimerBarPlot',
+                glyph: GLYPH_PATHS.bar,
+                category: 'summary'
+            }
+        ],
+        // removed siteTableData; handled by generator
+    },
     GARD: {
         name: 'GARD',
         visualizations: [
@@ -474,40 +508,6 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                     modelForTree: 'default'
                 },
                 category: 'model'
-            }
-        ],
-        // removed siteTableData; handled by generator
-    },
-    MULTIHIT: {
-        name: 'MULTIHIT',
-        visualizations: [
-            {
-                name: 'Evidence Ratios',
-                description: 'Evidence ratios for each site',
-                component: 'multihit-plots.js',
-                glyph: GLYPH_PATHS.bar,
-                category: 'codon'
-            },
-            {
-                name: 'Site Log-Likelihoods',
-                description: 'Log-likelihoods for each site',
-                component: 'multihit-plots.js',
-                glyph: GLYPH_PATHS.scatter,
-                category: 'codon'
-            },
-            {
-                name: 'Model Fitting Benchmarks',
-                description: 'Run time for model fitting',
-                component: 'multihit-plots.js',
-                glyph: GLYPH_PATHS.bar,
-                category: 'model'
-            },
-            {
-                name: 'Tile Table',
-                description: 'Summary statistics in a tile format',
-                component: 'TileTable',
-                glyph: GLYPH_PATHS.tile,
-                category: 'summary'
             }
         ],
         // removed siteTableData; handled by generator
