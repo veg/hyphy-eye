@@ -31,7 +31,7 @@ import {
   NrmTreePlotGenerator,
   NrmBranchLengthComparisonPlotGenerator 
 } from "../nrm/nrm-plots.js";
-import { PhylotreeGenerator } from "../utils/phylotree-utils.js";
+import { PhylotreeGenerator } from "../utils/phylotree-generator.js";
 
 
 const vl = vegaLiteApi.register(vega, vegaLite);
