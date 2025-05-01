@@ -25,6 +25,7 @@ export * from "./stats/summaries.js";
 export * from "./utils/general-utils.js";
 export * from "./utils/phylotree-utils.js";
 export * from "./utils/plot-utils.js";
+export * from "./utils/method-utils.js";
 
 // Export all method-specific utilities and plots
 export * from "./absrel/absrel-utils.js";
