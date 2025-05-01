@@ -5,7 +5,6 @@ import * as _ from "lodash-es";
 import * as parse_svg from "parse-svg-path";
 import * as utils from "./general-utils.js";
 import * as phylotree from "phylotree";
-import { methodUtils } from "./method-utils.js";
 
 /**
  * Computes a set of labels for each node in a tree.
