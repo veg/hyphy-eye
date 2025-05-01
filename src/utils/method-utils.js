@@ -9,14 +9,16 @@ import {
     getBustedErrorSink, 
     getBustedSiteTableData, 
     getBustedPositiveSelection,
-    getBustedMultiHitER
+    getBustedMultiHitER,
+    getBustedTestOmega
 } from '../busted/busted-utils.js';
 import { 
     getAbsrelAttributes, 
     getAbsrelProfileBranchSites, 
     getAbsrelTileSpecs, 
     getAbsrelSiteTableData, 
-    getAbsrelBSPositiveSelection 
+    getAbsrelBSPositiveSelection,
+    getAbsrelTestOmega
 } from '../absrel/absrel-utils.js';
 import { 
     getFelAttributes, 
@@ -51,6 +53,7 @@ export const methodUtils = {
         bsPositiveSelectionFn: getBustedPositiveSelection,
         errorSinkFn: getBustedErrorSink,
         multiHitFn: getBustedMultiHitER,
+        testOmegaFn: getBustedTestOmega,
         profileBranchSitesFn: null
     },
     aBSREL: { 
@@ -58,6 +61,7 @@ export const methodUtils = {
         tableFn: getAbsrelSiteTableData,
         tileFn: getAbsrelTileSpecs, 
         bsPositiveSelectionFn: getAbsrelBSPositiveSelection,
+        testOmegaFn: getAbsrelTestOmega,
         errorSinkFn: null,
         multiHitFn: null,
         profileBranchSitesFn: getAbsrelProfileBranchSites
@@ -69,7 +73,8 @@ export const methodUtils = {
         bsPositiveSelectionFn: null,
         errorSinkFn: null,
         multiHitFn: null,
-        profileBranchSitesFn: null
+        profileBranchSitesFn: null,
+        testOmegaFn: null
     },
     MEME: { 
         attrsFn: getMemeAttributes, 
@@ -78,7 +83,8 @@ export const methodUtils = {
         bsPositiveSelectionFn: getMemePosteriorsPerBranchSite,
         errorSinkFn: null,
         multiHitFn: null,
-        profileBranchSitesFn: null
+        profileBranchSitesFn: null,
+        testOmegaFn: null
     },
     GARD: { 
         attrsFn: getGardAttributes, 
@@ -87,7 +93,8 @@ export const methodUtils = {
         bsPositiveSelectionFn: null,
         errorSinkFn: null,
         multiHitFn: null,
-        profileBranchSitesFn: null
+        profileBranchSitesFn: null,
+        testOmegaFn: null
     },
     NRM: { 
         attrsFn: getNrmAttributes, 
@@ -96,7 +103,8 @@ export const methodUtils = {
         bsPositiveSelectionFn: null,
         errorSinkFn: null,
         multiHitFn: null,
-        profileBranchSitesFn: null
+        profileBranchSitesFn: null,
+        testOmegaFn: null
     },
     MULTIHIT: { 
         attrsFn: getMultihitAttributes, 
@@ -105,6 +113,7 @@ export const methodUtils = {
         bsPositiveSelectionFn: null,
         errorSinkFn: null,
         multiHitFn: null,
-        profileBranchSitesFn: null
+        profileBranchSitesFn: null,
+        testOmegaFn: null
     }
 };

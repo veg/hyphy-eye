@@ -117,6 +117,14 @@ export function getNrmTree(resultsJson, i, treeDim, treeLabels, treeObjects, ava
 
 // Generator for phylogenetic tree view with legend (Figure 2)
 export function NrmTreePlotGenerator(resultsJson, opts = {}) {
+  // Ensure phylotree CSS is loaded once
+  if (typeof document !== 'undefined' && !document.getElementById('phylotree-css')) {
+    const link = document.createElement('link');
+    link.id = 'phylotree-css';
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css';
+    document.head.appendChild(link);
+  }
   const attrs = utils.getNrmAttributes(resultsJson);
   const treeDim = opts.treeDim || null;
   const treeLabels = opts.treeLabels || [];

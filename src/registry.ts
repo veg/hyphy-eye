@@ -119,25 +119,28 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Phylogenetic Tree',
                 description: 'Tree visualization with branch support values',
-                component: 'busted-plots.js',
+                component: 'Phylotree',
                 glyph: GLYPH_PATHS.tree,
                 options: {
-                    evThreshold: 10,
-                    testOmega: true,
-                    hasErrorSink: false
+                    useErrorSink: true,
+                    treeLabels: ['sequence names', 'show internal'],
+                    branchLength: 'unconstrained',
+                    colorBranches: true
                 },
                 category: 'summary'
             },
             {
                 name: 'Site-Specific Tree',
                 description: 'Tree visualization for specific codon sites',
-                component: 'busted-plots.js',
+                component: 'Phylotree',
                 glyph: GLYPH_PATHS.tree,
                 options: {
-                    partitionSizes: [],
-                    evThreshold: 10,
-                    testOmega: true,
-                    hasErrorSink: false
+                    useErrorSink: true,
+                    treeLabels: ['sequence names', 'show internal', 'codons'],
+                    branchLength: 'unconstrained',
+                    colorBranches: true,
+                    useSiteSpecificSupport: true,
+                    useOmegaSupport: true
                 },
                 category: 'codon'
             }
@@ -195,23 +198,31 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Phylogenetic Tree',
                 description: 'Tree visualization with branch support values',
-                component: 'absrel-plots.js',
+                component: 'Phylotree',
                 glyph: GLYPH_PATHS.tree,
                 options: {
-                    evThreshold: 10,
-                    colorBranches: true
+                    treeLabels: ["sequence names", "show internal"],
+                    branchLength: "Baseline MG94xREV",
+                    colorBranches: true,
+                    useErrorSink: false,
+                    useSiteSpecificSupport: false,
+                    useTurboColor: true
                 },
                 category: 'summary'
             },
             {
                 name: 'Site-Specific Tree',
                 description: 'Tree visualization for specific codon sites',
-                component: 'absrel-plots.js',
+                component: 'Phylotree',
                 glyph: GLYPH_PATHS.tree,
                 options: {
-                    partitionSizes: [],
-                    evThreshold: 10,
-                    colorBranches: true
+                    treeLabels: ["sequence names", "show internal", "codons"],
+                    branchLength: "Baseline MG94xREV",
+                    colorBranches: true,
+                    useErrorSink: false,
+                    useSiteSpecificSupport: true,
+                    useTurboColor: false,
+                    useOmegaSupport: true
                 },
                 category: 'codon'
             }
@@ -271,11 +282,15 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Phylogenetic Tree',
                 description: 'Tree visualization showing tested branches',
-                component: 'fel-plots.js',
+                component: 'Phylotree',
                 glyph: GLYPH_PATHS.tree,
                 options: {
-                    pvalueThreshold: 0.1,
-                    hasPasmt: false
+                    treeLabels: ["sequence names", "show internal"],
+                    branchLength: "Global MG94xREV",
+                    colorBranches: true,
+                    useErrorSink: false,
+                    useSiteSpecificSupport: false,
+                    useTurboColor: true
                 },
                 category: 'summary'
             }
@@ -362,24 +377,28 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
             {
                 name: 'Phylogenetic Tree',
                 description: 'Tree visualization with branch support values',
-                component: 'meme-plots.js',
+                component: 'Phylotree',
                 glyph: GLYPH_PATHS.tree,
                 options: {
-                    treeLabels: true,
-                    branchLength: true,
-                    colorBranches: true
+                    treeLabels: ["sequence names", "show internal"],
+                    branchLength: "Global MG94xREV",
+                    useErrorSink: false,
+                    useSiteSpecificSupport: false,
+                    useTurboColor: true
                 },
                 category: 'summary'
             },
             {
                 name: 'Site-Specific Tree',
                 description: 'Tree visualization for specific codon sites',
-                component: 'meme-plots.js',
+                component: 'Phylotree',
                 glyph: GLYPH_PATHS.tree,
                 options: {
-                    treeLabels: true,
-                    branchLength: true,
-                    shadeBranches: true
+                    treeLabels: ["sequence names", "show internal", "codons"],
+                    branchLength: "Global MG94xREV",
+                    useErrorSink: false,
+                    useSiteSpecificSupport: true,
+                    useTurboColor: false
                 },
                 category: 'codon'
             }

@@ -31,14 +31,6 @@ export function PosteriorsHeatmap(
   color_scheme = "redyellowblue"
 ) {
 
-  console.log("data", data);
-  console.log("from", from);
-  console.log("step", step);
-  console.log("branch_order", branch_order);
-  console.log("size_field", size_field);
-  console.log("color_label", color_label);
-  console.log("color_scheme", color_scheme);
-
   let N = branch_order.length;
   let box_size = 10; 
   let font_size = 8;
@@ -137,7 +129,6 @@ export function HeatmapGenerator(resultsJson, method, threshold, options = {}) {
     if (!fn) throw new Error(`No ${data} function for ${key}`);
     // Use raw data override if provided
     const posteriorData = fn(resultsJson);
-    console.log("posteriorData", posteriorData);
     const step = plotUtils.er_step_size(resultsJson);
     const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
     const branch_order = phylotreeUtils.treeNodeOrdering(treeObjects[0], resultsJson.tested[0], false, false);
@@ -168,8 +159,6 @@ export function HeatmapGenerator(resultsJson, method, threshold, options = {}) {
                 )
             );
         }
-        // debug: inspect generated specs array
-        console.log('vconcat specs', { numCodons, step, specsCount: specs.length, firstSpec: specs[0] });
         return { vconcat: specs };
     }
     return PosteriorsHeatmap(

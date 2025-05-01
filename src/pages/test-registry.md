@@ -30,6 +30,7 @@ import {
   NrmTreePlotGenerator,
   NrmBranchLengthComparisonPlotGenerator 
 } from "../nrm/nrm-plots.js";
+import { PhylotreeGenerator } from "../utils/phylotree-utils.js";
 
 
 const vl = vegaLiteApi.register(vega, vegaLite);
@@ -114,6 +115,13 @@ for (const method of methods) {
           vizContainer.appendChild(spec);
           btn.remove();
           return;
+        } else if (viz.component === "Phylotree") {
+          // Merge visualization options with any threshold values
+          console.log('Tree options:', opts);
+          spec = PhylotreeGenerator(json, method, opts);
+          vizContainer.appendChild(spec);
+          btn.remove();
+          return;
         } else {
           const p = document.createElement("p");
           p.textContent = `${viz.component} not supported yet`;
@@ -131,3 +139,4 @@ for (const method of methods) {
     });
   }
 }
+```

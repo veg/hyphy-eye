@@ -321,7 +321,7 @@ export function displayTree(results_json, ev_threshold, index, T, options, treeD
     
     // Set the branch length accessor using the utility
     T.branch_length_accessor = phylotreeUtils.setBranchLengthAccessor(T, results_json, index, branch_length);
-    
+    console.log("test_omega", test_omega) 
     // Configure the tree using the helper
     const t = phylotreeUtils.configureTree(T, treeDim, {
         height: dim && dim[0],
