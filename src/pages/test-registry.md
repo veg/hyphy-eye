@@ -19,7 +19,8 @@ import { MemeAlphaBetaPlotGenerator } from "../meme/meme-plots.js";
 import { 
   GardBreakpointPlotGenerator, 
   GardSupportPlotGenerator, 
-  GardTreeLengthPlotGenerator 
+  GardTreeLengthPlotGenerator,
+  GardTreeGridGenerator 
 } from "../gard/gard-plots.js";
 import { 
   MultihitEvidenceRatiosPlotGenerator, 
@@ -120,6 +121,13 @@ for (const method of methods) {
           console.log('Tree options:', opts);
           spec = PhylotreeGenerator(json, method, opts);
           vizContainer.appendChild(spec);
+          btn.remove();
+          return;
+        } else if (viz.component === "GardTreeGrid") {
+          spec = GardTreeGridGenerator(json, method, opts);
+          const treesContainer = document.createElement("div")
+          treesContainer.innerHTML = spec;
+          vizContainer.appendChild(treesContainer);
           btn.remove();
           return;
         } else {

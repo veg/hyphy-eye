@@ -192,17 +192,40 @@ export function GardSupportPlotGenerator(resultsJson, opts = {}) {
 
 // Generator for total tree length by partition
 export function GardTreeLengthPlotGenerator(resultsJson, opts = {}) {
-  // Accept resultsJson, compute treeLengths internally
-  const treeObjects = getGardTreeObjects(resultsJson);
-  const lengths = getGardTreeLengths(treeObjects);
-  return {
-    width: opts.width || 800,
-    height: opts.height || 200,
-    data: {values: lengths},
-    mark: {type:"line",tooltip:true,point:false},
-    encoding: {
-      x: {field:"x",type:"quantitative",axis:{grid:false,title:"Coordinate"}},
-      y: {field:"L",type:"quantitative",axis:{grid:false,title:"Total tree length"},scale:{type:"sqrt"}}
+    // Accept resultsJson, compute treeLengths internally
+    const treeObjects = getGardTreeObjects(resultsJson);
+    const lengths = getGardTreeLengths(treeObjects);
+    return {
+        width: opts.width || 800,
+        height: opts.height || 200,
+        data: {values: lengths},
+        mark: {type: "rule",tooltip:true},
+        encoding: {
+            x: {field:"x",type:"quantitative",axis:{grid:false,title:"coordinate"}},
+            y: {field:"L",type:"quantitative",axis:{grid:false,title:"Total tree length"}}
+        }
+    };
+}
+
+/**
+ * Generator for a grid of breakpoint trees
+ * @param {Object} resultsJson - GARD results JSON
+ * @param {string} method - method name (unused)
+ * @param {Object} opts - options object, supports 'variants' array to highlight
+ * @returns {string} HTML string for the grid of trees
+ */
+export function GardTreeGridGenerator(resultsJson, method, opts = {}) {
+     // Ensure phylotree CSS is loaded once
+    if (typeof document !== 'undefined' && !document.getElementById('phylotree-css')) {
+        const link = document.createElement('link');
+        link.id = 'phylotree-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css';
+        document.head.appendChild(link);
     }
-  };
+
+    const treeObjects = getGardTreeObjects(resultsJson);
+    const variants = opts.variants || [];
+    const displayed = getGardDisplayedTrees(treeObjects, variants);
+    return getGardTreeDivs(treeObjects, displayed);
 }

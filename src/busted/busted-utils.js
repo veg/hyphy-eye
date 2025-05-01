@@ -32,7 +32,6 @@ const percentageFormat = d3.format (".2p")
 export function getBustedAttributes(resultsJson) {
     // Extract common attributes using the utility function
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
-console.log(resultsJson);
     // BUSTED-specific attributes
     const srvRateClasses = _.size(resultsJson.fits["Unconstrained model"]["Rate Distributions"]["Synonymous site-to-site rates"]);
     const hasBackground = utils.hasBackground(resultsJson);

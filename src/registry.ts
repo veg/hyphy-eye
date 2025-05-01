@@ -105,17 +105,6 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
                     size_field: "subs"
                 }
             },
-                        {
-                name: 'Error-Sink Support',
-                description: 'Heatmap showing support for error-sink',
-                component: 'PosteriorsHeatmap',
-                glyph: GLYPH_PATHS.heatmap,
-                category: 'codon',
-                options: {
-                    data: "errorSinkFn",
-                    size_field: "subs"
-                }
-            },
             {
                 name: 'Phylogenetic Tree',
                 description: 'Tree visualization with branch support values',
@@ -443,16 +432,14 @@ export const HyPhyMethods: Record<string, HyPhyMethod> = {
         name: 'GARD',
         visualizations: [
             {
-                name: 'Breakpoint Trees',
-                description: 'Phylogenetic trees at breakpoint positions',
-                component: 'gard-plots.js',
+                name: 'Breakpoint Tree Grid',
+                description: 'Grid of breakpoint trees',
+                component: 'GardTreeGrid',
                 glyph: GLYPH_PATHS.tree,
+                category: 'summary',
                 options: {
-                    availableDistances: [],
-                    distanceFunction: 'default',
-                    modelForTree: 'default'
-                },
-                category: 'summary'
+                    variants: []
+                }
             },
             {
                 name: 'Breakpoint Placement',
