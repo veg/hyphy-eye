@@ -205,11 +205,9 @@ export function extractCommonAttributes(resultsJson) {
   }
   
   // Extract partition sizes if available
-  if (_.has(resultsJson, 'data partitions')) {
-    attributes.partitionSizes = _.chain(resultsJson['data partitions'])
-      .map((d, k) => (d['coverage'][0].length))
-      .value();
-  }
+  attributes.partitionSizes = Object.values(resultsJson.tested).map(
+    d => Object.values(d).filter(d => d === "test").length
+  )
   
   // Extract tested branch information if available
   if (_.has(resultsJson, 'tested')) {

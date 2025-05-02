@@ -10,7 +10,7 @@ import * as vegaLiteApi from "npm:vega-lite-api";
 import { FileAttachment } from "observablehq:stdlib";
 import * as registry from "../registry.js";
 import { BeadPlotGenerator } from "../components/bead-plot.js";
-import { HeatmapGenerator } from "../components/posteriors-heatmap.js";
+import { PosteriorsHeatmapGenerator } from "../components/posteriors-heatmap.js";
 import { TileTableGenerator } from "../components/tile-table/tile-table.js";
 import { RateDensitiesGenerator } from "../components/rate-summary-plots/rate-densities.js";
 import { RateBarPlotsGenerator } from "../components/rate-summary-plots/rate-bars.js";
@@ -32,6 +32,7 @@ import {
   NrmBranchLengthComparisonPlotGenerator 
 } from "../nrm/nrm-plots.js";
 import { PhylotreeGenerator } from "../utils/phylotree-generator.js";
+import { VisualizationOutputType } from "../registry.js";
 
 const vl = vegaLiteApi.register(vega, vegaLite);
 
@@ -50,31 +51,52 @@ const methods = ["BUSTED","aBSREL","FEL","MEME","GARD","NRM","MULTIHIT"];
 const thresholds = {BUSTED:10,aBSREL:0.1,FEL:0.1,MEME:0.1,GARD:0.1,NRM:0.1,MULTIHIT:0.1};
 const dynCaps = {BUSTED:10000,aBSREL:10000,FEL:10,MEME:10000,GARD:10000,NRM:10000,MULTIHIT:10000};
 
+// Make generator functions available in window scope
+window.FelAlphaBetaPlotGenerator = FelAlphaBetaPlotGenerator;
+window.PhylotreeGenerator = PhylotreeGenerator;
+window.MemeAlphaBetaPlotGenerator = MemeAlphaBetaPlotGenerator;
+window.BeadPlotGenerator = BeadPlotGenerator;
+window.PosteriorsHeatmapGenerator = PosteriorsHeatmapGenerator;
+window.TileTableGenerator = TileTableGenerator;
+window.RateDensitiesGenerator = RateDensitiesGenerator;
+window.RateBarPlotsGenerator = RateBarPlotsGenerator;
+window.GardBreakpointPlotGenerator = GardBreakpointPlotGenerator;
+window.GardSupportPlotGenerator = GardSupportPlotGenerator;
+window.GardTreeLengthPlotGenerator = GardTreeLengthPlotGenerator;
+window.GardTreeGridGenerator = GardTreeGridGenerator;
+window.MultihitEvidenceRatiosPlotGenerator = MultihitEvidenceRatiosPlotGenerator;
+window.MultihitSiteLogLikelihoodPlotGenerator = MultihitSiteLogLikelihoodPlotGenerator;
+window.MultihitTimerBarPlotGenerator = MultihitTimerBarPlotGenerator;
+window.NrmTreePlotGenerator = NrmTreePlotGenerator;
+window.NrmBranchLengthComparisonPlotGenerator = NrmBranchLengthComparisonPlotGenerator;
+
 // Helper functions for visualization handling
 function getGeneratorFunction(componentName) {
   const generatorName = `${componentName}Generator`;
   return window[generatorName];
 }
 
-function handleVisualizationOutput(output, outputType, container) {
+async function handleVisualizationOutput(output, outputType, container) {
   switch (outputType) {
     case VisualizationOutputType.VEGA_SPEC:
-      return vl.render({ spec: output });
+      const view = await vl.render({ spec: output });
+      container.appendChild(view);
+      return null;
     case VisualizationOutputType.DOM_ELEMENT:
       container.appendChild(output);
-      return null; // No need to render Vega spec
+      return null; 
     case VisualizationOutputType.HTML_STRING:
       const htmlContainer = document.createElement("div");
       htmlContainer.innerHTML = output;
       container.appendChild(htmlContainer);
-      return null; // No need to render Vega spec
+      return null;
     default:
       throw new Error(`Unknown output type: ${outputType}`);
   }
 }
 
 // Main visualization rendering function
-function renderVisualization(viz, json, method, opts) {
+function renderVisualization(viz, json, method, opts, vizContainer) {
   try {
     const generator = getGeneratorFunction(viz.component);
     if (!generator) {
@@ -85,14 +107,7 @@ function renderVisualization(viz, json, method, opts) {
     const spec = generator(json, method, opts);
 
     // Handle the output based on its type
-    const view = handleVisualizationOutput(spec, viz.outputType, vizContainer);
-
-    // If we got a Vega view, append it
-    if (view) {
-      vizContainer.appendChild(view);
-    }
-
-    btn.remove();
+    handleVisualizationOutput(spec, viz.outputType, vizContainer);
   } catch (err) {
     const pErr = document.createElement("p");
     pErr.textContent = `Error in ${viz.component} for ${method}: ${err.message}`;
@@ -128,7 +143,8 @@ for (const method of methods) {
         if (!jsonPromise) jsonPromise = attachments[method].json();
         const json = await jsonPromise;
         const opts = viz.options || {};
-        renderVisualization(viz, json, method, opts);
+        renderVisualization(viz, json, method, opts, vizContainer);
+        btn.remove();
       } catch (err) {
         const pErr = document.createElement("p");
         pErr.textContent = `Error loading data for ${method}: ${err.message}`;
@@ -137,3 +153,4 @@ for (const method of methods) {
     });
   }
 }
+```
