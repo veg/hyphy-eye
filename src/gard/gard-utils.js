@@ -28,14 +28,15 @@ export function getGardAttributes(resultsJson) {
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
     // GARD-specific attributes
-    const stages = _.size(resultsJson.improvements);
+    const improvements = resultsJson.improvements || {};
+    const stages = Object.keys(improvements).length;
     const potentialBreakpoints = resultsJson.potentialBreakpoints;
     const modelsConsidered = resultsJson.totalModelCount;
     const deltaAICcBaseline = floatFormat(resultsJson.baselineScore - resultsJson.bestModelAICc);
     const deltaAICcSingle = floatFormat(resultsJson.singleTreeAICc - resultsJson.bestModelAICc);
     const caicImprovements = getGardCaicImprovements(resultsJson);
     const breakpointsProfile = getGardBreakpoints(resultsJson);
-    const siteSupport = Object.entries(resultsJson["siteBreakPointSupport"])
+    const siteSupport = Object.entries(resultsJson["siteBreakPointSupport"] || {})
         .map(([key, value]) => ({
             bp: Number(key),
             support: value
@@ -66,18 +67,25 @@ export function getGardAttributes(resultsJson) {
  *                     and the number of models the breakpoint is associated with.
  */
 export function getGardBreakpoints(resultsJson) {
-  let bp = {};
-  return resultsJson.improvements
-    .flatMap((d) => {
-      return d.breakpoints.map((b) => {
-        if (!bp[b[0]]) bp[b[0]] = [];
-        bp[b[0]].push(d.breakpoints.length);
-        return {'bp': b[0], 'model': d.breakpoints.length};
-      });
-    })
-    .map((d) => {
-      d.span = Math.max(...bp[d.bp]) - Math.min(...bp[d.bp]);
-      return d;
+    const improvements = resultsJson.improvements || {};
+    const breakpoints = Object.values(improvements).flatMap(d => d.breakpoints || []);
+    
+    const bpMap = new Map();
+    breakpoints.forEach(b => {
+        const bp = b[0];
+        if (!bpMap.has(bp)) {
+            bpMap.set(bp, []);
+        }
+        bpMap.get(bp).push(b.length);
+    });
+
+    return Array.from(bpMap.entries()).map(([bp, lengths]) => {
+        const model = lengths[0];
+        return {
+            bp,
+            model,
+            span: Math.max(...lengths) - Math.min(...lengths)
+        };
     });
 }
 
@@ -95,15 +103,26 @@ export function getGardBreakpoints(resultsJson) {
  *     - daic: {number} The adjusted deltaAICc value for the stage.
  */
 export function getGardCaicImprovements(resultsJson) {
+    const improvements = resultsJson.improvements || {};
+    const improvementArray = Object.values(improvements);
+    
     let accumulator = 0;
-    return _.map(resultsJson['improvements'], (d, i) => {
-        let delta = d.deltaAICc;
-        if (i > 0 && d.deltaAICc > resultsJson['improvements'][0].deltaAICc) {
-            delta = delta - accumulator;
+    const initialDelta = improvementArray[0]?.deltaAICc || 0;
+    
+    return improvementArray.map((d, i) => {
+        if (!d) return null;
+        
+        let delta = d.deltaAICc || 0;
+        if (i > 0 && delta > initialDelta) {
+            delta = initialDelta;
         }
+        
         accumulator += delta;
-        return {'bp': d.breakpoints.length, 'daic': delta};
-    });
+        return {
+            bp: d.breakpoints?.length || 0,
+            daic: accumulator
+        };
+    }).filter(d => d !== null);
 }
 
 export function getGardTileSpecs(resultsJson) {

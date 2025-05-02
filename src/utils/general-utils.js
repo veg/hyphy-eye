@@ -205,15 +205,19 @@ export function extractCommonAttributes(resultsJson) {
   }
   
   // Extract partition sizes if available
-  attributes.partitionSizes = Object.values(resultsJson.tested).map(
-    d => Object.values(d).filter(d => d === "test").length
-  )
+  if (resultsJson.tested) {
+    attributes.partitionSizes = Object.values(resultsJson.tested).map(
+      d => (d && typeof d === 'object') ? Object.values(d).filter(d => d === "test").length : 0
+    );
+  } else {
+    attributes.partitionSizes = [];
+  }
   
   // Extract tested branch information if available
   if (_.has(resultsJson, 'tested')) {
     const testedArray = Object.values(resultsJson.tested);
     const testCounts = testedArray.map(obj => {
-      return Object.values(obj).filter(value => value === "test").length;
+      return (obj && typeof obj === 'object') ? Object.values(obj).filter(value => value === "test").length : 0;
     });
     attributes.testedBranchCount = d3.median(testCounts);
   }

@@ -41,17 +41,17 @@ export function getFelAttributes(resultsJson) {
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
     // FEL-specific attributes
-    const hasSrv = resultsJson.MLE.content.some((partition) => 
-        partition.some(([ds]) => ds > 0 && ds !== 1)
+    const hasSrv = Object.values(resultsJson.MLE?.content || {}).some((partition) => 
+        partition?.some(([ds]) => ds > 0 && ds !== 1) || false
     );
     const hasCi = resultsJson["confidence interval"];
-    const hasPositiveLRT = resultsJson.MLE.content.some((partition) => 
-        partition.some(([_, __, ___, ____, lrt]) => lrt > 0)
+    const hasPositiveLRT = Object.values(resultsJson.MLE?.content || {}).some((partition) => 
+        partition?.some(([_, __, ___, ____, lrt]) => lrt > 0) || false
     );
-    const hasPasmt = resultsJson.MLE["LRT"];
-    const variableSiteCount = resultsJson.MLE.content
-        .map((partition) => partition.filter(([ds, dn]) => ds + dn > 0))
-        .reduce((sum, filteredPartition) => sum + filteredPartition.length, 0);
+    const hasPasmt = resultsJson.MLE?.["LRT"];
+    const variableSiteCount = Object.values(resultsJson.MLE?.content || {})
+        .map((partition) => partition?.filter(([ds, dn]) => ds + dn > 0) || [])
+        .reduce((sum, filteredPartition) => sum + (filteredPartition?.length || 0), 0);
 
     return {
         hasSrv,
