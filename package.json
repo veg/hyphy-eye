@@ -1,5 +1,5 @@
 {
-  "name": "hyphy-eye",
+  "name": "@veg/hyphy-eye",
   "version": "0.1.0",
   "type": "module",
   "files": [
@@ -56,5 +56,24 @@
   },
   "engines": {
     "node": ">=18"
-  }
+  },
+  "description": "Observable Framework application for building, testing, and exporting visualization components for Datamonkey.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/veg/hyphy-eye.git"
+  },
+  "keywords": [
+    "hyphy",
+    "datamonkey",
+    "selection",
+    "phylogenetics",
+    "genomics",
+    "visualization"
+  ],
+  "author": "Danielle Callan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/veg/hyphy-eye/issues"
+  },
+  "homepage": "https://github.com/veg/hyphy-eye#readme"
 }
