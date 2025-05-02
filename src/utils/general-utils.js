@@ -211,12 +211,11 @@ export function extractCommonAttributes(resultsJson) {
   
   // Extract tested branch information if available
   if (_.has(resultsJson, 'tested')) {
-    attributes.testedBranchCount = d3.median(
-      _.chain(resultsJson.tested)
-        .map()
-        .map((d) => _.filter(_.map(d), (d) => d == "test").length)
-        .value()
-    );
+    const testedArray = Object.values(resultsJson.tested);
+    const testCounts = testedArray.map(obj => {
+      return Object.values(obj).filter(value => value === "test").length;
+    });
+    attributes.testedBranchCount = d3.median(testCounts);
   }
   
   return attributes;
@@ -291,11 +290,8 @@ export function getRateDistribution(resultsJson, hasErrorSink, keys, tags = ["om
     let rateData;
     if (clipFirst) {
         // Filter out error sink rate (rate 0) for BUSTED and aBSREL
-        rateData = _.chain(rateInfo)
-            .toPairs()
-            .filter(([key]) => key !== '0')
-            .fromPairs()
-            .value();
+        const entries = Object.entries(rateInfo);
+        rateData = Object.fromEntries(entries.filter(([key]) => key !== '0'));
     } else {
         rateData = rateInfo;
     }

@@ -261,7 +261,11 @@ export function getBustedSiteTableData(resultsJson) {
 }
 
 export function getBustedSiteIndexPartitionCodon(resultsJson) {
-    return _.chain (resultsJson['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
+    const partitions = resultsJson['data partitions'];
+    const mappedData = Object.entries(partitions).map(([k, d]) => {
+        return d['coverage'][0].map(site => [+k + 1, site + 1]);
+    });
+    return [].concat(...mappedData); // Flatten the array
 }
 
 export function getBustedDistMean(d) {

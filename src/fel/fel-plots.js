@@ -324,11 +324,16 @@ export function FelAlphaBetaPlotGenerator(resultsJson, method, options = {}) {
 }
 
 export function getFelAlphaBetaYrange(fig1data) {
-  let min = _.chain (fig1data).map ("alpha").max ().value ();
-  let max = _.chain (fig1data).map ("beta").max ().value ();
+  // Get max alpha and beta values using native JavaScript
+  const alphaValues = fig1data.map(d => d.alpha);
+  const betaValues = fig1data.map(d => d.beta);
+  const alphaBetaValues = fig1data.map(d => d["alpha=beta"]);
 
-  // check if fig1data.alpha=beta exceeds either value
-  const maxAB = _.chain (fig1data).map ("alpha=beta").max ().value ();
+  let min = Math.max(...alphaValues);
+  let max = Math.max(...betaValues);
+
+  // Check if alpha=beta exceeds either value
+  const maxAB = Math.max(...alphaBetaValues);
   if (maxAB > max) max = maxAB;
   if (maxAB > min) min = maxAB;
 

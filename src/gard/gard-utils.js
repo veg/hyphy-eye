@@ -35,12 +35,11 @@ export function getGardAttributes(resultsJson) {
     const deltaAICcSingle = floatFormat(resultsJson.singleTreeAICc - resultsJson.bestModelAICc);
     const caicImprovements = getGardCaicImprovements(resultsJson);
     const breakpointsProfile = getGardBreakpoints(resultsJson);
-    const siteSupport = _.chain(resultsJson["siteBreakPointSupport"])
-        .toPairs()
-        .map((d) => {
-            return {'bp': +d[0], 'support': d[1]};
-        })
-        .value();
+    const siteSupport = Object.entries(resultsJson["siteBreakPointSupport"])
+        .map(([key, value]) => ({
+            bp: Number(key),
+            support: value
+        }));
 
     return {
         stages,
@@ -68,13 +67,18 @@ export function getGardAttributes(resultsJson) {
  */
 export function getGardBreakpoints(resultsJson) {
   let bp = {};
-  return _.chain(resultsJson.improvements).map((d) => {
-      return _.map(d.breakpoints, (b) => {
-          if (!bp[b[0]]) bp[b[0]] = [];
-          bp[b[0]].push(d.breakpoints.length);
-          return {'bp': b[0], 'model': d.breakpoints.length};
+  return resultsJson.improvements
+    .flatMap((d) => {
+      return d.breakpoints.map((b) => {
+        if (!bp[b[0]]) bp[b[0]] = [];
+        bp[b[0]].push(d.breakpoints.length);
+        return {'bp': b[0], 'model': d.breakpoints.length};
       });
-  }).flatten().each((d) => d.span = d3.max(bp[d.bp]) - d3.min(bp[d.bp])).value();
+    })
+    .map((d) => {
+      d.span = Math.max(...bp[d.bp]) - Math.min(...bp[d.bp]);
+      return d;
+    });
 }
 
 /**

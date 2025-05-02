@@ -50,25 +50,32 @@ export function getAbsrelAttributes(resultsJson) {
     // aBSREL-specific attributes
     const positiveResults = resultsJson["test results"]["positive test results"];
     const pvalueThreshold = resultsJson["test results"]["P-value threshold"];
-    const profilableBranches = new Set(_.chain(_.get(resultsJson, ["Site Log Likelihood", "tested"])).keys().value());
+    const profilableBranches = new Set(Object.keys(_.get(resultsJson, ["Site Log Likelihood", "tested"])));
     const srvRateClasses = resultsJson["Synonymous site-posteriors"] ? resultsJson["Synonymous site-posteriors"].length : 0;
     const srvDistribution = utils.getRateDistribution(resultsJson, null, ["fits", "Full adaptive model", "Rate Distributions", "Synonymous site-to-site rates"], ["rate", "proportion"]);
-    const omegaRateClasses = _.chain(resultsJson["branch attributes"])
-        .map((d) => _.map(d, (dd) => _.size(dd["Rate Distributions"])))
-        .map((d) => _.max(d))
-        .value();
+    
+    // Calculate omega rate classes
+    const branchAttributes = resultsJson["branch attributes"];
+    const omegaRateClasses = branchAttributes.map(partition => {
+        return Object.values(partition).map(branch => {
+            return Object.keys(branch["Rate Distributions"]).length;
+        });
+    }).map(partitionRates => Math.max(...partitionRates));
+
+    // Calculate median rates for nucleotide changes
     const mhRates = {
-        'DH': d3.median(_.chain(resultsJson["branch attributes"])
-            .map((d) => _.map(d, (dd) => _.get(dd, ["Rate Distributions", "rate at which 2 nucleotides are changed instantly within a single codon"])))
-            .flatten()
-            .filter((d) => d)
-            .value()),
-        'TH': d3.median(_.chain(resultsJson["branch attributes"])
-            .map((d) => _.map(d, (dd) => _.get(dd, ["Rate Distributions", "rate at which 3 nucleotides are changed instantly within a single codon"])))
-            .flatten()
-            .filter((d) => d)
-            .value())
+        'DH': d3.median(branchAttributes
+            .map(partition => Object.values(partition)
+                .map(branch => branch["Rate Distributions"]["rate at which 2 nucleotides are changed instantly within a single codon"])
+                .filter(d => d))
+            .flat()),
+        'TH': d3.median(branchAttributes
+            .map(partition => Object.values(partition)
+                .map(branch => branch["Rate Distributions"]["rate at which 3 nucleotides are changed instantly within a single codon"])
+                .filter(d => d))
+            .flat())
     };
+
     const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
     const profileBranchSites = getAbsrelProfileBranchSites(resultsJson, treeObjects);
 
@@ -368,10 +375,12 @@ export function getAbsrelProfileBranchSites(resultsJson, treeObjects) {
  *   index and site index for each site
  */
 export function getAbsrelSiteIndexPartitionCodon(resultsJson) {
-    return _.chain (resultsJson['data partitions']).map ((d,k)=>_.map (d['coverage'][0], (site)=>[+k+1,site+1])).flatten().value();
+    const partitions = resultsJson['data partitions'];
+    const mappedData = Object.entries(partitions).map(([k, d]) => {
+        return d['coverage'][0].map(site => [+k + 1, site + 1]);
+    });
+    return [].concat(...mappedData); // Flatten the array
 }
-
-
 
 /**
  * Retrieves the rate distribution for a given branch in the results JSON.

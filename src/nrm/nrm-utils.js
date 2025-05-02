@@ -26,16 +26,12 @@ export function getNrmAttributes(resultsJson) {
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
     // NRM-specific attributes
-    const treeLengthByModel = _.chain(_.keys(resultsJson.fits))
-        .map((d) => {
-            return [d, d3.sum(_.map(resultsJson["branch attributes"]["0"], (bv) => bv[d]))];
-        })
-        .fromPairs()
-        .value();
-    const modelSummary = _.chain(resultsJson["fits"])
-        .map((v, m) => [m, v["AIC-c"]])
-        .sortBy((d) => d[1])
-        .value();
+    const treeLengthByModel = Object.entries(resultsJson.fits)
+        .map(([d, _]) => [d, d3.sum(Object.values(resultsJson["branch attributes"]["0"]).map(bv => bv[d]))])
+        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+    const modelSummary = Object.entries(resultsJson["fits"])
+        .map(([m, v]) => [m, v["AIC-c"]])
+        .sort((a, b) => a[1] - b[1]);
     const bestModel = modelSummary[0][0];
     const bestModelTreeLength = floatFormat(treeLengthByModel[bestModel]);
     const modelTableData = getNrmModelTableData(resultsJson, treeLengthByModel);
@@ -100,18 +96,15 @@ export function getNrmQMatrixTable(resultsJson, model) {
  * @returns {Array} A table (array of objects) containing the model comparison data
  */
 export function getNrmModelTableData(resultsJson, treeLengthByModel) {
-  return _.chain (treeLengthByModel).map((i,d)=> {
-      return {
-        'Model' : d,
-        'AIC-c' : resultsJson["fits"][d]["AIC-c"],
-        'Tree length' : treeLengthByModel[d],
-        'f(A)' : resultsJson["fits"][d]["Equilibrium frequencies"][0][0],
-        'f(C)' : resultsJson["fits"][d]["Equilibrium frequencies"][0][1],
-        'f(G)' : resultsJson["fits"][d]["Equilibrium frequencies"][0][2],
-        'f(T)' : resultsJson["fits"][d]["Equilibrium frequencies"][0][3]
-
-      };
-  }).value();
+  return Object.entries(treeLengthByModel).map(([d, i]) => ({
+    'Model': d,
+    'AIC-c': resultsJson["fits"][d]["AIC-c"],
+    'Tree length': treeLengthByModel[d],
+    'f(A)': resultsJson["fits"][d]["Equilibrium frequencies"][0][0],
+    'f(C)': resultsJson["fits"][d]["Equilibrium frequencies"][0][1],
+    'f(G)': resultsJson["fits"][d]["Equilibrium frequencies"][0][2],
+    'f(T)': resultsJson["fits"][d]["Equilibrium frequencies"][0][3]
+  }));
 }
 
 /**

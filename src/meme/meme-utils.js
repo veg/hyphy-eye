@@ -1,8 +1,6 @@
-import * as d3 from "d3";
 import * as _ from "lodash-es";
 import * as utils from "../utils/general-utils.js";
 import {html} from "htl";
-import { getAbsrelAttributes } from "../absrel/absrel-utils.js";
 
 /**
  * Extracts some summary attributes from MEME results that are used later in the
@@ -32,10 +30,9 @@ export function getMemeAttributes(resultsJson) {
     const hasSubstitutions = !!_.get(resultsJson, ["substitutions"]);
     const hasSiteLRT = !!_.find(_.get(resultsJson, ["MLE", "headers"]), (d) => d[0] == "Variation p");
     const hasBackground = utils.hasBackground(resultsJson);
-    const siteIndexPartitionCodon = _.chain(resultsJson['data partitions'])
-        .map((d, k) => _.map(d['coverage'][0], (site) => [+k+1, site+1]))
-        .flatten()
-        .value();
+    const siteIndexPartitionCodon = Object.values(resultsJson['data partitions'])
+        .map((d, k) => Object.values(d['coverage'][0]).map((site) => [+k+1, site+1]))
+        .flat();
 
     return {
         testedBranchCount: commonAttrs.testedBranchCount,
@@ -59,11 +56,9 @@ export function getMemeAttributes(resultsJson) {
  * @returns {number} The count of sites with p-values below the threshold
  */
 export function getMemeCountSitesByPvalue(resultsJson, pvalueThreshold) {
-    const countSites = _.chain(resultsJson["MLE"]["content"])
-        .mapValues((d) => _.filter(d, (r) => r[6] <= +pvalueThreshold).length)
-        .values()
-        .sum()
-        .value();
+    const countSites = Object.values(resultsJson["MLE"]["content"])
+        .map(d => d.filter(r => r[6] <= +pvalueThreshold).length)
+        .reduce((sum, count) => sum + count, 0);
 
     return countSites;
 }
@@ -80,12 +75,10 @@ export function getMemeSelectedBranchesPerSelectedSite(resultsJson, pvalueThresh
     const countSites = getMemeCountSitesByPvalue(resultsJson, pvalueThreshold);
     const selectedBranchesPerSelectedSite = 
         countSites ? 
-        (_.chain(resultsJson["MLE"]["content"])
-            .mapValues((d) => _.filter(d, (r) => r[6] <= +pvalueThreshold))
-            .mapValues((d) => _.sum(_.map(d, (r) => r[7])))
-            .values()
-            .sum()
-            .value() / countSites).toFixed(2) 
+        (Object.values(resultsJson["MLE"]["content"])
+            .map(d => d.filter(r => r[6] <= +pvalueThreshold))
+            .map(d => d.reduce((sum, r) => sum + r[7], 0))
+            .reduce((sum, count) => sum + count, 0) / countSites).toFixed(2) 
         : "N/A";
 
     return selectedBranchesPerSelectedSite; 
@@ -97,12 +90,10 @@ export function getMemeTileSpecs(resultsJson, pvalueThreshold) {
     const selectedBranchesPerSelectedSite = getMemeSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
     // Compute count of sites with ω variation below p-value threshold
     const variationCount = attrs.hasSiteLRT ?
-        _.chain(resultsJson['MLE']['content'])
-            .mapValues(d => _.filter(d, r => r[11] <= +pvalueThreshold).length)
-            .values()
-            .sum()
-            .value()
-        : 'N/A';
+        Object.values(resultsJson['MLE']['content'])
+            .map(d => d.filter(r => r[11] <= +pvalueThreshold).length)
+            .reduce((sum, count) => sum + count, 0)
+        : 0;
     
     return [
         {

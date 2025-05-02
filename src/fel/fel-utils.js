@@ -41,14 +41,17 @@ export function getFelAttributes(resultsJson) {
     const commonAttrs = utils.extractCommonAttributes(resultsJson);
     
     // FEL-specific attributes
-    const hasSrv = _.chain(resultsJson.MLE.content).some((d) => _.some(d, (dd) => dd[0] > 0 && dd[0] != 1)).value();
+    const hasSrv = resultsJson.MLE.content.some((partition) => 
+        partition.some(([ds]) => ds > 0 && ds !== 1)
+    );
     const hasCi = resultsJson["confidence interval"];
-    const hasPositiveLRT = _.some(_.map(resultsJson.MLE.content, (d) => _.some(d, (dd) => dd[5] > 0.)));
+    const hasPositiveLRT = resultsJson.MLE.content.some((partition) => 
+        partition.some(([_, __, ___, ____, lrt]) => lrt > 0)
+    );
     const hasPasmt = resultsJson.MLE["LRT"];
-    const variableSiteCount = d3.sum(_.chain(resultsJson.MLE.content)
-      .map((d) => _.filter(d, (dd) => dd[0] + dd[1] > 0))
-      .map(d => d.length)
-      .value());
+    const variableSiteCount = resultsJson.MLE.content
+        .map((partition) => partition.filter(([ds, dn]) => ds + dn > 0))
+        .reduce((sum, filteredPartition) => sum + filteredPartition.length, 0);
 
     return {
         hasSrv,

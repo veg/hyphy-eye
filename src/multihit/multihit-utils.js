@@ -24,11 +24,12 @@ export function getMultihitAttributes(resultsJson) {
     
     // Multihit-specific attributes
     const stages = _.size(resultsJson.improvements);
-    const evidenceRatios = _.chain(resultsJson["Evidence Ratios"])
-        .map((d, k) => [_.map(d[0], (x, i) => { return { model: k, site: i, er: x }})]).flatten().flatten().value();
-    const siteLogLikelihood = _.chain(resultsJson["Site Log Likelihood"])
-        .map((d, k) => [_.map(d[0], (x, i) => { return { model: k, site: i, siteLogLikelihood: x }})]).flatten().flatten().value();
-    const timers = _.chain(resultsJson["timers"]).map((d, k) => { return { model: k, time: d.timer }}).value();
+    const evidenceRatios = Object.entries(resultsJson["Evidence Ratios"])
+        .flatMap(([k, d]) => d[0].map((x, i) => ({ model: k, site: i, er: x })));
+    const siteLogLikelihood = Object.entries(resultsJson["Site Log Likelihood"])
+        .flatMap(([k, d]) => d[0].map((x, i) => ({ model: k, site: i, siteLogLikelihood: x })));
+    const timers = Object.entries(resultsJson["timers"])
+        .map(([k, d]) => ({ model: k, time: d.timer }));
 
     return {
         numberOfSequences: commonAttrs.numberOfSequences,

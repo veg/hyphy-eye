@@ -136,14 +136,11 @@ export function PosteriorsHeatmapGenerator(resultsJson, method, options = {}) {
     const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
     const branch_order = phylotreeUtils.treeNodeOrdering(treeObjects[0], resultsJson.tested[0], false, false);
 
-    const numCodons = _.chain(posteriorData)
-        .map(d => 
-            d.Codon != null
-                ? d.Codon
-                : (d.Key ? +d.Key.split("|")[1] : undefined)
-        )
-        .max()
-  .value();
+    const numCodons = Math.max(...posteriorData.map(d => {
+        return d.Codon != null
+            ? d.Codon
+            : (d.Key ? +d.Key.split("|")[1] : undefined);
+    }).filter(n => n !== undefined));
     // split into vconcat if many sites
     if (numCodons > step) {
         const specs = [];
