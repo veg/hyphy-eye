@@ -2,7 +2,6 @@ import * as _ from 'lodash-es';
 import * as plotUtils from "../utils/plot-utils.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import { methodUtils } from '../utils/method-utils.js';
-import * as bustedUtils from '../busted/busted-utils.js';
 
 // TODO: change this color scheme to something from crameri
 // i think we want linear, fewer hues?
@@ -103,13 +102,16 @@ export function PosteriorsHeatmap(
  * Generator for posterior heatmaps across methods.
  * @param {Object} resultsJson - HyPhy JSON.
  * @param {String} method - Method key (e.g. 'BUSTED', 'aBSREL', 'MEME').
- * @param {number} threshold - p-value or evidence ratio threshold.
- * @param {Object} options - Optional settings: flavor override, size_field, color_label, color_scheme.
+ * @param {Object} options - Optional settings: flavor override, size_field, color_label, color_scheme, threshold.
  * @returns {Object} Vega-Lite spec for a vconcat of posterior heatmaps.
  */
-export function HeatmapGenerator(resultsJson, method, threshold, options = {}) {
+export function PosteriorsHeatmapGenerator(resultsJson, method, options = {}) {
     // Evaluate dynamic string options referencing attrs or results_json
-    const finalOpts = { ...options };
+    const finalOpts = { 
+        ...options,
+        threshold: options.threshold || 10
+    };
+    console.log('PosteriorsHeatmapGenerator options:', finalOpts);
     const utilsFns = methodUtils[method];
     if (!utilsFns) throw new Error(`No utilities defined for method: ${method}`);
     const attrs = utilsFns.attrsFn(resultsJson);

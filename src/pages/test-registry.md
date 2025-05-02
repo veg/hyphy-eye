@@ -33,7 +33,6 @@ import {
 } from "../nrm/nrm-plots.js";
 import { PhylotreeGenerator } from "../utils/phylotree-generator.js";
 
-
 const vl = vegaLiteApi.register(vega, vegaLite);
 
 // Preload attachments to satisfy FileAttachment literal requirement
@@ -50,6 +49,56 @@ const attachments = {
 const methods = ["BUSTED","aBSREL","FEL","MEME","GARD","NRM","MULTIHIT"];
 const thresholds = {BUSTED:10,aBSREL:0.1,FEL:0.1,MEME:0.1,GARD:0.1,NRM:0.1,MULTIHIT:0.1};
 const dynCaps = {BUSTED:10000,aBSREL:10000,FEL:10,MEME:10000,GARD:10000,NRM:10000,MULTIHIT:10000};
+
+// Helper functions for visualization handling
+function getGeneratorFunction(componentName) {
+  const generatorName = `${componentName}Generator`;
+  return window[generatorName];
+}
+
+function handleVisualizationOutput(output, outputType, container) {
+  switch (outputType) {
+    case VisualizationOutputType.VEGA_SPEC:
+      return vl.render({ spec: output });
+    case VisualizationOutputType.DOM_ELEMENT:
+      container.appendChild(output);
+      return null; // No need to render Vega spec
+    case VisualizationOutputType.HTML_STRING:
+      const htmlContainer = document.createElement("div");
+      htmlContainer.innerHTML = output;
+      container.appendChild(htmlContainer);
+      return null; // No need to render Vega spec
+    default:
+      throw new Error(`Unknown output type: ${outputType}`);
+  }
+}
+
+// Main visualization rendering function
+function renderVisualization(viz, json, method, opts) {
+  try {
+    const generator = getGeneratorFunction(viz.component);
+    if (!generator) {
+      throw new Error(`Generator function not found for component: ${viz.component}`);
+    }
+
+    // Generate the visualization
+    const spec = generator(json, method, opts);
+
+    // Handle the output based on its type
+    const view = handleVisualizationOutput(spec, viz.outputType, vizContainer);
+
+    // If we got a Vega view, append it
+    if (view) {
+      vizContainer.appendChild(view);
+    }
+
+    btn.remove();
+  } catch (err) {
+    const pErr = document.createElement("p");
+    pErr.textContent = `Error in ${viz.component} for ${method}: ${err.message}`;
+    vizContainer.appendChild(pErr);
+  }
+}
 
 // Use the main notebook container
 const root = document.getElementById("observablehq-main");
@@ -79,72 +128,12 @@ for (const method of methods) {
         if (!jsonPromise) jsonPromise = attachments[method].json();
         const json = await jsonPromise;
         const opts = viz.options || {};
-        let spec;
-        if (viz.component === "BeadPlot") {
-          spec = BeadPlotGenerator(json, method, thresholds[method], dynCaps[method], opts);
-        } else if (viz.component === "PosteriorsHeatmap") {
-          spec = HeatmapGenerator(json, method, thresholds[method], opts);
-        } else if (viz.component === "TileTable") {
-          spec = TileTableGenerator(json, method, thresholds[method], opts);
-          vizContainer.appendChild(spec);
-          btn.remove();
-          return;
-        } else if (viz.component === "RateDensities") {
-          spec = RateDensitiesGenerator(json, method, thresholds[method], opts);
-        } else if (viz.component === "RateBarPlots") {
-          spec = RateBarPlotsGenerator(json, method, thresholds[method], opts);
-        } else if (viz.component === "FelAlphaBetaPlot") {
-          spec = FelAlphaBetaPlotGenerator(json, method, thresholds[method], opts);
-        } else if (viz.component === "MemeAlphaBetaPlot") {
-          spec = MemeAlphaBetaPlotGenerator(json, method, thresholds[method], opts);
-        } else if (viz.component === "GardBreakpointPlot") {
-          spec = GardBreakpointPlotGenerator(json, opts);
-        } else if (viz.component === "GardSupportPlot") {
-          spec = GardSupportPlotGenerator(json, opts);
-        } else if (viz.component === "GardTreeLengthPlot") {
-          spec = GardTreeLengthPlotGenerator(json, opts);
-        } else if (viz.component === "MultihitEvidenceRatiosPlot") {
-          spec = MultihitEvidenceRatiosPlotGenerator(json);
-        } else if (viz.component === "MultihitSiteLogLikelihoodPlot") {
-          spec = MultihitSiteLogLikelihoodPlotGenerator(json);
-        } else if (viz.component === "MultihitTimerBarPlot") {
-          spec = MultihitTimerBarPlotGenerator(json);
-        } else if (viz.component === "NrmBranchLengthComparisonPlot") {
-          spec = NrmBranchLengthComparisonPlotGenerator(json);
-        } else if (viz.component === "NrmTreePlot") {
-          spec = NrmTreePlotGenerator(json);
-          vizContainer.appendChild(spec);
-          btn.remove();
-          return;
-        } else if (viz.component === "Phylotree") {
-          // Merge visualization options with any threshold values
-          console.log('Tree options:', opts);
-          spec = PhylotreeGenerator(json, method, opts);
-          vizContainer.appendChild(spec);
-          btn.remove();
-          return;
-        } else if (viz.component === "GardTreeGrid") {
-          spec = GardTreeGridGenerator(json, method, opts);
-          const treesContainer = document.createElement("div")
-          treesContainer.innerHTML = spec;
-          vizContainer.appendChild(treesContainer);
-          btn.remove();
-          return;
-        } else {
-          const p = document.createElement("p");
-          p.textContent = `${viz.component} not supported yet`;
-          vizContainer.appendChild(p);
-          return;
-        }
-        const view = await vl.render({ spec });
-        vizContainer.appendChild(view);
+        renderVisualization(viz, json, method, opts);
       } catch (err) {
         const pErr = document.createElement("p");
-        pErr.textContent = `Error in ${viz.component} for ${method}: ${err.message}`;
+        pErr.textContent = `Error loading data for ${method}: ${err.message}`;
         vizContainer.appendChild(pErr);
       }
-      btn.remove();
     });
   }
 }
-```

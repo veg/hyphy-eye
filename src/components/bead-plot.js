@@ -166,8 +166,12 @@ export function BeadPlot(
 
 // TODO: make this BeadPlotGenerator, work for all methods, reads from registry
 // Wrapper that takes HyPhy results JSON and prepares data for BeadPlot
-export function BeadPlotGenerator(resultsJson, method, threshold = 10, dyn_range_cap = 10000, options = {}) {
-    const finalOpts = { ...options };
+export function BeadPlotGenerator(resultsJson, method, options = {}) {
+    const finalOpts = { 
+        ...options,
+        threshold: options.threshold || 10,
+        dyn_range_cap: options.dyn_range_cap || 10000
+    };
     // Lookup util functions centrally
     const utilsFns = methodUtils[method];
     if (!utilsFns) throw new Error(`No utilities defined for method: ${method}`);
@@ -180,7 +184,7 @@ export function BeadPlotGenerator(resultsJson, method, threshold = 10, dyn_range
         }
     });
     // Build data via centralized table function
-    const siteRes = utilsFns.tableFn(resultsJson, threshold);
+    const siteRes = utilsFns.tableFn(resultsJson, finalOpts.threshold);
     const data = Array.isArray(siteRes[0]) ? siteRes[0] : siteRes;
     // Assemble arguments: data, from, step, then only defined finalOpts in order
     const beadArgs = [data, 1, data.length];
@@ -191,14 +195,6 @@ export function BeadPlotGenerator(resultsJson, method, threshold = 10, dyn_range
     ];
     // Loop through options in order, pushing values or skipping as needed
     for (const opt of optOrder) {
-        if (opt === 'threshold') {
-            beadArgs.push(threshold);
-            continue;
-        }
-        if (opt === 'dyn_range_cap') {
-            beadArgs.push(dyn_range_cap);
-            continue;
-        }
         if (finalOpts[opt] !== undefined) {
             beadArgs.push(finalOpts[opt]);
         } else {

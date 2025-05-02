@@ -293,34 +293,34 @@ export function getFelPvPlot(data, pvalueThreshold) {
  * 
  * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
  * @param {string} method - The method name (should be "FEL")
- * @param {number} threshold - The threshold for significance
- * @param {Object} opts - Additional options for the visualization
+ * @param {Object} options - Additional options for the visualization
  * @returns {Object} A Vega-Lite specification for the chart
  */
-export function FelAlphaBetaPlotGenerator(resultsJson, method, threshold, opts = {}) {
-  // Verify this is being called with the FEL method
-  if (method !== "FEL") {
-    console.warn(`FelAlphaBetaPlotGenerator called with method ${method}, expected "FEL"`); 
-  }
-  
-  // Get site data from the FEL-specific function
-  const siteRes = utils.getFelSiteTableData(resultsJson, threshold);
-  const data = siteRes[0]; // First element contains the site data
-  
-  // Calculate the y-range for the plot
-  const yrange = getFelAlphaBetaYrange(data);
-  
-  // Extract options or use defaults
-  const step = opts.step || 70;
-  
-  // Create a concatenated plot for all sites
-  return {
-    "width": 800, 
-    "height": 200,
-    "vconcat": _.map(_.range(1, data.length + 1, step), (d) => {
-      return getFelAlphaBetaPlot(data, d, step, yrange);
-    })
-  };
+export function FelAlphaBetaPlotGenerator(resultsJson, method, options = {}) {
+    // Verify this is being called with the FEL method
+    if (method !== "FEL") {
+        console.warn(`FelAlphaBetaPlotGenerator called with method ${method}, expected "FEL"`); 
+    }
+    
+    // Get site data from the FEL-specific function
+    const threshold = options.threshold || 10;
+    const siteRes = utils.getFelSiteTableData(resultsJson, threshold);
+    const data = siteRes[0]; // First element contains the site data
+    
+    // Calculate the y-range for the plot
+    const yrange = getFelAlphaBetaYrange(data);
+    
+    // Extract options or use defaults
+    const step = options.step || 70;
+    
+    // Create a concatenated plot for all sites
+    return {
+      "width": 800, 
+      "height": 200,
+      "vconcat": _.map(_.range(1, data.length + 1, step), (d) => {
+        return getFelAlphaBetaPlot(data, d, step, yrange);
+      })
+    };
 }
 
 export function getFelAlphaBetaYrange(fig1data) {

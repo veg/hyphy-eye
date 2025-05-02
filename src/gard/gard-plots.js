@@ -211,10 +211,15 @@ export function GardTreeLengthPlotGenerator(resultsJson, opts = {}) {
  * Generator for a grid of breakpoint trees
  * @param {Object} resultsJson - GARD results JSON
  * @param {string} method - method name (unused)
- * @param {Object} opts - options object, supports 'variants' array to highlight
+ * @param {Object} options - options object, supports 'variants' array to highlight
  * @returns {string} HTML string for the grid of trees
  */
-export function GardTreeGridGenerator(resultsJson, method, opts = {}) {
+export function GardTreeGridGenerator(resultsJson, method, options = {}) {
+    // Verify this is being called with the GARD method
+    if (method !== "GARD") {
+        console.warn(`GardTreeGridGenerator called with method ${method}, expected "GARD"`); 
+    }
+
      // Ensure phylotree CSS is loaded once
     if (typeof document !== 'undefined' && !document.getElementById('phylotree-css')) {
         const link = document.createElement('link');
@@ -225,7 +230,7 @@ export function GardTreeGridGenerator(resultsJson, method, opts = {}) {
     }
 
     const treeObjects = getGardTreeObjects(resultsJson);
-    const variants = opts.variants || [];
+    const variants = options.variants || [];
     const displayed = getGardDisplayedTrees(treeObjects, variants);
     return getGardTreeDivs(treeObjects, displayed);
 }
