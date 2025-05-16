@@ -344,3 +344,46 @@ export function getRateDistributionByBranch(resultsJson, branch, keys = ["branch
 export function getBranchPvalue(resultsJson, branch, keys = ["branch attributes", "0"], pvalueKey = "Corrected P-value") {
     return _.get(resultsJson, [...keys, branch, pvalueKey]);
 }
+
+/**
+ * Identifies which HyPhy method was used to produce the results JSON
+ * 
+ * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
+ * @returns {string|null} The name of the HyPhy method used, or null if not identifiable
+ */
+export function identifyHyPhyMethod(resultsJson) {
+    // Check if results_json has the required structure
+    if (!resultsJson || !resultsJson.analysis || !resultsJson.analysis.info) {
+        console.log("no analysis.info")
+        return null;
+    }
+    
+    const info = resultsJson.analysis.info;
+    console.log("info", info)
+    
+    // Define method patterns to search for
+    const methodPatterns = [
+        { pattern: /BUSTED/i, method: 'BUSTED' },
+        { pattern: /aBSREL/i, method: 'aBSREL' },
+        { pattern: /FEL/i, method: 'FEL' },
+        { pattern: /MEME/i, method: 'MEME' },
+        { pattern: /GARD/i, method: 'GARD' },
+        { pattern: /SLAC/i, method: 'SLAC' },
+        { pattern: /FUBAR/i, method: 'FUBAR' },
+        { pattern: /RELAX/i, method: 'RELAX' },
+        { pattern: /NRM/i, method: 'NRM' },
+        { pattern: /MULTIHIT/i, method: 'MULTIHIT' }
+    ];
+    
+    // Check for method name in analysis.info
+    for (const methodObj of methodPatterns) {
+        console.log("methodObj", methodObj)
+        // Check if the method name appears in analysis.info
+        if (info.includes(methodObj.method)) {
+            console.log("found", methodObj.method)
+            return methodObj.method;
+        }
+    }
+    
+    return null;
+}

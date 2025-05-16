@@ -40,8 +40,15 @@ export default {
       ]
     },
     {
+      name: "Testing",
+      open: false,
+      pages: [
+        {name: "Method Identifier", path: "pages/method-identifier"}
+      ]
+    },
+    {
       name: "Usage",
-      open: true,
+      open: false,
       pages: [
         {name: "Datamonkey Usage", path: "pages/datamonkey-usage"}
       ]
