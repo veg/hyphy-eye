@@ -31,6 +31,54 @@ const results_json = Mutable(
   await FileAttachment("../data/fel_test_data.json").json(),
 );
 
+// Handle data from URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+const jsonUrl = urlParams.get('json');
+const jsonData = urlParams.get('data');
+const dataId = urlParams.get('id');
+const storageKey = urlParams.get('key');
+
+if (jsonUrl) {
+  // Load JSON from external URL
+  fetch(jsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      if (data && data.MLE) {
+        results_json.value = data;
+      }
+    })
+    .catch(error => console.error('Error loading JSON:', error));
+} else if (jsonData) {
+  // Parse JSON from URL parameter
+  try {
+    const data = JSON.parse(decodeURIComponent(jsonData));
+    if (data && data.MLE) {
+      results_json.value = data;
+    }
+  } catch (error) {
+    console.error('Error parsing JSON from URL:', error);
+  }
+} else if (dataId || storageKey) {
+  // Try to load from localStorage first
+  const key = storageKey || `hyphy-results-${dataId}`;
+  const localData = localStorage.getItem(key);
+  
+  if (localData) {
+    try {
+      const data = JSON.parse(localData);
+      if (data && data.MLE) {
+        results_json.value = data;
+      }
+    } catch (error) {
+      console.error('Error parsing localStorage data:', error);
+    }
+  } else if (dataId) {
+    // If not in localStorage, request from parent via postMessage
+    window.parent.postMessage({ type: 'request-data', id: dataId }, '*');
+  }
+}
+
+// Keep existing postMessage listener and handle data responses
 window.addEventListener(
   "message",
   (event) => {
@@ -42,6 +90,15 @@ window.addEventListener(
       event.data.data.MLE
     ) {
       results_json.value = event.data.data;
+    } else if (
+      event.data &&
+      event.data.type === "data-response" &&
+      event.data.data
+    ) {
+      // Handle response to data request
+      if (event.data.data && event.data.data.MLE) {
+        results_json.value = event.data.data;
+      }
     }
   },
   false,
