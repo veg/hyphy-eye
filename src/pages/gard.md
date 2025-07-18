@@ -3,6 +3,7 @@ sidebar: false
 header: false
 footer: false
 pager: false
+theme: air
 ---
 
 ```js
@@ -29,81 +30,116 @@ const percentageFormat = d3.format(".2p")
 const proportionFormat = d3.format(".5p")
 ```
 
-# GARD
-<br>
-
-## Results file
+# GARD results summary
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
-```
+const results_json = Mutable(
+  await FileAttachment("../data/gard_test_data.json").json(),
+);
 
-```js
-const results_json = Mutable(results_file.json());
-```
-
-```js
 // Handle data from URL parameters
+console.log('[GARD DEBUG] Starting parameter processing...');
+console.log('[GARD DEBUG] Current URL:', window.location.href);
+console.log('[GARD DEBUG] Search params:', window.location.search);
+
 const urlParams = new URLSearchParams(window.location.search);
 const jsonUrl = urlParams.get('json');
 const jsonData = urlParams.get('data');
 const dataId = urlParams.get('id');
 const storageKey = urlParams.get('key');
 
+console.log('[GARD DEBUG] Extracted parameters:', {jsonUrl, jsonData, dataId, storageKey});
+
 if (jsonUrl) {
+  console.log('[GARD DEBUG] Loading from URL:', jsonUrl);
   // Load JSON from external URL
   fetch(jsonUrl)
     .then(response => response.json())
     .then(data => {
+      console.log('[GARD DEBUG] Fetched data from URL:', data);
       if (data && data.MLE) {
+        console.log('[GARD DEBUG] Setting results_json from URL data');
         results_json.value = data;
+      } else {
+        console.log('[GARD DEBUG] URL data missing MLE property');
       }
     })
-    .catch(error => console.error('Error loading JSON:', error));
+    .catch(error => console.error('[GARD DEBUG] Error loading JSON:', error));
 } else if (jsonData) {
+  console.log('[GARD DEBUG] Parsing JSON from parameter:', jsonData.substring(0, 100) + '...');
   // Parse JSON from URL parameter
   try {
     const data = JSON.parse(decodeURIComponent(jsonData));
+    console.log('[GARD DEBUG] Parsed data from parameter:', data);
     if (data && data.MLE) {
+      console.log('[GARD DEBUG] Setting results_json from parameter data');
       results_json.value = data;
+    } else {
+      console.log('[GARD DEBUG] Parameter data missing MLE property');
     }
   } catch (error) {
-    console.error('Error parsing JSON from URL:', error);
+    console.error('[GARD DEBUG] Error parsing JSON from URL:', error);
   }
 } else if (dataId || storageKey) {
   // Try to load from localStorage first
   const key = storageKey || `hyphy-results-${dataId}`;
+  console.log('[GARD DEBUG] Looking for localStorage data with key:', key);
   const localData = localStorage.getItem(key);
   
   if (localData) {
+    console.log('[GARD DEBUG] Found localStorage data, length:', localData.length);
     try {
       const data = JSON.parse(localData);
+      console.log('[GARD DEBUG] Parsed localStorage data:', Object.keys(data));
       if (data && data.MLE) {
+        console.log('[GARD DEBUG] Setting results_json from localStorage');
         results_json.value = data;
+      } else {
+        console.log('[GARD DEBUG] localStorage data missing MLE property');
       }
     } catch (error) {
-      console.error('Error parsing localStorage data:', error);
+      console.error('[GARD DEBUG] Error parsing localStorage data:', error);
     }
-  } else if (dataId) {
-    // If not in localStorage, request from parent via postMessage
-    window.parent.postMessage({ type: 'request-data', id: dataId }, '*');
+  } else {
+    console.log('[GARD DEBUG] No localStorage data found');
+    if (dataId) {
+      console.log('[GARD DEBUG] Requesting data from parent via postMessage');
+      // If not in localStorage, request from parent via postMessage
+      window.parent.postMessage({ type: 'request-data', id: dataId }, '*');
+    }
   }
+} else {
+  console.log('[GARD DEBUG] No URL parameters found, using default test data');
 }
 
 window.addEventListener(
   "message",
   (event) => {
-    if (event.data.data && event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+    console.log('[GARD DEBUG] Received postMessage:', event.data);
+    if (
+      event.data &&
+      typeof event.data === "object" &&
+      event.data.data &&
+      typeof event.data.data === "object" &&
+      event.data.data.MLE
+    ) {
+      console.log('[GARD DEBUG] Setting results_json from postMessage data');
+      results_json.value = event.data.data;
     } else if (
       event.data &&
       event.data.type === "data-response" &&
       event.data.data
     ) {
+      console.log('[GARD DEBUG] Received data-response postMessage');
       // Handle response to data request
       if (event.data.data && event.data.data.MLE) {
+        console.log('[GARD DEBUG] Setting results_json from data-response');
         results_json.value = event.data.data;
+      } else {
+        console.log('[GARD DEBUG] data-response missing MLE property');
       }
+    } else {
+      console.log('[GARD DEBUG] postMessage did not match expected format');
     }
   },
   false,

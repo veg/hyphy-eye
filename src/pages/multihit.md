@@ -3,6 +3,7 @@ sidebar: false
 header: false
 footer: false
 pager: false
+theme: air
 ---
 
 ```js
@@ -24,81 +25,116 @@ const percentageFormat = d3.format(".2p")
 const proportionFormat = d3.format(".5p")
 ```
 
-# MULTI-HIT
-<br>
-
-## Results file
+# MULTI-HIT results summary
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
-```
+const results_json = Mutable(
+  await FileAttachment("../data/multihit_test_data.json").json(),
+);
 
-```js
-const results_json = Mutable(results_file.json());
-```
-
-```js
 // Handle data from URL parameters
+console.log('[MULTIHIT DEBUG] Starting parameter processing...');
+console.log('[MULTIHIT DEBUG] Current URL:', window.location.href);
+console.log('[MULTIHIT DEBUG] Search params:', window.location.search);
+
 const urlParams = new URLSearchParams(window.location.search);
 const jsonUrl = urlParams.get('json');
 const jsonData = urlParams.get('data');
 const dataId = urlParams.get('id');
 const storageKey = urlParams.get('key');
 
+console.log('[MULTIHIT DEBUG] Extracted parameters:', {jsonUrl, jsonData, dataId, storageKey});
+
 if (jsonUrl) {
+  console.log('[MULTIHIT DEBUG] Loading from URL:', jsonUrl);
   // Load JSON from external URL
   fetch(jsonUrl)
     .then(response => response.json())
     .then(data => {
+      console.log('[MULTIHIT DEBUG] Fetched data from URL:', data);
       if (data && data.MLE) {
+        console.log('[MULTIHIT DEBUG] Setting results_json from URL data');
         results_json.value = data;
+      } else {
+        console.log('[MULTIHIT DEBUG] URL data missing MLE property');
       }
     })
-    .catch(error => console.error('Error loading JSON:', error));
+    .catch(error => console.error('[MULTIHIT DEBUG] Error loading JSON:', error));
 } else if (jsonData) {
+  console.log('[MULTIHIT DEBUG] Parsing JSON from parameter:', jsonData.substring(0, 100) + '...');
   // Parse JSON from URL parameter
   try {
     const data = JSON.parse(decodeURIComponent(jsonData));
+    console.log('[MULTIHIT DEBUG] Parsed data from parameter:', data);
     if (data && data.MLE) {
+      console.log('[MULTIHIT DEBUG] Setting results_json from parameter data');
       results_json.value = data;
+    } else {
+      console.log('[MULTIHIT DEBUG] Parameter data missing MLE property');
     }
   } catch (error) {
-    console.error('Error parsing JSON from URL:', error);
+    console.error('[MULTIHIT DEBUG] Error parsing JSON from URL:', error);
   }
 } else if (dataId || storageKey) {
   // Try to load from localStorage first
   const key = storageKey || `hyphy-results-${dataId}`;
+  console.log('[MULTIHIT DEBUG] Looking for localStorage data with key:', key);
   const localData = localStorage.getItem(key);
   
   if (localData) {
+    console.log('[MULTIHIT DEBUG] Found localStorage data, length:', localData.length);
     try {
       const data = JSON.parse(localData);
+      console.log('[MULTIHIT DEBUG] Parsed localStorage data:', Object.keys(data));
       if (data && data.MLE) {
+        console.log('[MULTIHIT DEBUG] Setting results_json from localStorage');
         results_json.value = data;
+      } else {
+        console.log('[MULTIHIT DEBUG] localStorage data missing MLE property');
       }
     } catch (error) {
-      console.error('Error parsing localStorage data:', error);
+      console.error('[MULTIHIT DEBUG] Error parsing localStorage data:', error);
     }
-  } else if (dataId) {
-    // If not in localStorage, request from parent via postMessage
-    window.parent.postMessage({ type: 'request-data', id: dataId }, '*');
+  } else {
+    console.log('[MULTIHIT DEBUG] No localStorage data found');
+    if (dataId) {
+      console.log('[MULTIHIT DEBUG] Requesting data from parent via postMessage');
+      // If not in localStorage, request from parent via postMessage
+      window.parent.postMessage({ type: 'request-data', id: dataId }, '*');
+    }
   }
+} else {
+  console.log('[MULTIHIT DEBUG] No URL parameters found, using default test data');
 }
 
 window.addEventListener(
   "message",
   (event) => {
-    if (event.data.data && event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+    console.log('[MULTIHIT DEBUG] Received postMessage:', event.data);
+    if (
+      event.data &&
+      typeof event.data === "object" &&
+      event.data.data &&
+      typeof event.data.data === "object" &&
+      event.data.data.MLE
+    ) {
+      console.log('[MULTIHIT DEBUG] Setting results_json from postMessage data');
+      results_json.value = event.data.data;
     } else if (
       event.data &&
       event.data.type === "data-response" &&
       event.data.data
     ) {
+      console.log('[MULTIHIT DEBUG] Received data-response postMessage');
       // Handle response to data request
       if (event.data.data && event.data.data.MLE) {
+        console.log('[MULTIHIT DEBUG] Setting results_json from data-response');
         results_json.value = event.data.data;
+      } else {
+        console.log('[MULTIHIT DEBUG] data-response missing MLE property');
       }
+    } else {
+      console.log('[MULTIHIT DEBUG] postMessage did not match expected format');
     }
   },
   false,
