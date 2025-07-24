@@ -324,7 +324,10 @@ export function getTreeViewOptions(resultsJson, options = {}) {
 export function getTreeObjects(results_json, modelForTree = "Global MG94xREV") {
     const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
         let T = new phylotree.phylotree (tree);
-        T.branch_length_accessor = setBranchLengthAccessor(T, results_json, i, modelForTree);
+        // Only set branch length accessor if branch attributes exist
+        if (results_json["branch attributes"]) {
+            T.branch_length_accessor = (n) => results_json["branch attributes"][i][n.data.name][modelForTree];
+        }
         return T;
     });
 
@@ -342,8 +345,13 @@ export function getTreeObjects(results_json, modelForTree = "Global MG94xREV") {
  */
 export function setBranchLengthAccessor(tree, resultsJson, index, branchLengthKey) {
     return (n) => {
-        const branchAttributes = resultsJson["branch attributes"][index];
-        return (n.data.name in branchAttributes ? branchAttributes[n.data.name][branchLengthKey] : 0) || 0;
+        if (resultsJson["branch attributes"] && 
+            resultsJson["branch attributes"][index] && 
+            resultsJson["branch attributes"][index][n.data.name] && 
+            resultsJson["branch attributes"][index][n.data.name][branchLengthKey]) {
+            return resultsJson["branch attributes"][index][n.data.name][branchLengthKey];
+        }
+        return 0;
     };
 }
 

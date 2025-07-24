@@ -45,3 +45,5 @@ export * from "./nrm/nrm-utils.js";
 export * from "./nrm/nrm-plots.js";
 export * from "./slac/slac-utils.js";
 export * from "./slac/slac-plots.js";
+export * from "./bgm/bgm-utils.js";
+export * from "./bgm/bgm-plots.js";
