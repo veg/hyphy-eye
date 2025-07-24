@@ -45,6 +45,7 @@ window.addEventListener(
   false,
 );
 ```
+
 <hr>
 
 ## Results summary

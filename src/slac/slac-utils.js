@@ -109,38 +109,38 @@ export function getSlacTileSpecs(resultsJson, pvalueThreshold = 0.1) {
     return [
         {
             number: attributes.numberOfSequences,
-            description: "sequences",
-            icon: "icon-people",
+            description: "sequences in the alignment",
+            icon: "icon-options-vertical icons",
             color: "asbestos"
         },
         {
             number: attributes.numberOfSites,
-            description: "sites",
-            icon: "icon-grid",
+            description: "codon sites in the alignment",
+            icon: "icon-options icons",
             color: "asbestos"
         },
         {
             number: attributes.numberOfPartitions,
             description: "partitions",
-            icon: "icon-layers",
+            icon: "icon-arrow-up icons",
             color: "asbestos"
         },
         {
             number: significantSites,
             description: `significant sites (p ≤ ${pvalueThreshold})`,
-            icon: "icon-target",
+            icon: "icon-target icons",
             color: "midnight_blue"
         },
         {
             number: positivelySeletedSites,
             description: "positively selected sites",
-            icon: "icon-arrow-up",
+            icon: "icon-plus icons",
             color: "midnight_blue"
         },
         {
             number: negativelySelectedSites,
             description: "negatively selected sites",
-            icon: "icon-arrow-down",
+            icon: "icon-minus icons",
             color: "midnight_blue"
         }
     ];

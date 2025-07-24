@@ -322,14 +322,49 @@ export function getTreeViewOptions(resultsJson, options = {}) {
  */
 
 export function getTreeObjects(results_json, modelForTree = "Global MG94xREV") {
-    const tree_objects = _.map (results_json.input.trees, (tree,i)=> {
-        let T = new phylotree.phylotree (tree);
-        // Only set branch length accessor if branch attributes exist
-        if (results_json["branch attributes"]) {
-            T.branch_length_accessor = (n) => results_json["branch attributes"][i][n.data.name][modelForTree];
-        }
-        return T;
-    });
+    if (!results_json || !results_json.input || !results_json.input.trees) {
+        return [];
+    }
+
+    const trees = results_json.input.trees;
+    let tree_objects;
+
+    // Handle both array and object-keyed tree structures
+    if (Array.isArray(trees)) {
+        // Standard array format: ["tree1", "tree2", ...]
+        tree_objects = _.map(trees, (tree, i) => {
+            let T = new phylotree.phylotree(tree);
+            // Only set branch length accessor if branch attributes exist
+            if (results_json["branch attributes"]) {
+                T.branch_length_accessor = (n) => results_json["branch attributes"][i][n.data.name][modelForTree];
+            }
+            return T;
+        });
+    } else if (typeof trees === 'object') {
+        // Object-keyed format: {"0": "tree1", "1": "tree2", ...}
+        const treeKeys = Object.keys(trees).sort((a, b) => parseInt(a) - parseInt(b)); // Sort numerically
+        tree_objects = treeKeys.map((key) => {
+            let T = new phylotree.phylotree(trees[key]);
+            // Only set branch length accessor if branch attributes exist
+            if (results_json["branch attributes"]) {                
+                if (results_json["branch attributes"][key]) {
+                    T.branch_length_accessor = (n) => {
+                        const branchAttrs = results_json["branch attributes"][key][n.data.name];
+                        if (branchAttrs) {
+                            const attrsCopy = { ...branchAttrs };
+                            delete attrsCopy["original name"];
+                            const branchLengthKey = Object.keys(attrsCopy)[0];
+                            return branchLengthKey ? attrsCopy[branchLengthKey] : 0;
+                        }
+                        return 0;
+                    };
+                }
+            }
+            return T;
+        });
+    } else {
+        return [];
+    }
 
     return tree_objects;
 }

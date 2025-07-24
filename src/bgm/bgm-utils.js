@@ -77,20 +77,26 @@ export function getBgmTileSpecs(resultsJson, posteriorThreshold = 0.5) {
     return [
         {
             number: attributes.numberOfSequences,
-            description: "sequences",
-            icon: "icon-people",
+            description: "sequences in the alignment",
+            icon: "icon-options-vertical icons",
             color: "asbestos"
         },
         {
             number: attributes.numberOfSites,
-            description: "sites",
-            icon: "icon-grid",
+            description: "codon sites in the alignment",
+            icon: "icon-options icons",
+            color: "asbestos"
+        },
+        {
+            number: attributes.numberOfPartitions,
+            description: "partitions",
+            icon: "icon-arrow-up icons",
             color: "asbestos"
         },
         {
             number: coevolvingPairs,
             description: `co-evolving site pairs (p ≥ ${posteriorThreshold})`,
-            icon: "icon-link",
+            icon: "icon-link icons",
             color: "midnight_blue"
         }
     ];

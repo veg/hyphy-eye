@@ -33,6 +33,7 @@ export default {
         {name: "aBSREL", path: "pages/absrel"},
         {name: "BGM", path: "pages/bgm"},
         {name: "BUSTED", path: "pages/busted"},
+        {name: "FADE", path: "pages/fade"},
         {name: "FEL", path: "pages/fel"},
         {name: "GARD", path: "pages/gard"},
         {name: "MEME", path: "pages/meme"},
