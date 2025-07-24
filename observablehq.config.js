@@ -30,15 +30,15 @@ export default {
       name: "Legacy Notebooks",
       open: false,
       pages: [
-        {name: "BUSTED", path: "pages/busted"},
         {name: "aBSREL", path: "pages/absrel"},
-        {name: "GARD", path: "pages/gard"},
+        {name: "BGM", path: "pages/bgm"},
+        {name: "BUSTED", path: "pages/busted"},
         {name: "FEL", path: "pages/fel"},
+        {name: "GARD", path: "pages/gard"},
         {name: "MEME", path: "pages/meme"},
-        {name: "NRM", path: "pages/nrm"},
         {name: "MULTI-HIT", path: "pages/multihit"},
-        {name: "SLAC", path: "pages/slac"},
-        {name: "BGM", path: "pages/bgm"}
+        {name: "NRM", path: "pages/nrm"},
+        {name: "SLAC", path: "pages/slac"}
       ]
     },
     {
