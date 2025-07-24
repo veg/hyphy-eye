@@ -43,3 +43,5 @@ export * from "./multihit/multihit-utils.js";
 export * from "./multihit/multihit-plots.js";
 export * from "./nrm/nrm-utils.js";
 export * from "./nrm/nrm-plots.js";
+export * from "./slac/slac-utils.js";
+export * from "./slac/slac-plots.js";

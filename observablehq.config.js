@@ -36,7 +36,8 @@ export default {
         {name: "FEL", path: "pages/fel"},
         {name: "MEME", path: "pages/meme"},
         {name: "NRM", path: "pages/nrm"},
-        {name: "MULTI-HIT", path: "pages/multihit"}
+        {name: "MULTI-HIT", path: "pages/multihit"},
+        {name: "SLAC", path: "pages/slac"}
       ]
     },
     {
