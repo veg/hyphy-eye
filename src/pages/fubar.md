@@ -8,6 +8,7 @@ pager: false
 ```js
 import * as d3 from "d3";
 import * as _ from "lodash-es";
+import * as Plot from "npm:@observablehq/plot";
 import * as tt from "../components/tile-table/tile-table.js";
 import { FileAttachment } from "observablehq:stdlib";
 
@@ -32,7 +33,7 @@ const results_file = view(
 ```
 
 ```js
-const results_json = Mutable(results_file ? results_file.json() : test_data);
+const results_json = Mutable(results_file ? await results_file.json() : test_data);
 ```
 
 ```js
@@ -160,7 +161,7 @@ const selected_site = view(
 
 ```js
 const grid_data =
-  results_json.grid?.map((row, i) => {
+  results_json?.grid?.map((row, i) => {
     if (!selected_site || selected_site === "") {
       return { alpha: row[0], beta: row[1], weight: row[2] };
     }
@@ -171,7 +172,7 @@ const grid_data =
     let site_idx = -1;
 
     for (const [key, partition] of Object.entries(
-      results_json["data partitions"] || {},
+      results_json?.["data partitions"] || {},
     )) {
       const idx = partition.coverage[0].indexOf(site_num);
       if (idx > -1) {
@@ -182,29 +183,33 @@ const grid_data =
     }
 
     const posterior =
-      results_json.posterior?.[partition_idx]?.[site_idx]?.[0]?.[i] || 0;
+      results_json?.posterior?.[partition_idx]?.[site_idx]?.[0]?.[i] || 0;
     return { alpha: row[0], beta: row[1], weight: posterior };
   }) || [];
 ```
 
 ```js
-const max_weight = Math.max(...grid_data.map((d) => d.weight));
+const max_weight = grid_data.length > 0 ? Math.max(...grid_data.map((d) => d.weight)) : 1;
 ```
 
 **Figure 1**. <small>Posterior distribution of synonymous (α) and non-synonymous (β) substitution rates ${selected_site ? `for site ${selected_site}` : "across the entire alignment"}. Circle size is proportional to the posterior weight allocated to each rate combination. The diagonal line indicates ω = 1 (neutral evolution).</small>
 
 ```js
-Plot.plot({
+const max_alpha = grid_data.length > 0 ? Math.max(...grid_data.map((d) => d.alpha)) : 10;
+const max_beta = grid_data.length > 0 ? Math.max(...grid_data.map((d) => d.beta)) : 10;
+const max_rate = Math.max(max_alpha, max_beta);
+
+display(Plot.plot({
   width: 640,
   height: 640,
   margin: 60,
   x: {
     label: "Synonymous substitution rate (α)",
-    domain: [0, Math.max(...grid_data.map((d) => d.alpha)) * 1.05],
+    domain: [0, max_alpha * 1.05],
   },
   y: {
     label: "Non-synonymous substitution rate (β)",
-    domain: [0, Math.max(...grid_data.map((d) => d.beta)) * 1.05],
+    domain: [0, max_beta * 1.05],
   },
   color: {
     type: "diverging",
@@ -227,10 +232,7 @@ Plot.plot({
     Plot.line(
       [
         [0, 0],
-        [
-          Math.max(...grid_data.map((d) => Math.max(d.alpha, d.beta))),
-          Math.max(...grid_data.map((d) => Math.max(d.alpha, d.beta))),
-        ],
+        [max_rate, max_rate],
       ],
       {
         stroke: "gray",
@@ -239,7 +241,7 @@ Plot.plot({
       },
     ),
   ],
-});
+}))
 ```
 
 <hr>
@@ -247,11 +249,12 @@ Plot.plot({
 ## Site-by-site results
 
 ```js
+const sites = Object.values(results_json?.MLE?.content || {}).flat();
 const site_table_data = sites.map((row, i) => {
   // Find partition for this site
   let partition = 1;
   for (const [key, part] of Object.entries(
-    results_json["data partitions"] || {},
+    results_json?.["data partitions"] || {},
   )) {
     if (part.coverage[0].includes(i)) {
       partition = parseInt(key) + 1;
@@ -296,7 +299,7 @@ const filtered_sites = site_table_data.filter((d) =>
 ```
 
 ```js
-Inputs.table(filtered_sites, {
+display(Inputs.table(filtered_sites, {
   columns: [
     "Site",
     "Partition",
@@ -323,7 +326,7 @@ Inputs.table(filtered_sites, {
     Partition: 80,
     Selection: 80,
   },
-});
+}))
 ```
 
 <details>
@@ -349,7 +352,7 @@ Inputs.table(filtered_sites, {
 ## Model fits
 
 ```js
-const model_fits = Object.entries(results_json.fits || {}).map(
+const model_fits = Object.entries(results_json?.fits || {}).map(
   ([name, fit]) => ({
     Model: name,
     "Log Likelihood": fit["Log Likelihood"],
@@ -360,19 +363,19 @@ const model_fits = Object.entries(results_json.fits || {}).map(
 ```
 
 ```js
-Inputs.table(model_fits, {
+display(Inputs.table(model_fits, {
   format: {
     "Log Likelihood": (d) => d.toFixed(2),
     "AIC-c": (d) => d.toFixed(2),
   },
-});
+}))
 ```
 
 <hr>
 
 ## Suggested Citation
 
-<p><tt>${results_json.analysis?.citation || "Citation not available"}</tt></p>
+<p><tt>${results_json?.analysis?.citation || "Citation not available"}</tt></p>
 
 <style>
 .card {
