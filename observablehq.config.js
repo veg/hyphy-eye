@@ -62,6 +62,7 @@ export default {
       pages: [
         {name: "aBSREL", path: "pages/absrel"},
         {name: "BUSTED", path: "pages/busted"},
+        {name: "difFUBAR", path: "pages/diffubar"},
         {name: "FEL", path: "pages/fel"},
         {name: "FUBAR", path: "pages/fubar"},
         {name: "GARD", path: "pages/gard"},
