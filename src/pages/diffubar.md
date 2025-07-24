@@ -11,7 +11,6 @@ import * as _ from "lodash-es";
 import * as Plot from "npm:@observablehq/plot";
 import * as phylotree from "phylotree";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
-import * as tt from "../components/tile-table/tile-table.js";
 import { FileAttachment } from "observablehq:stdlib";
 
 // Load test data immediately
@@ -63,10 +62,31 @@ function get_diffubar_attributes(json) {
     chain_length: json.settings?.["chain-length"] || 50,
     burn_in: json.settings?.["burn-in"] || 10,
     concentration: json.settings?.concentration || 0.1,
-    g1_branches: Object.values(json.tested || {}).filter(test => test === "G1").length,
-    g2_branches: Object.values(json.tested || {}).filter(test => test === "G2").length,
-    background_branches: Object.values(json.tested || {}).filter(test => test === "background").length
+    g1_branches: count_group_branches(json, "G1"),
+    g2_branches: count_group_branches(json, "G2"), 
+    background_branches: count_group_branches(json, "background")
   };
+}
+
+// Helper function to count branches by group
+function count_group_branches(json, group) {
+  if (!json?.tested) return 0;
+  
+  // Get the first partition's tested data
+  const tested_data = Object.values(json.tested)[0] || {};
+  let count = 0;
+  
+  for (const [branch_name, status] of Object.entries(tested_data)) {
+    if (group === "background" && status === "background") {
+      count++;
+    } else if (group === "G1" && (branch_name.includes("{G1}") || status === "test" && branch_name.includes("G1"))) {
+      count++;
+    } else if (group === "G2" && (branch_name.includes("{G2}") || status === "test" && branch_name.includes("G2"))) {
+      count++;
+    }
+  }
+  
+  return count;
 }
 
 // Helper function to count significant sites
@@ -83,6 +103,37 @@ function count_significant_sites(json, threshold) {
 
 const attrs = get_diffubar_attributes(results_json);
 const significant_counts = count_significant_sites(results_json, posterior_threshold);
+
+// Custom tile table function for difFUBAR
+function display_tile_table(specs) {
+  return html`<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0;">
+    ${specs.map(spec => html`
+      <div style="
+        background: var(--theme-background-alt);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        border-left: 4px solid ${getColorFromName(spec.color)};
+      ">
+        <div style="font-size: 2rem; font-weight: bold; color: ${getColorFromName(spec.color)};">
+          ${spec.number}
+        </div>
+        <div style="font-size: 0.9rem; color: var(--theme-foreground-muted); margin-top: 0.5rem;">
+          ${spec.description}
+        </div>
+      </div>
+    `)}
+  </div>`;
+}
+
+function getColorFromName(colorName) {
+  const colors = {
+    "asbestos": "#7f8c8d",
+    "midnight_blue": "#2c3e50", 
+    "pomegranate": "#c0392b"
+  };
+  return colors[colorName] || "#7f8c8d";
+}
 ```
 
 difFUBAR (differential Fast Unconstrained Bayesian AppRoximation) compares the non-synonymous to synonymous substitution rate ratio (ω = dN/dS) between two predefined groups of branches on a phylogeny. The analysis uses Markov Chain Monte Carlo with ${attrs.chain_length} iterations and a burn-in of ${attrs.burn_in} to estimate posterior probabilities for differential selection between groups.
@@ -152,7 +203,7 @@ const tile_specs = [
 ];
 ```
 
-<div>${tt.tile_table(tile_specs)}</div>
+${display_tile_table(tile_specs)}
 
 ## Overview plot
 
@@ -296,14 +347,18 @@ display(Plot.plot({
 
 ```js
 const site_table_data = sites_data.map((row, i) => {
-  // Find partition for this site
+  // For difFUBAR, we'll use a simple partition assignment since the structure is different
+  // Most difFUBAR analyses have a single partition
   let partition = 1;
-  for (const [key, part] of Object.entries(
-    results_json?.["data partitions"] || {},
-  )) {
-    if (part.coverage[0].includes(i)) {
-      partition = parseInt(key) + 1;
-      break;
+  
+  // Try to determine partition from data partitions if available
+  if (results_json?.["data partitions"]) {
+    for (const [key, part] of Object.entries(results_json["data partitions"])) {
+      // Check if partition has coverage data and if site index falls within it
+      if (part && part.coverage && part.coverage[0] && part.coverage[0].includes(i)) {
+        partition = parseInt(key) + 1;
+        break;
+      }
     }
   }
 
@@ -486,14 +541,26 @@ function display_tree(i) {
 
     // Color branches based on group assignment
     t.style_edges((e, n) => {
-        const group = results_json?.tested?.[n.target.data.name];
+        // Get the tested data for the first partition
+        const tested_data = results_json?.tested?.[0] || {};
+        const branch_name = n.target.data.name;
+        
         let color = "gray"; // default/background
-        if (group === "G1") {
+        let stroke_width = "1";
+        
+        // Determine group based on branch name and tested status
+        if (branch_name.includes("{G1}")) {
             color = "#3498db"; // blue for group 1
-        } else if (group === "G2") {
-            color = "#e74c3c"; // red for group 2  
+            stroke_width = "3";
+        } else if (branch_name.includes("{G2}")) {
+            color = "#e74c3c"; // red for group 2
+            stroke_width = "3";
+        } else if (tested_data[branch_name] === "background") {
+            color = "gray";
+            stroke_width = "1";
         }
-        e.style("stroke", color).style("stroke-width", group !== "background" ? "3" : "1");
+        
+        e.style("stroke", color).style("stroke-width", stroke_width);
     });
 
     t.placenodes();
