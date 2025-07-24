@@ -25,6 +25,20 @@ export default {
       pages: [
         {name: "Datamonkey Usage", path: "pages/datamonkey-usage"}
       ]
+    },
+    {
+      name: "Visualizations",
+      open: true,
+      pages: [
+        {name: "aBSREL", path: "pages/absrel"},
+        {name: "BUSTED", path: "pages/busted"},
+        {name: "FEL", path: "pages/fel"},
+        {name: "FUBAR", path: "pages/fubar"},
+        {name: "GARD", path: "pages/gard"},
+        {name: "MEME", path: "pages/meme"},
+        {name: "MULTIHIT", path: "pages/multihit"},
+        {name: "NRM", path: "pages/nrm"}
+      ]
     }
   ]
 
