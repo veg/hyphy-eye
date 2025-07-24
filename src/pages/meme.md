@@ -1,10 +1,3 @@
----
-sidebar: false
-header: false
-footer: false
-pager: false
----
-
 ```js
 import * as d3 from "d3";
 import * as Plot from "npm:@observablehq/plot";
@@ -16,6 +9,7 @@ import * as vegaLiteApi from "npm:vega-lite-api";
 import * as utils from "../meme/meme-utils.js";
 import * as plots from "../meme/meme-plots.js";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
+import * as generalUtils from "../utils/general-utils.js";
 import * as statsSummary from "../stats/summaries.js";
 import * as omegaPlots from "../components/omega-plots.js";
 import * as tt from "../components/tile-table/tile-table.js";
@@ -36,11 +30,11 @@ const proportionFormat = d3.format (".5p")
 ## Results file
 
 ```js
-const results_file = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+const resultsFile = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
 ```
 
 ```js
-const results_json = Mutable(results_file.json());
+const resultsJson = Mutable(resultsFile.json());
 ```
 
 ```js
@@ -48,7 +42,7 @@ window.addEventListener(
   "message",
   (event) => {
     if (event.data.data.MLE) {
-      results_json.value = event.data.data; // Update the mutable value
+      resultsJson.value = event.data.data; // Update the mutable value
     }
   },
   false,
@@ -59,44 +53,47 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.get_attributes(results_json);
+const attrs = utils.getMemeAttributes(resultsJson);
 ```
 
-<span style = 'font-size: 110%; color;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${count_sites}** sites in this dataset (<tt>p≤${pvalue_threshold}</tt>).</span>
-${attrs.has_resamples > 0 ? "This analysis used parametric bootstrap with " + attrs.has_resamples + " replicates to test for significance." : ""} ${+results_json.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
+<span style = 'font-size: 110%; color;'>Based on the likelihood ratio test, _episodic diversifying selection_ has acted on **${countSites}** sites in this dataset (<tt>p≤${pvalueThreshold}</tt>).</span>
+${attrs.hasResamples > 0 ? "This analysis used parametric bootstrap with " + attrs.hasResamples + " replicates to test for significance." : ""} ${+resultsJson.analysis.version < 3.0 ? "<small><b>Some of the visualizations are not available for MEME analyses before v3.0</b>" : ""}
 
 ```js
-const pvalue_threshold = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1", submit: "Update"}))
+const pvalueThreshold = view(Inputs.text({label: html`<b>p-value threshold</b>`, value: "0.1", submit: "Update"}))
 ```
 
 ```js
-const tree_objects = phylotreeUtils.get_tree_objects(results_json);
-const siteTableData = utils.siteTableData(results_json, table_options, pvalue_threshold, attrs.siteIndexPartitionCodon, tree_objects);
-const tile_specs = utils.get_tile_specs(results_json, pvalue_threshold);
-const bsPositiveSelection = utils.getPosteriorsPerBranchSite(results_json);
-const count_sites = utils.get_count_sites_by_pvalue(results_json, pvalue_threshold);
-const selected_branches_per_selected_site = utils.get_selected_branches_per_selected_site(results_json, pvalue_threshold);
-const test_omega = utils.getRateDistribution(results_json, ["fits","Unconstrained model","Rate Distributions","Test"])
-const treeViewOptions = plots.getTreeViewOptions(results_json, tree_objects)
+const treeObjects = phylotreeUtils.getTreeObjects(resultsJson);
+const siteTableData = utils.getMemeSiteTableData(resultsJson, pvalueThreshold, attrs.siteIndexPartitionCodon, treeObjects, tableOptions);
+const tileSpecs = utils.getMemeTileSpecs(resultsJson, pvalueThreshold);
+const bsPositiveSelection = utils.getMemePosteriorsPerBranchSite(resultsJson);
+const countSites = utils.getMemeCountSitesByPvalue(resultsJson, pvalueThreshold);
+const selectedBranchesPerSelectedSite = utils.getMemeSelectedBranchesPerSelectedSite(resultsJson, pvalueThreshold);
+const testOmega = generalUtils.getRateDistribution(resultsJson, null, ["fits","Unconstrained model","Rate Distributions","Test"])
+const treeViewOptions = phylotreeUtils.getTreeViewOptions(resultsJson, {
+    onlyWithSubstitutions: true,
+    includeMapping: true
+  })
 // TODO: clean this up
-const sites_table = [{
-    'class' : (d)=>html`<span style = "color:${plots.TABLE_COLORS[d]}">${d}</span>`, 
+const sitesTable = [{
+    'class' : (d)=>html`<span style = "color:${plots.MEME_TABLE_COLORS[d]}">${d}</span>`, 
     'Substitutions' : (d)=>d.length == 0 ? "-" : _.map (d, (c)=>c[1] + " " + c[0]).join('   ,   '),
     'dN/dS' : (d)=>omegaPlots.renderNDiscreteDistributions ([d],{"height" : 20, "width" : 200, "scale" : "sqrt"})
     }, 
-    _.filter (siteTableData[0], (x)=>table_filter.indexOf(x.class)>=0), siteTableData[1]
+    _.filter (siteTableData[0], (x)=>tableFilter.indexOf(x.class)>=0), siteTableData[1]
   ];
 ```
 
-<div>${tt.tile_table(tile_specs)}</div>
+<div>${tt.tileTable(tileSpecs)}</div>
 
 #### Alignment-wide results
 
 ```js
-const plot_type =  view(Inputs.select(_.map (_.filter (plots.get_plot_options(attrs.has_site_LRT, attrs.has_resamples, bsPositiveSelection), (d)=>d[1](results_json)), d=>d[0]),{label: html`<b>Plot type</b>`}))
+const plotType = view(Inputs.select(_.map (_.filter (plots.getMemePlotOptions(attrs.hasSiteLRT, attrs.hasResamples, bsPositiveSelection), (d)=>d[1](resultsJson)), d=>d[0]),{label: html`<b>Plot type</b>`}))
 ```
 
-**Figure 1**. ${plot_type ? plots.get_plot_description(plot_type, attrs.has_resamples) : "No plotting options available"}
+**Figure 1**. ${plotType ? plots.getMemePlotDescription(plotType, attrs.hasResamples) : "No plotting options available"}
 
 ```js
 function getFig1data() {
@@ -108,37 +105,37 @@ const fig1data = getFig1data();
 
 ```js
 let plot_spec;
-if (plot_type) {
-  plot_spec = plots.get_plot_spec(results_json, plot_type, bsPositiveSelection, fig1data, siteTableData, attrs.has_site_LRT, attrs.has_resamples, pvalue_threshold, tree_objects)
+if (plotType) {
+  plot_spec = plots.getMemePlotSpec(resultsJson, plotType, bsPositiveSelection, fig1data, siteTableData, attrs.hasSiteLRT, attrs.hasResamples, pvalueThreshold, treeObjects)
 }
 ```
 <div>${vl.render({"spec": plot_spec})}</div>
 
 ```js
-const table_filter = view(Inputs.checkbox(["Diversifying", "Neutral","Invariable"], {value: ["Diversifying", "Neutral", "Invariable"], label: html`<b>Show</b>`}))
+const tableFilter = view(Inputs.checkbox(["Diversifying", "Neutral","Invariable"], {value: ["Diversifying", "Neutral", "Invariable"], label: html`<b>Show</b>`}))
 ```
 
 ```js
-const table_options = view(Inputs.checkbox(["Distribution plot","Show q-values","Show substitutions (tested branches)"], {value: ["Show q-values"], label: html`<b>Options</b>`}))
+const tableOptions = view(Inputs.checkbox(["Distribution plot","Show q-values","Show substitutions (tested branches)"], {value: ["Show q-values"], label: html`<b>Options</b>`}))
 ```
 
 **Table 1**. Detailed site-by-site results from the MEME analysis
 
 ```js
-const table1 = view(Inputs.table (sites_table[1], {
+const table1 = view(Inputs.table (sitesTable[1], {
   rows : 20,
-  format: sites_table[0],
+  format: sitesTable[0],
   layout: "auto",
-  header: sites_table[2]
+  header: sitesTable[2]
 }))
 ```
 
 ```js
-const tree_id =  view(Inputs.select(treeViewOptions[0], {size : 10, label: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
+const selectedTree =  view(Inputs.select(treeViewOptions[0], {size : 10, label: html`<b>Tree to view</b>`, placeholder : "Select partition / codon tree to view"}))
 ```
 
 ```js
-const branch_length =  view(Inputs.select(_.chain (results_json["branch attributes"]["attributes"]).toPairs().filter (d=>d[1]["attribute type"] == "branch length").map (d=>d[0]).value(),{value: "unconstrained", label: html`<b>Branch length </b>`}))
+const branchLength =  view(Inputs.select(_.chain (resultsJson["branch attributes"]["attributes"]).toPairs().filter (d=>d[1]["attribute type"] == "branch length").map (d=>d[0]).value(),{value: "unconstrained", label: html`<b>Branch length </b>`}))
 ```
 
 ```js
@@ -148,11 +145,11 @@ const treeLabels = view(Inputs.checkbox(
 ```
 
 ```js
-const color_branches =  view(Inputs.select(plots.get_tree_color_options(results_json),{value: "Support for selection", label: html`<b>Color branches </b>`}))
+const colorBranches =  view(Inputs.select(plots.getMemeTreeColorOptions(resultsJson),{value: "Support for selection", label: html`<b>Color branches </b>`}))
 ```
 
 ```js
-const shade_branches =  view(Inputs.select(plots.get_tree_color_options(results_json).concat ("None"),{value: "None", label: html`<b>Opaqueness of branches </b>`}))
+const shadeBranches =  view(Inputs.select(plots.getMemeTreeColorOptions(resultsJson).concat ("None"),{value: "None", label: html`<b>Opaqueness of branches </b>`}))
 ```
 
 ```js
@@ -160,16 +157,17 @@ const treeDim = view(Inputs.text({placeholder : "1024 x 800", description: "Tree
 ```
 
 ```js
+const treeId = phylotreeUtils.getTreeId(selectedTree);
 function getFigure2() {
-    let toDisplay = tree_id.split (" ");
+    let toDisplay = selectedTree.split (" ");
     if (toDisplay.length > 1) {
       if (toDisplay[0] == "Codon") {  
-          const codon_index = (+toDisplay[1]);
-          let partition_id = attrs.siteIndexPartitionCodon [codon_index][0]-1;
-          let TT = plots.display_tree_site(results_json, partition_id, codon_index, treeDim, treeLabels, branch_length, color_branches, shade_branches, tree_objects, treeViewOptions);
+          const codonIndex = treeId;
+          let partitionId = attrs.siteIndexPartitionCodon [codonIndex][0]-1;
+          let TT = plots.getMemeTreeSite(resultsJson, partitionId, codonIndex, treeDim, treeLabels, branchLength, colorBranches, shadeBranches, treeObjects, treeViewOptions);
           return TT;
       } 
-      let TT = plots.display_tree(results_json, (-1) + (+toDisplay[1]), treeDim, treeLabels, branch_length, color_branches, tree_objects);
+      let TT = plots.getMemeTree(resultsJson, treeId, treeDim, treeLabels, branchLength, colorBranches, treeObjects);
       return TT;
     }
 
@@ -207,12 +205,4 @@ if (figure2 && figure2.color_scale) {
 ## Suggested Citation
 
 <br>
-<p><tt>${results_json.analysis["citation"]}</tt></p>
-
-<hr>
-
-## hyphy-eye
-
-<br>
-
-View _more_ results at [hyphy-eye](/)!!
+<p><tt>${resultsJson.analysis["citation"]}</tt></p>

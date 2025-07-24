@@ -1,6 +1,5 @@
-import * as Plot from "npm:@observablehq/plot";
-import { resize } from "npm:@observablehq/stdlib";
-import * as d3 from "npm:d3";
+import * as Plot from "@observablehq/plot";
+import * as d3 from "d3";
 
 export function weeklyPlot(usageData) {
   // Format the data for visualization
@@ -12,31 +11,29 @@ export function weeklyPlot(usageData) {
     };
   });
 
-  return resize((width) =>
-    Plot.plot({
-      width,
-      height: 300,
-      y: {
-        label: "Number of Jobs",
-        grid: true,
-      },
-      marks: [
-        Plot.axisX({ label: "Week", labelOffset: 40 }),
-        Plot.rectY(
-          transformedData,
-          Plot.binX(
-            { y: "count" },
-            {
-              x: "created",
-              interval: "week",
-              fill: "orange",
-            },
-          ),
+  return Plot.plot({
+    width: 800,
+    height: 300,
+    y: {
+      label: "Number of Jobs",
+      grid: true,
+    },
+    marks: [
+      Plot.axisX({ label: "Week", labelOffset: 40 }),
+      Plot.rectY(
+        transformedData,
+        Plot.binX(
+          { y: "count" },
+          {
+            x: "created",
+            interval: "week",
+            fill: "orange",
+          },
         ),
-        Plot.ruleY([0]),
-      ],
-    }),
-  );
+      ),
+      Plot.ruleY([0]),
+    ],
+  });
 }
 
 export function sitesAndSequences(usageData) {
@@ -49,30 +46,28 @@ export function sitesAndSequences(usageData) {
     };
   });
 
-  return resize((width) =>
-    Plot.plot({
-      width,
-      height: 300,
-      x: {
-        label: "Number of Sites",
-        grid: true,
-        labelOffset: 30,
-      },
-      y: {
-        label: "Number of Sequences",
-        grid: true,
-      },
-      marks: [
-        Plot.dot(transformedData, {
-          x: "sites",
-          y: "sequences",
-          fill: "purple",
-          title: (d) =>
-            `Date: ${d3.utcFormat("%Y-%m-%d")(
-              d.created,
-            )}<br>Sites: ${d.sites}<br>Sequences: ${d.sequences}`,
-        }),
-      ],
-    }),
-  );
+  return Plot.plot({
+    width: 800,
+    height: 300,
+    x: {
+      label: "Number of Sites",
+      grid: true,
+      labelOffset: 30,
+    },
+    y: {
+      label: "Number of Sequences",
+      grid: true,
+    },
+    marks: [
+      Plot.dot(transformedData, {
+        x: "sites",
+        y: "sequences",
+        fill: "purple",
+        title: (d) =>
+          `Date: ${d3.utcFormat("%Y-%m-%d")(
+            d.created,
+          )}<br>Sites: ${d.sites}<br>Sequences: ${d.sequences}`,
+      }),
+    ],
+  });
 }

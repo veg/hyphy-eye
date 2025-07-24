@@ -3,6 +3,7 @@
 
 import * as _ from "lodash-es";
 import * as d3 from "d3";
+import { methodUtils } from '../utils/method-utils.js';
 
 /**
  * Plot a bead plot of the given data, with an optional threshold marking. 
@@ -161,4 +162,58 @@ export function BeadPlot(
     }
 
     return spec;
+}
+
+// TODO: make this BeadPlotGenerator, work for all methods, reads from registry
+// Wrapper that takes HyPhy results JSON and prepares data for BeadPlot
+export function BeadPlotGenerator(resultsJson, method, options = {}) {
+    const finalOpts = { 
+        ...options,
+        threshold: options.threshold || 10,
+        dyn_range_cap: options.dyn_range_cap || 10000
+    };
+    // Lookup util functions centrally
+    const utilsFns = methodUtils[method];
+    if (!utilsFns) throw new Error(`No utilities defined for method: ${method}`);
+    const attrs = utilsFns.attrsFn(resultsJson);
+    // Evaluate any string options referencing attrs or results_json
+    Object.entries(finalOpts).forEach(([opt, val]) => {
+        if (typeof val === 'string' && /\battrs\b|\bresults_json\b/.test(val)) {
+            const fn = new Function('attrs', 'results_json', `return ${val}`);
+            finalOpts[opt] = fn(attrs, resultsJson);
+        }
+    });
+    // Build data via centralized table function
+    const siteRes = utilsFns.tableFn(resultsJson, finalOpts.threshold);
+    const data = Array.isArray(siteRes[0]) ? siteRes[0] : siteRes;
+    // Assemble arguments: data, from, step, then only defined finalOpts in order
+    const beadArgs = [data, 1, data.length];
+    const optOrder = [
+        'key', 'log_scale', 'dyn_range_cap', 'y_label',
+        'threshold', 'key2', 'color_data', 'color_label',
+        'string_color', 'rev_threshold_color'
+    ];
+    // Loop through options in order, pushing values or skipping as needed
+    for (const opt of optOrder) {
+        if (finalOpts[opt] !== undefined) {
+            beadArgs.push(finalOpts[opt]);
+        } else {
+            beadArgs.push(null);
+        }
+    }
+
+    // If too many codons, split into multiple vconcat plots
+    const maxCodons = 70;
+    if (data.length > maxCodons) {
+        const specs = [];
+        for (let i = 0; i < data.length; i += maxCodons) {
+            const subFrom = i + 1;
+            const subStep = Math.min(maxCodons, data.length - i);
+            // reuse options args (after data/from/step)
+            const restArgs = beadArgs.slice(3);
+            specs.push(BeadPlot(data, subFrom, subStep, ...restArgs));
+        }
+        return { vconcat: specs };
+    }
+    return BeadPlot(...beadArgs);
 }

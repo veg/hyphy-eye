@@ -20,8 +20,38 @@ export default {
       ]
     },
     {
-      name: "Usage",
+      name: "Registry",
       open: true,
+      pages: [
+        {name: "Test Registry", path: "pages/test-registry"}
+      ]
+    },
+    {
+      name: "Legacy Notebooks",
+      open: false,
+      pages: [
+        {name: "aBSREL", path: "pages/absrel"},
+        {name: "BGM", path: "pages/bgm"},
+        {name: "BUSTED", path: "pages/busted"},
+        {name: "FADE", path: "pages/fade"},
+        {name: "FEL", path: "pages/fel"},
+        {name: "GARD", path: "pages/gard"},
+        {name: "MEME", path: "pages/meme"},
+        {name: "MULTI-HIT", path: "pages/multihit"},
+        {name: "NRM", path: "pages/nrm"},
+        {name: "SLAC", path: "pages/slac"}
+      ]
+    },
+    {
+      name: "Testing",
+      open: false,
+      pages: [
+        {name: "Method Identifier", path: "pages/method-identifier"}
+      ]
+    },
+    {
+      name: "Usage",
+      open: false,
       pages: [
         {name: "Datamonkey Usage", path: "pages/datamonkey-usage"}
       ]

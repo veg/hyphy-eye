@@ -1,57 +1,193 @@
-# hyphy-eye
+# HyPhy-Eye
 
-This repo is a WIP, all that follows should be considered subject to change.
+## Overview
 
-## Motivation
-Currently, Observable Notebooks are distributed via ObservableHQ and put directly into production on Datamonkey.org.
-This introduces a few potential pain points, which this project hopes to alleviate:
-1. collaborators must carefully coordinate as managing code conflicts and versioning is only weakly supported in Notebook
-2. there is no support for automated unit testing, which leaves code vulnerable to regressions
-3. there is a lack of flexibility in how Notebooks can be distributed (ObservableHQ only)
-4. there is a lack of flexibility in how Notebooks can be integrated into other contexts (requires Observable runtime)
-5. the development process usually involves forking an existing Notebook, which does not encourage well factored code
-6. code is distributed across multiple Notebooks and hidden behind cells you have to click, making quick parsing/ searching difficult
+HyPhy-Eye is an Observable Framework application for building, testing, and exporting visualization components for Datamonkey and HyPhy results. It provides a structured environment where you can develop components with example data, view them in example pages, and export them as an npm package for use in production environments.
 
-The combination of the previously listed factors, and others I've probably not thought of or forgotten, creates a situation where maintenance, adding features and deployment to production are potentially cumbersome and likely to be error prone.
+The project includes:
 
-**The more contributors there are to these Notebooks, the more we're likely to start noticing these pain points.**
+- Reusable visualization components for HyPhy analysis results
+- Utility functions for data processing and manipulation
+- Statistical functions for analysis
+- Example pages demonstrating each HyPhy method
+- A standardized export system for npm packaging
 
-## Scope
+## Getting Started
 
-**The idea for this so far is that it may serve as a place where:**
-1. visualization components for hyphy-vision/ datamonkey can be built and tested
-2. some basic statistics and utility functions that those components rely on can live
-3. we can build various demo pages for individual components, which are automatically deployed on commit to main, to try to protect them from regressions
-4. we can convert existing Observable Notebooks. These will also get demo pages, to compare to the original Notebook. 
-5. new results summaries for HyPhy methods might be prototyped, or new features for existing ones. (If people prefer prototyping in Notebook and converting, also ok!)
-6. components and utility functions get bundled into an npm package that get be used in production
+### Prerequisites
 
+- Node.js (v14 or higher)
+- npm or yarn
 
-**Importantly, though, I do NOT currently expect this project to:**
-1. see results summaries go directly from here to production
-2. publish any artifacts directly through observable hq
+### Installation
 
-If we want to put markdown pages from here into production that will require some additional thinking/ planning/ development.
+```bash
+# Clone the repository
+git clone https://github.com/veg/hyphy-eye.git
+cd hyphy-eye
 
-## Development
-
-This is an [Observable Framework](https://observablehq.com/framework/) app. To install the required dependencies, run:
-
-```
+# Install dependencies
 npm install
 ```
 
-Then, to start the local preview server, run:
+#### Development
 
-```
+This is an [Observable Framework](https://observablehq.com/framework/) app. To start the local preview server, run:
+
+```bash
+# Start the development server
 npm run dev
 ```
 
-Then visit <http://localhost:3000> to preview your app.
+This will launch the Observable Framework application at http://localhost:3000, where you can browse and interact with the example pages.
 
-For more, see <https://observablehq.com/framework/getting-started>.
+## Building Components
 
-PRs are welcome!!
+Components are located in the `src/components` directory. Each component should:
+
+1. Be in its own file or subdirectory
+2. Export a function that returns an Observable-compatible element
+3. Include appropriate TypeScript definitions if applicable
+
+Example:
+
+```javascript
+// src/components/my-component.js
+export function MyComponent(data, options = {}) {
+  // Component implementation
+  return element;
+}
+```
+
+## Testing Components
+
+You can test components by creating example pages in the `src/pages` directory:
+
+1. Create a new markdown file in `src/pages`
+2. Import and use your component in the page
+3. View the page in the development server
+
+Example:
+
+```markdown
+# My Component Example
+
+```js
+import { MyComponent } from '../components/my-component.js';
+const data = { /* example data */ };
+```
+
+<div>${MyComponent(data)}</div>
+```
+
+## HyPhy Methods Registry
+
+HyPhy-Eye includes a comprehensive registry of all supported HyPhy methods and their visualizations. The registry provides a structured way to discover and use available visualizations for each method.
+
+### Registry Structure
+
+The registry includes:
+
+- All supported HyPhy methods (BUSTED, aBSREL, FEL, MEME, GARD, NRM, MULTIHIT)
+- Available visualizations for each method (plots, tables, networks, trees)
+- Component paths for each visualization
+- Method-specific attribute getter functions
+- Default configuration options
+
+### Updating the Registry
+
+To add or update a method in the registry:
+
+1. Edit `src/registry.ts` to add/update the method definition
+2. Ensure the method includes:
+   - A clear name and description
+   - List of visualizations with:
+     - Name and description
+     - Component path (relative to `src/`)
+     - Visualization type (plot, table, network, or tree)
+     - Options object with default values
+   - Attribute getter function information with parameters
+
+Example of adding a new visualization:
+
+```typescript
+// Add a new visualization to an existing method
+FEL: {
+    name: 'FEL',
+    description: 'Fixed Effects Likelihood',
+    visualizations: [
+        {
+            name: 'New Visualization',
+            description: 'Description of the visualization',
+            component: 'new-component.js',
+            type: 'plot',
+            options: {
+                // Default options
+            }
+        }
+    ],
+    attributes: {
+        function: 'getFelAttributes',
+        parameters: {
+            resultsJson: 'Object'
+        }
+    }
+}
+```
+
+### Using the Registry
+
+The registry can be imported and used in two ways:
+
+```javascript
+// Import the registry
+import { HyPhyMethods } from 'hyphy-eye/registry';
+
+// Get available methods
+const methods = Object.values(HyPhyMethods);
+
+// Get visualizations for a specific method
+const felVisualizations = HyPhyMethods.FEL.visualizations;
+
+// Get the attribute getter function for a method
+const getBustedAttrs = HyPhyMethods.BUSTED.attributes.function;
+```
+
+## Exporting as an npm Package
+
+All components, utilities and functions are exported through `src/index.js`. The registry is also exported through `src/registry.js`.
+
+### To use HyPhy-Eye in another project:
+
+```bash
+# Build the package
+npm run build-npm
+
+# Pack it for local testing
+npm pack
+
+# Or publish to npm (requires npm credentials)
+npm publish
+```
+
+Then in your project:
+
+```bash
+npm install hyphy-eye
+```
+
+```javascript
+// Import specific components or utilities
+import { TileTable, getAbsrelAttributes } from 'hyphy-eye';
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+For more information on Observable Framework, see <https://observablehq.com/framework/getting-started>.
+
+PRs are welcome!
 
 ## Project structure
 
@@ -61,6 +197,8 @@ Our Framework project looks something like this:
 .
 ├─ src
 │  ├─ components
+│  │  ├─ tile-table            # component subdirectory
+│  │  ├─ rate-summary-plots    # component subdirectory
 │  │  └─ omega-plots.js        # an importable module
 │  ├─ stats
 │  │  └─ chi-squared.js        # an importable module
@@ -68,10 +206,17 @@ Our Framework project looks something like this:
 │  │  └─ phylotree-utils.js    # an importable module
 │  ├─ data
 │  │  └─ meme.json             # a static data file for testing
-│  ├─ meme
-│  │  └─ meme-utils.json       # utility functions that are specific to meme
-│  ├─ component-demo.md        # a page for testing a component
-│  ├─ meme.md                  # a page for comparison to a Notebook
+│  ├─ pages                    # directory for all example pages
+│  │  ├─ absrel.md             # aBSREL method page
+│  │  ├─ busted.md             # BUSTED method page
+│  │  ├─ meme.md               # MEME method page
+│  │  └─ component-demo.md     # a page for testing a component
+│  ├─ absrel                   # method-specific utilities
+│  │  └─ absrel-utils.js       # utility functions for aBSREL
+│  ├─ busted                   # method-specific utilities
+│  │  └─ busted-utils.js       # utility functions for BUSTED
+│  ├─ meme                     # method-specific utilities
+│  │  └─ meme-utils.js         # utility functions for MEME
 │  └─ index.md                 # the home page
 ├─ .gitignore
 ├─ observablehq.config.js      # the demo app config file

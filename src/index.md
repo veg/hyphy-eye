@@ -1,18 +1,16 @@
-# Welcome to hyphy-eye!!
+# Welcome to hyphy-eye
 
-</br>
+hyphy-eye is an interactive ObservableHQ framework for visualizing results from HyPhy analyses and prototyping new data visualizations for Datamonkey.org. It provides:
 
-**This is an Observable Framework app which does two things:**
-1. It can be used to visualize HyPhy results json. (see below)
-2. It is where new visualization components for datamonkey.org can be built and tested. (see left side panel)
+- **Legacy Notebooks** for each HyPhy method: aBSREL, BUSTED, FEL, MEME, GARD, NRM (non-reversible model), and MULTI-HIT you can upload your own HyPhy results JSON files to these notebooks to generate plots and tables.
+- **Visualization Components** which can be shared across the various methods and used to generate plots and tables from HyPhy results JSON.
+- A **Visualization Registry** to generate, preview, and test individual visualization modules using the components developed here.
 
-</br>
+The components, registry and all supporting utilities are available as an npm package at [hyphy-eye](https://www.npmjs.com/package/hyphy-eye).
 
-**View results summaries for:**
-- [aBSREL](/pages/absrel)
-- [BUSTED](/pages/busted)
-- [FEL](/pages/fel)
-- [GARD](/pages/gard)
-- [MEME](/pages/meme)
-- [MULTI-HIT](/pages/multihit)
-- [NRM (non-reversible model)](/pages/nrm)
+Use the left sidebar to navigate:
+
+- **Notebooks**: Explore prebuilt analysis notebooks under “Legacy Notebooks”
+- **Components**: Explore prebuilt visualization components under “Components”
+- **Registry**: Access the live registry and test JSON-driven visualization generators
+- **Usage**: Access plots describing datamonkey.org usage
