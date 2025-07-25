@@ -543,26 +543,30 @@ function getTreeLegend(json, tree_index) {
     return a.toString().localeCompare(b.toString());
   });
   
-  const legend_spans = sorted_groups.map(group => {
+  const legend_parts = ["Phylogenetic tree showing branch group assignments: "];
+  
+  sorted_groups.forEach((group, index) => {
+    if (index > 0) legend_parts.push(", ");
+    
     if (group === "background") {
-      return html`<span style="color: gray">Background</span>`;
-    }
-    
-    let color_index;
-    if (!isNaN(group)) {
-      color_index = parseInt(group) - 1;
+      legend_parts.push(html`<span style="color: gray">Background</span>`);
     } else {
-      color_index = Math.abs(group.toString().split('').reduce((a, b) => {
-        a = ((a << 5) - a) + b.charCodeAt(0);
-        return a & a;
-      }, 0)) % group_colors.length;
+      let color_index;
+      if (!isNaN(group)) {
+        color_index = parseInt(group) - 1;
+      } else {
+        color_index = Math.abs(group.toString().split('').reduce((a, b) => {
+          a = ((a << 5) - a) + b.charCodeAt(0);
+          return a & a;
+        }, 0)) % group_colors.length;
+      }
+      
+      const color = group_colors[color_index] || group_colors[0];
+      legend_parts.push(html`<span style="color: ${color}; font-weight: bold">Group ${group}</span>`);
     }
-    
-    const color = group_colors[color_index] || group_colors[0];
-    return html`<span style="color: ${color}; font-weight: bold">Group ${group}</span>`;
   });
   
-  return html`<small>Phylogenetic tree showing branch group assignments: ${legend_spans.join(', ')}</small>`;
+  return html`<small>${legend_parts}</small>`;
 }
 
 const tree_legend = getTreeLegend(results_json, (-1) + (+tree_id.split(" ")[1]));
@@ -617,8 +621,11 @@ function display_tree(i) {
         const branch_group = branch_attrs?.["Branch group"];
         
         // Debug: log the first few branches to see the structure
-        if (Math.random() < 0.1) { // Only log 10% of the time to avoid spam
-            console.log("Branch:", n.target.data.name, "Group:", branch_group, "Attrs:", branch_attrs);
+        if (Math.random() < 0.2) { // Only log 20% of the time to avoid spam
+            console.log("Branch name:", `"${n.target.data.name}"`, "Group:", branch_group, "Has attrs:", !!branch_attrs);
+            if (branch_attrs) {
+                console.log("  Branch attrs:", Object.keys(branch_attrs));
+            }
         }
         
         // Define color palette for groups
@@ -641,8 +648,12 @@ function display_tree(i) {
         if (branch_group && branch_group !== "background") {
             // Convert group identifier to a consistent number for color assignment
             let group_index;
-            if (typeof branch_group === "string" && !isNaN(branch_group)) {
-                // If it's a numeric string like "1", "2"
+            if (branch_group === "1") {
+                group_index = 0; // First color (blue)
+            } else if (branch_group === "2") {
+                group_index = 1; // Second color (red)
+            } else if (typeof branch_group === "string" && !isNaN(branch_group)) {
+                // If it's a numeric string like "3", "4", etc.
                 group_index = parseInt(branch_group) - 1;
             } else {
                 // For any other group identifier, hash it to get consistent color
@@ -655,6 +666,11 @@ function display_tree(i) {
             color = group_colors[group_index] || group_colors[0];
             stroke_width = "3";
             opacity = 1.0;
+            
+            // Debug successful coloring
+            if (Math.random() < 0.1) {
+                console.log(`Coloring branch "${n.target.data.name}" group "${branch_group}" with color ${color}`);
+            }
         }
         
         e.style("stroke", color)
