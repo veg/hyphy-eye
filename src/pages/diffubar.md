@@ -585,6 +585,75 @@ function display_tree(i) {
     console.log("Branch attributes keys:", Object.keys(results_json?.["branch attributes"]?.[i] || {}));
     console.log("First few branch attrs:", Object.entries(results_json?.["branch attributes"]?.[i] || {}).slice(0, 5));
     
+    // Define edge colorizer function
+    const edgeColorizer = function(element, data) {
+        const branch_name = data.target.data.name;
+        
+        // Try to find branch attributes by checking multiple name variations
+        let branch_attrs = null;
+        let branch_group = null;
+        
+        // First try exact match
+        branch_attrs = results_json?.["branch attributes"]?.[i]?.[branch_name];
+        
+        // If not found, try with {G1} and {G2} tags
+        if (!branch_attrs) {
+            const tagged_names = [
+                branch_name + "{G1}",
+                branch_name + "{G2}"
+            ];
+            
+            for (const tagged_name of tagged_names) {
+                branch_attrs = results_json?.["branch attributes"]?.[i]?.[tagged_name];
+                if (branch_attrs) break;
+            }
+        }
+        
+        // If still not found, look for original name in branch attributes
+        if (!branch_attrs && results_json?.["branch attributes"]?.[i]) {
+            for (const [key, attrs] of Object.entries(results_json["branch attributes"][i])) {
+                if (attrs["original name"] === branch_name) {
+                    branch_attrs = attrs;
+                    break;
+                }
+            }
+        }
+        
+        branch_group = branch_attrs?.["Branch group"];
+        
+        // Define color palette
+        const group_colors = ["#3498db", "#e74c3c", "#9b59b6", "#f39c12"];
+        
+        // Apply styling based on branch group
+        if (branch_group && branch_group !== "background") {
+            let group_index;
+            if (branch_group === "1") {
+                group_index = 0; // Blue
+            } else if (branch_group === "2") {
+                group_index = 1; // Red  
+            } else if (!isNaN(branch_group)) {
+                group_index = parseInt(branch_group) - 1;
+            } else {
+                group_index = 0;
+            }
+            
+            const color = group_colors[group_index] || group_colors[0];
+            element.style("stroke", color, "important")
+                   .style("stroke-width", "3px", "important")
+                   .style("opacity", "1.0", "important");
+                   
+            // Debug successful coloring
+            if (Math.random() < 0.1) {
+                console.log(`Colored branch "${branch_name}" (group ${branch_group}) with ${color}`);
+            }
+        } else {
+            // Background branches
+            element.style("stroke", "gray", "important")
+                   .style("stroke-width", "1px", "important") 
+                   .style("opacity", "0.5", "important");
+        }
+    };
+
     var t = T.render({
         height: dim && dim[0] || 1024, 
         width: dim && dim[1] || 600,
@@ -592,7 +661,8 @@ function display_tree(i) {
         'is-radial': false,
         'left-right-spacing': 'fit-to-size', 
         'top-bottom-spacing': 'fit-to-size',
-        'node_circle_size': (n) => 0
+        'node_circle_size': (n) => 0,
+        'edge-styler': edgeColorizer
     });
       
     function sort_nodes(asc) {
@@ -612,76 +682,6 @@ function display_tree(i) {
     t.style_nodes((e, n) => {
         if (n.children && n.children.length) return; 
         e.selectAll("title").data([n.data.name]).join("title").text((d) => d);
-    });
-
-    // Color branches based on group assignment
-    t.style_edges((e, n) => {
-        // Get the branch attributes for group assignment
-        const branch_attrs = results_json?.["branch attributes"]?.[i]?.[n.target.data.name];
-        const branch_group = branch_attrs?.["Branch group"];
-        
-        // Debug: log the first few branches to see the structure
-        if (Math.random() < 0.2) { // Only log 20% of the time to avoid spam
-            console.log("Branch name:", `"${n.target.data.name}"`, "Group:", branch_group, "Has attrs:", !!branch_attrs);
-            if (branch_attrs) {
-                console.log("  Branch attrs:", Object.keys(branch_attrs));
-            }
-        }
-        
-        // Define color palette for groups
-        const group_colors = [
-            "#3498db", // blue
-            "#e74c3c", // red
-            "#9b59b6", // purple
-            "#f39c12", // orange
-            "#1abc9c", // teal
-            "#34495e", // dark blue-gray
-            "#e67e22", // dark orange
-            "#2ecc71"  // green
-        ];
-        
-        let color = "gray"; // default for background
-        let stroke_width = "1";
-        let opacity = 0.5;
-        
-        // Handle non-background groups
-        if (branch_group && branch_group !== "background") {
-            // Convert group identifier to a consistent number for color assignment
-            let group_index;
-            if (branch_group === "1") {
-                group_index = 0; // First color (blue)
-            } else if (branch_group === "2") {
-                group_index = 1; // Second color (red)
-            } else if (typeof branch_group === "string" && !isNaN(branch_group)) {
-                // If it's a numeric string like "3", "4", etc.
-                group_index = parseInt(branch_group) - 1;
-            } else {
-                // For any other group identifier, hash it to get consistent color
-                group_index = Math.abs(branch_group.toString().split('').reduce((a, b) => {
-                    a = ((a << 5) - a) + b.charCodeAt(0);
-                    return a & a;
-                }, 0)) % group_colors.length;
-            }
-            
-            color = group_colors[group_index] || group_colors[0];
-            stroke_width = "3";
-            opacity = 1.0;
-            
-            // Debug successful coloring
-            if (Math.random() < 0.1) {
-                console.log(`Coloring branch "${n.target.data.name}" group "${branch_group}" with color ${color}`);
-            }
-        }
-        
-        e.style("stroke", color)
-         .style("stroke-width", stroke_width)
-         .style("opacity", opacity);
-        
-        // Add tooltip with branch name and group
-        const group_display = branch_group === "background" || !branch_group ? 
-                             "Background" : `Group ${branch_group}`;
-        e.selectAll("title").data([`${n.target.data.name} (${group_display})`])
-         .join("title").text(d => d);
     });
 
     t.placenodes();
