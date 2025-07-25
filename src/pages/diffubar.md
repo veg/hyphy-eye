@@ -258,6 +258,21 @@ display(Plot.plot({
     legend: true
   },
   marks: [
+    // Vertical bars connecting ω1 and ω2 in Mean ω Values panel
+    Plot.link(overview_data, {
+      fx: null,
+      fy: d => "Mean ω Values",
+      x1: "site",
+      x2: "site", 
+      y1: "mean_omega1",
+      y2: "mean_omega2",
+      stroke: "gray",
+      strokeWidth: d => (d.p_omega1_greater > +posterior_threshold || d.p_omega2_greater > +posterior_threshold || 
+                        d.p_omega1_positive > +posterior_threshold || d.p_omega2_positive > +posterior_threshold) ? 2 : 1,
+      opacity: d => (d.p_omega1_greater > +posterior_threshold || d.p_omega2_greater > +posterior_threshold || 
+                     d.p_omega1_positive > +posterior_threshold || d.p_omega2_positive > +posterior_threshold) ? 0.8 : 0.3
+    }),
+    
     // Posterior probabilities panel
     Plot.dot(overview_data, {
       fx: null,
@@ -307,7 +322,8 @@ display(Plot.plot({
       x: "site",
       y: "mean_omega1",
       fill: "#3498db", 
-      r: 3,
+      r: d => (d.p_omega1_greater > +posterior_threshold || d.p_omega1_positive > +posterior_threshold) ? 4 : 2,
+      opacity: d => (d.p_omega1_greater > +posterior_threshold || d.p_omega1_positive > +posterior_threshold) ? 1 : 0.5,
       title: d => `Site ${d.site}: mean(ω₁) = ${d.mean_omega1.toFixed(3)}`
     }),
     Plot.dot(overview_data, {
@@ -316,7 +332,8 @@ display(Plot.plot({
       x: "site",
       y: "mean_omega2",
       fill: "#e74c3c",
-      r: 3, 
+      r: d => (d.p_omega2_greater > +posterior_threshold || d.p_omega2_positive > +posterior_threshold) ? 4 : 2,
+      opacity: d => (d.p_omega2_greater > +posterior_threshold || d.p_omega2_positive > +posterior_threshold) ? 1 : 0.5,
       title: d => `Site ${d.site}: mean(ω₂) = ${d.mean_omega2.toFixed(3)}`
     }),
     

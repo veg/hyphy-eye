@@ -1,0 +1,46 @@
+# tmp files
+*.log
+*~
+
+# local files
+node_modules
+bower_components
+vendor
+
+# ide files
+*.iml
+.idea
+.project
+
+# vim files
+.*.swp
+
+# vs code files
+launch.json
+
+# mac
+.DS_Store
+
+# ctag
+.tags
+
+# jasmine spec runners
+spec/*.html
+
+# coverage reports
+coverage
+
+# browserify bundle & test
+bundle.js
+spec/index-browserify.html
+
+# font noise from some doc tool
+web/docs/public
+
+*.map
+jsx-compiled
+dist
+public
+
+tags*
+*yalc*
