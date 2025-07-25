@@ -520,13 +520,67 @@ const treeDim = view(Inputs.text({
 }));
 ```
 
-<small>Phylogenetic tree showing branch group assignments: <span style="color: #3498db">Group 1</span>, <span style="color: #e74c3c">Group 2</span>, <span style="color: gray">Background</span></small>
+```js
+// Generate dynamic legend based on groups present in the data
+function getTreeLegend(json, tree_index) {
+  if (!json?.["branch attributes"]?.[tree_index]) return html`<small>Phylogenetic tree</small>`;
+  
+  const group_colors = [
+    "#3498db", "#e74c3c", "#9b59b6", "#f39c12", 
+    "#1abc9c", "#34495e", "#e67e22", "#2ecc71"
+  ];
+  
+  const groups = new Set();
+  Object.values(json["branch attributes"][tree_index]).forEach(attrs => {
+    if (attrs?.["Branch group"]) {
+      groups.add(attrs["Branch group"]);
+    }
+  });
+  
+  const sorted_groups = Array.from(groups).sort((a, b) => {
+    // Sort numerically if possible, otherwise alphabetically
+    if (!isNaN(a) && !isNaN(b)) return parseInt(a) - parseInt(b);
+    return a.toString().localeCompare(b.toString());
+  });
+  
+  const legend_spans = sorted_groups.map(group => {
+    if (group === "background") {
+      return html`<span style="color: gray">Background</span>`;
+    }
+    
+    let color_index;
+    if (!isNaN(group)) {
+      color_index = parseInt(group) - 1;
+    } else {
+      color_index = Math.abs(group.toString().split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0)) % group_colors.length;
+    }
+    
+    const color = group_colors[color_index] || group_colors[0];
+    return html`<span style="color: ${color}; font-weight: bold">Group ${group}</span>`;
+  });
+  
+  return html`<small>Phylogenetic tree showing branch group assignments: ${legend_spans.join(', ')}</small>`;
+}
+
+const tree_legend = getTreeLegend(results_json, (-1) + (+tree_id.split(" ")[1]));
+```
+
+${tree_legend}
 
 ```js
 function display_tree(i) {
     let dim = treeDim.length ? _.map(treeDim.split("x"), (d) => +d) : null;
  
     let T = tree_objects[i];
+    
+    // Debug: log tree structure and branch attributes
+    console.log("Tree partition:", i);
+    console.log("Branch attributes keys:", Object.keys(results_json?.["branch attributes"]?.[i] || {}));
+    console.log("First few branch attrs:", Object.entries(results_json?.["branch attributes"]?.[i] || {}).slice(0, 5));
+    
     var t = T.render({
         height: dim && dim[0] || 1024, 
         width: dim && dim[1] || 600,
@@ -558,26 +612,60 @@ function display_tree(i) {
 
     // Color branches based on group assignment
     t.style_edges((e, n) => {
-        // Get the tested data for the first partition
-        const tested_data = results_json?.tested?.[0] || {};
-        const branch_name = n.target.data.name;
+        // Get the branch attributes for group assignment
+        const branch_attrs = results_json?.["branch attributes"]?.[i]?.[n.target.data.name];
+        const branch_group = branch_attrs?.["Branch group"];
         
-        let color = "gray"; // default/background
-        let stroke_width = "1";
-        
-        // Determine group based on branch name and tested status
-        if (branch_name.includes("{G1}")) {
-            color = "#3498db"; // blue for group 1
-            stroke_width = "3";
-        } else if (branch_name.includes("{G2}")) {
-            color = "#e74c3c"; // red for group 2
-            stroke_width = "3";
-        } else if (tested_data[branch_name] === "background") {
-            color = "gray";
-            stroke_width = "1";
+        // Debug: log the first few branches to see the structure
+        if (Math.random() < 0.1) { // Only log 10% of the time to avoid spam
+            console.log("Branch:", n.target.data.name, "Group:", branch_group, "Attrs:", branch_attrs);
         }
         
-        e.style("stroke", color).style("stroke-width", stroke_width);
+        // Define color palette for groups
+        const group_colors = [
+            "#3498db", // blue
+            "#e74c3c", // red
+            "#9b59b6", // purple
+            "#f39c12", // orange
+            "#1abc9c", // teal
+            "#34495e", // dark blue-gray
+            "#e67e22", // dark orange
+            "#2ecc71"  // green
+        ];
+        
+        let color = "gray"; // default for background
+        let stroke_width = "1";
+        let opacity = 0.5;
+        
+        // Handle non-background groups
+        if (branch_group && branch_group !== "background") {
+            // Convert group identifier to a consistent number for color assignment
+            let group_index;
+            if (typeof branch_group === "string" && !isNaN(branch_group)) {
+                // If it's a numeric string like "1", "2"
+                group_index = parseInt(branch_group) - 1;
+            } else {
+                // For any other group identifier, hash it to get consistent color
+                group_index = Math.abs(branch_group.toString().split('').reduce((a, b) => {
+                    a = ((a << 5) - a) + b.charCodeAt(0);
+                    return a & a;
+                }, 0)) % group_colors.length;
+            }
+            
+            color = group_colors[group_index] || group_colors[0];
+            stroke_width = "3";
+            opacity = 1.0;
+        }
+        
+        e.style("stroke", color)
+         .style("stroke-width", stroke_width)
+         .style("opacity", opacity);
+        
+        // Add tooltip with branch name and group
+        const group_display = branch_group === "background" || !branch_group ? 
+                             "Background" : `Group ${branch_group}`;
+        e.selectAll("title").data([`${n.target.data.name} (${group_display})`])
+         .join("title").text(d => d);
     });
 
     t.placenodes();
