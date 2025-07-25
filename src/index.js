@@ -49,3 +49,5 @@ export * from "./bgm/bgm-utils.js";
 export * from "./bgm/bgm-plots.js";
 export * from "./fade/fade-utils.js";
 export * from "./fade/fade-plots.js";
+export * from "./relax/relax-utils.js";
+export * from "./relax/relax-plots.js";
