@@ -4,51 +4,10 @@
  */
 
 import * as d3 from "d3";
-import * as Plot from "@observablehq/plot";
 import * as _ from "lodash-es";
 import * as phylotree from "phylotree";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 
-/**
- * Creates a placeholder plot for RELAX visualization.
- * This will be replaced with actual visualization components.
- *
- * @param {Object} plotData - Data for the plot
- * @param {Object} options - Plot options
- *
- * @returns {Object} Plot object
- */
-export function createRelaxPlaceholderPlot(plotData, options = {}) {
-    const width = options.width || 800;
-    const height = options.height || 400;
-    
-    return Plot.plot({
-        width,
-        height,
-        style: {
-            background: "transparent",
-            color: "black",
-            fontFamily: "system-ui, sans-serif"
-        },
-        x: {
-            label: "Placeholder X-axis"
-        },
-        y: {
-            label: "Placeholder Y-axis"
-        },
-        marks: [
-            Plot.text(
-                [{ x: width / 2, y: height / 2 }],
-                { 
-                    x: "x", 
-                    y: "y", 
-                    text: ["RELAX Visualization (Placeholder)"],
-                    fontSize: 20
-                }
-            )
-        ]
-    });
-}
 
 /**
  * Creates rate distribution pie charts for RELAX visualization.

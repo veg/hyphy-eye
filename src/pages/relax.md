@@ -253,3 +253,13 @@ const branchTable = view(Inputs.table(branchData, {
   }
 }));
 ```
+
+<hr>
+
+## Suggested Citation
+
+<br>
+${resultsJson.analysis["citation"] === "TBD" ? 
+  html`<p>Please cite <strong>HyPhy</strong>: <a href="https://academic.oup.com/bioinformatics/article/21/5/676/220389" target="_blank">Kosakovsky Pond, S. L., Frost, S. D. W., & Muse, S. V. (2005). HyPhy: hypothesis testing using phylogenies. Bioinformatics, 21(5), 676-679.</a></p>` :
+  html`<p><tt>${resultsJson.analysis["citation"]}</tt></p>`
+}
