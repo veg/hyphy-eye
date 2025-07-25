@@ -19,6 +19,8 @@ const test_data = await FileAttachment("../data/diffubar_test_data.json").json()
 
 # difFUBAR
 
+difFUBAR (differential Fast Unconstrained Bayesian AppRoximation) tests for differences in selective pressures between pre-defined groups of branches in a phylogenetic tree.
+
 <br>
 
 ## Results file
