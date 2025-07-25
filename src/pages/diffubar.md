@@ -580,10 +580,7 @@ function display_tree(i) {
  
     let T = tree_objects[i];
     
-    // Debug: log tree structure and branch attributes
-    console.log("Tree partition:", i);
-    console.log("Branch attributes keys:", Object.keys(results_json?.["branch attributes"]?.[i] || {}));
-    console.log("First few branch attrs:", Object.entries(results_json?.["branch attributes"]?.[i] || {}).slice(0, 5));
+    // Tree coloring is now working with edge-styler
     
     // Define edge colorizer function
     const edgeColorizer = function(element, data) {
@@ -642,10 +639,7 @@ function display_tree(i) {
                    .style("stroke-width", "3px", "important")
                    .style("opacity", "1.0", "important");
                    
-            // Debug successful coloring
-            if (Math.random() < 0.1) {
-                console.log(`Colored branch "${branch_name}" (group ${branch_group}) with ${color}`);
-            }
+            // Branch successfully colored
         } else {
             // Background branches
             element.style("stroke", "gray", "important")
