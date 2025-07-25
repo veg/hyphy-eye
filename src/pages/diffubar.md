@@ -578,7 +578,7 @@ const figure_tree = display_tree((-1) + (+tree_id.split(" ")[1])).show()
 
 ## Suggested Citation
 
-<p><tt>${results_json?.analysis?.citation || "Citation not available"}</tt></p>
+<p><tt>difFUBAR: Scalable Bayesian comparison of adaptive evolution. Hassan Sadiq, Patrick Truong, Maximilian Danielsson, Venkatesh Kumar, Hedwig Nora Nordlinder, Darren Patrick Martin, Ben Murrell. bioRxiv 2025.05.19.654647; doi: https://doi.org/10.1101/2025.05.19.654647</tt></p>
 
 <style>
 .card {
