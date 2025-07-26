@@ -504,7 +504,21 @@ display(Inputs.table(model_fits, {
 // difFUBAR doesn't have branch attributes like FEL, so we create tree objects differently
 const tree_objects = _.map(results_json.input.trees, (tree, i) => {
   let T = new phylotree.phylotree(tree);
-  // Use the original branch lengths from the newick string
+  
+  // Store the original newick to help with tag recovery
+  T.original_newick = tree;
+  console.log("Original Newick:", tree);
+  
+  // Try to preserve tagged internal node names
+  // Parse the newick and map tagged internal nodes
+  const taggedInternalNodes = new Map();
+  
+  // Simple regex to find tagged internal nodes in newick
+  const tagMatches = tree.match(/\)\{G[12]\}/g);
+  if (tagMatches) {
+    console.log("Found tagged internal nodes in Newick:", tagMatches);
+  }
+  
   return T;
 });
 ```
@@ -592,6 +606,7 @@ function display_tree(i) {
         console.log("=== Edge Colorizer Debug ===");
         console.log("Branch name:", `"${branch_name}"`);
         console.log("Is internal node:", !!(data.target.children && data.target.children.length > 0));
+        console.log("Node data:", data.target.data);
         console.log("Available branch attributes keys:", Object.keys(results_json?.["branch attributes"]?.[i] || {}));
         
         // Try to find branch attributes by checking multiple name variations
@@ -602,45 +617,23 @@ function display_tree(i) {
         branch_attrs = results_json?.["branch attributes"]?.[i]?.[branch_name];
         console.log("Exact match found:", !!branch_attrs);
         
-        // Special case: if this is an internal node with empty name, determine group by descendants
+        // Special case: if this is an internal node with empty name, try {G1} and {G2} directly
         if (branch_name === "" && data.target.children && data.target.children.length > 0) {
-            console.log("Empty internal node, checking descendants...");
+            console.log("Empty internal node - trying direct {G1} and {G2} lookup");
             
-            // Check if any descendants have G1 or G2 tags
-            let hasG1Descendant = false;
-            let hasG2Descendant = false;
+            // Simply try both {G1} and {G2} for empty internal nodes
+            const direct_tagged_names = ["{G1}", "{G2}"];
             
-            function checkDescendants(node) {
-                if (!node.children || node.children.length === 0) {
-                    // Leaf node - check if it has G1 or G2 in branch attributes
-                    const leafName = node.data.name;
-                    if (results_json?.["branch attributes"]?.[i]?.[leafName + "{G1}"]) {
-                        hasG1Descendant = true;
-                    }
-                    if (results_json?.["branch attributes"]?.[i]?.[leafName + "{G2}"]) {
-                        hasG2Descendant = true;
-                    }
-                } else {
-                    // Internal node - recurse
-                    node.children.forEach(checkDescendants);
+            for (const tagged_name of direct_tagged_names) {
+                const test_attrs = results_json?.["branch attributes"]?.[i]?.[tagged_name];
+                if (test_attrs && test_attrs["Branch group"] !== "background") {
+                    branch_attrs = test_attrs;
+                    console.log("Found direct tag match:", tagged_name);
+                    // Note: This will assign the first match found. In difFUBAR there should be
+                    // a way to distinguish which internal node is which, but for now this tests the concept
+                    break;
                 }
             }
-            
-            data.target.children.forEach(checkDescendants);
-            
-            console.log("Has G1 descendants:", hasG1Descendant, "Has G2 descendants:", hasG2Descendant);
-            
-            // If this internal node has only G1 descendants, it's the G1 ancestor
-            if (hasG1Descendant && !hasG2Descendant) {
-                branch_attrs = results_json?.["branch attributes"]?.[i]?.["{G1}"];
-                console.log("Assigned to G1 internal node");
-            }
-            // If this internal node has only G2 descendants, it's the G2 ancestor  
-            else if (hasG2Descendant && !hasG1Descendant) {
-                branch_attrs = results_json?.["branch attributes"]?.[i]?.["{G2}"];
-                console.log("Assigned to G2 internal node");
-            }
-            // If it has both or neither, keep the background assignment
         }
         
         // If still not found, try with {G1} and {G2} tags appended
