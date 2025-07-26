@@ -617,37 +617,38 @@ function display_tree(i) {
         branch_attrs = results_json?.["branch attributes"]?.[i]?.[branch_name];
         console.log("Exact match found:", !!branch_attrs);
         
-        // Special case: if this is an internal node with empty name, try {G1} and {G2} directly
+        // Special case: use the annotation field that phylotree preserves from the original tags
         if (branch_name === "" && data.target.children && data.target.children.length > 0) {
-            console.log("Empty internal node - trying direct {G1} and {G2} lookup");
+            const annotation = data.target.data.annotation;
+            console.log("Empty internal node with annotation:", annotation);
             
-            // Simply try both {G1} and {G2} for empty internal nodes
-            const direct_tagged_names = ["{G1}", "{G2}"];
-            
-            for (const tagged_name of direct_tagged_names) {
-                const test_attrs = results_json?.["branch attributes"]?.[i]?.[tagged_name];
-                if (test_attrs && test_attrs["Branch group"] !== "background") {
-                    branch_attrs = test_attrs;
-                    console.log("Found direct tag match:", tagged_name);
-                    // Note: This will assign the first match found. In difFUBAR there should be
-                    // a way to distinguish which internal node is which, but for now this tests the concept
-                    break;
+            // Use annotation generically - look for {annotation} in branch attributes
+            if (annotation && results_json?.["branch attributes"]?.[i]) {
+                const tagged_key = "{" + annotation + "}";
+                branch_attrs = results_json["branch attributes"][i][tagged_key];
+                if (branch_attrs) {
+                    console.log("Using", tagged_key, "based on annotation");
                 }
             }
         }
         
-        // If still not found, try with {G1} and {G2} tags appended
-        if (!branch_attrs) {
-            const tagged_names = [
-                branch_name + "{G1}",
-                branch_name + "{G2}"
-            ];
+        // If still not found, try with any available tags appended to branch name
+        if (!branch_attrs && results_json?.["branch attributes"]?.[i]) {
+            // Find all tagged keys in branch attributes (keys that contain {})
+            const available_keys = Object.keys(results_json["branch attributes"][i]);
+            const tagged_keys = available_keys.filter(key => key.includes("{") && key.includes("}"));
             
-            for (const tagged_name of tagged_names) {
-                branch_attrs = results_json?.["branch attributes"]?.[i]?.[tagged_name];
-                if (branch_attrs) {
-                    console.log("Found with tag:", tagged_name);
-                    break;
+            for (const tagged_key of tagged_keys) {
+                // Extract the tag part from the key
+                const tag_match = tagged_key.match(/\{([^}]+)\}/);
+                if (tag_match) {
+                    const tag = tag_match[1];
+                    const potential_name = branch_name + "{" + tag + "}";
+                    branch_attrs = results_json["branch attributes"][i][potential_name];
+                    if (branch_attrs) {
+                        console.log("Found with tag:", potential_name);
+                        break;
+                    }
                 }
             }
         }
