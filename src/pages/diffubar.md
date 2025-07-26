@@ -589,13 +589,10 @@ function display_tree(i) {
     const edgeColorizer = function(element, data) {
         const branch_name = data.target.data.name;
         
-        // Debug: log internal nodes specifically
-        if (!data.target.children || data.target.children.length === 0) {
-            // This is a terminal node
-        } else {
-            // This is an internal node - log it
-            console.log("Internal node:", `"${branch_name}"`, "Has children:", data.target.children.length);
-        }
+        console.log("=== Edge Colorizer Debug ===");
+        console.log("Branch name:", `"${branch_name}"`);
+        console.log("Is internal node:", !!(data.target.children && data.target.children.length > 0));
+        console.log("Available branch attributes keys:", Object.keys(results_json?.["branch attributes"]?.[i] || {}));
         
         // Try to find branch attributes by checking multiple name variations
         let branch_attrs = null;
@@ -603,6 +600,7 @@ function display_tree(i) {
         
         // First try exact match
         branch_attrs = results_json?.["branch attributes"]?.[i]?.[branch_name];
+        console.log("Exact match found:", !!branch_attrs);
         
         // If not found, try with {G1} and {G2} tags
         if (!branch_attrs) {
@@ -613,7 +611,10 @@ function display_tree(i) {
             
             for (const tagged_name of tagged_names) {
                 branch_attrs = results_json?.["branch attributes"]?.[i]?.[tagged_name];
-                if (branch_attrs) break;
+                if (branch_attrs) {
+                    console.log("Found with tag:", tagged_name);
+                    break;
+                }
             }
         }
         
@@ -622,12 +623,15 @@ function display_tree(i) {
             for (const [key, attrs] of Object.entries(results_json["branch attributes"][i])) {
                 if (attrs["original name"] === branch_name) {
                     branch_attrs = attrs;
+                    console.log("Found by original name, key:", key);
                     break;
                 }
             }
         }
         
         branch_group = branch_attrs?.["Branch group"];
+        console.log("Final branch group:", branch_group);
+        console.log("Branch attrs:", branch_attrs);
         
         // Define color palette
         const group_colors = ["#3498db", "#e74c3c", "#9b59b6", "#f39c12"];
@@ -646,17 +650,18 @@ function display_tree(i) {
             }
             
             const color = group_colors[group_index] || group_colors[0];
+            console.log("Applying color:", color, "to branch:", branch_name);
             element.style("stroke", color, "important")
                    .style("stroke-width", "3px", "important")
                    .style("opacity", "1.0", "important");
-                   
-            // Branch successfully colored
         } else {
+            console.log("Background styling for:", branch_name);
             // Background branches
             element.style("stroke", "gray", "important")
                    .style("stroke-width", "1px", "important") 
                    .style("opacity", "0.5", "important");
         }
+        console.log("=== End Debug ===");
     };
 
     var t = T.render({
