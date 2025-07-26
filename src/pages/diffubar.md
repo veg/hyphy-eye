@@ -589,6 +589,14 @@ function display_tree(i) {
     const edgeColorizer = function(element, data) {
         const branch_name = data.target.data.name;
         
+        // Debug: log internal nodes specifically
+        if (!data.target.children || data.target.children.length === 0) {
+            // This is a terminal node
+        } else {
+            // This is an internal node - log it
+            console.log("Internal node:", `"${branch_name}"`, "Has children:", data.target.children.length);
+        }
+        
         // Try to find branch attributes by checking multiple name variations
         let branch_attrs = null;
         let branch_group = null;
