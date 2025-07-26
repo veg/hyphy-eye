@@ -507,7 +507,6 @@ const tree_objects = _.map(results_json.input.trees, (tree, i) => {
   
   // Store the original newick to help with tag recovery
   T.original_newick = tree;
-  console.log("Original Newick:", tree);
   
   // Try to preserve tagged internal node names
   // Parse the newick and map tagged internal nodes
@@ -516,7 +515,6 @@ const tree_objects = _.map(results_json.input.trees, (tree, i) => {
   // Simple regex to find tagged internal nodes in newick
   const tagMatches = tree.match(/\)\{G[12]\}/g);
   if (tagMatches) {
-    console.log("Found tagged internal nodes in Newick:", tagMatches);
   }
   
   return T;
@@ -603,11 +601,6 @@ function display_tree(i) {
     const edgeColorizer = function(element, data) {
         const branch_name = data.target.data.name;
         
-        console.log("=== Edge Colorizer Debug ===");
-        console.log("Branch name:", `"${branch_name}"`);
-        console.log("Is internal node:", !!(data.target.children && data.target.children.length > 0));
-        console.log("Node data:", data.target.data);
-        console.log("Available branch attributes keys:", Object.keys(results_json?.["branch attributes"]?.[i] || {}));
         
         // Try to find branch attributes by checking multiple name variations
         let branch_attrs = null;
@@ -615,19 +608,16 @@ function display_tree(i) {
         
         // First try exact match
         branch_attrs = results_json?.["branch attributes"]?.[i]?.[branch_name];
-        console.log("Exact match found:", !!branch_attrs);
         
         // Special case: use the annotation field that phylotree preserves from the original tags
         if (branch_name === "" && data.target.children && data.target.children.length > 0) {
             const annotation = data.target.data.annotation;
-            console.log("Empty internal node with annotation:", annotation);
             
             // Use annotation generically - look for {annotation} in branch attributes
             if (annotation && results_json?.["branch attributes"]?.[i]) {
                 const tagged_key = "{" + annotation + "}";
                 branch_attrs = results_json["branch attributes"][i][tagged_key];
                 if (branch_attrs) {
-                    console.log("Using", tagged_key, "based on annotation");
                 }
             }
         }
@@ -646,7 +636,6 @@ function display_tree(i) {
                     const potential_name = branch_name + "{" + tag + "}";
                     branch_attrs = results_json["branch attributes"][i][potential_name];
                     if (branch_attrs) {
-                        console.log("Found with tag:", potential_name);
                         break;
                     }
                 }
@@ -658,15 +647,12 @@ function display_tree(i) {
             for (const [key, attrs] of Object.entries(results_json["branch attributes"][i])) {
                 if (attrs["original name"] === branch_name) {
                     branch_attrs = attrs;
-                    console.log("Found by original name, key:", key);
                     break;
                 }
             }
         }
         
         branch_group = branch_attrs?.["Branch group"];
-        console.log("Final branch group:", branch_group);
-        console.log("Branch attrs:", branch_attrs);
         
         // Define color palette
         const group_colors = ["#3498db", "#e74c3c", "#9b59b6", "#f39c12"];
@@ -685,18 +671,15 @@ function display_tree(i) {
             }
             
             const color = group_colors[group_index] || group_colors[0];
-            console.log("Applying color:", color, "to branch:", branch_name);
             element.style("stroke", color, "important")
                    .style("stroke-width", "3px", "important")
                    .style("opacity", "1.0", "important");
         } else {
-            console.log("Background styling for:", branch_name);
             // Background branches
             element.style("stroke", "gray", "important")
                    .style("stroke-width", "1px", "important") 
                    .style("opacity", "0.5", "important");
         }
-        console.log("=== End Debug ===");
     };
 
     var t = T.render({
