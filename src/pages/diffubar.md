@@ -602,7 +602,48 @@ function display_tree(i) {
         branch_attrs = results_json?.["branch attributes"]?.[i]?.[branch_name];
         console.log("Exact match found:", !!branch_attrs);
         
-        // If not found, try with {G1} and {G2} tags
+        // Special case: if this is an internal node with empty name, determine group by descendants
+        if (branch_name === "" && data.target.children && data.target.children.length > 0) {
+            console.log("Empty internal node, checking descendants...");
+            
+            // Check if any descendants have G1 or G2 tags
+            let hasG1Descendant = false;
+            let hasG2Descendant = false;
+            
+            function checkDescendants(node) {
+                if (!node.children || node.children.length === 0) {
+                    // Leaf node - check if it has G1 or G2 in branch attributes
+                    const leafName = node.data.name;
+                    if (results_json?.["branch attributes"]?.[i]?.[leafName + "{G1}"]) {
+                        hasG1Descendant = true;
+                    }
+                    if (results_json?.["branch attributes"]?.[i]?.[leafName + "{G2}"]) {
+                        hasG2Descendant = true;
+                    }
+                } else {
+                    // Internal node - recurse
+                    node.children.forEach(checkDescendants);
+                }
+            }
+            
+            data.target.children.forEach(checkDescendants);
+            
+            console.log("Has G1 descendants:", hasG1Descendant, "Has G2 descendants:", hasG2Descendant);
+            
+            // If this internal node has only G1 descendants, it's the G1 ancestor
+            if (hasG1Descendant && !hasG2Descendant) {
+                branch_attrs = results_json?.["branch attributes"]?.[i]?.["{G1}"];
+                console.log("Assigned to G1 internal node");
+            }
+            // If this internal node has only G2 descendants, it's the G2 ancestor  
+            else if (hasG2Descendant && !hasG1Descendant) {
+                branch_attrs = results_json?.["branch attributes"]?.[i]?.["{G2}"];
+                console.log("Assigned to G2 internal node");
+            }
+            // If it has both or neither, keep the background assignment
+        }
+        
+        // If still not found, try with {G1} and {G2} tags appended
         if (!branch_attrs) {
             const tagged_names = [
                 branch_name + "{G1}",
