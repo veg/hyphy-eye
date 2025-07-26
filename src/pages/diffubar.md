@@ -476,21 +476,22 @@ display(Inputs.table(filtered_sites, {
 ## Model fits
 
 ```js
-const model_fits = Object.entries(results_json?.fits || {}).map(
-  ([name, fit]) => ({
-    Model: name,
-    "Log Likelihood": fit["Log Likelihood"],
-    Parameters: fit["estimated parameters"],
-    "AIC-c": fit["AIC-c"],
-  }),
-);
+// difFUBAR has a simpler fits structure than other methods
+const model_fits = results_json?.fits ? [
+  {
+    Model: "difFUBAR",
+    "Log Likelihood": results_json.fits["Log Likelihood"],
+    Parameters: "N/A", // difFUBAR doesn't report parameter count in fits
+    "AIC-c": "N/A"     // difFUBAR doesn't report AIC-c in fits
+  }
+] : [];
 ```
 
 ```js
 display(Inputs.table(model_fits, {
   format: {
-    "Log Likelihood": (d) => d.toFixed(2),
-    "AIC-c": (d) => d.toFixed(2),
+    "Log Likelihood": (d) => typeof d === "number" ? d.toFixed(2) : d,
+    "AIC-c": (d) => typeof d === "number" ? d.toFixed(2) : d,
   },
 }))
 ```
