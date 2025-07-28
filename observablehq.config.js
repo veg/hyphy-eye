@@ -40,7 +40,8 @@ export default {
         {name: "MULTI-HIT", path: "pages/multihit"},
         {name: "NRM", path: "pages/nrm"},
         {name: "RELAX", path: "pages/relax"},
-        {name: "SLAC", path: "pages/slac"}
+        {name: "SLAC", path: "pages/slac"},
+        {name: "Slatkin", path: "pages/slatkin"}
       ]
     },
     {

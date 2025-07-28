@@ -51,3 +51,5 @@ export * from "./fade/fade-utils.js";
 export * from "./fade/fade-plots.js";
 export * from "./relax/relax-utils.js";
 export * from "./relax/relax-plots.js";
+export * from "./slatkin/slatkin-utils.js";
+export * from "./slatkin/slatkin-plots.js";
