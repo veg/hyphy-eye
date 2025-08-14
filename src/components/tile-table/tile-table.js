@@ -4,6 +4,8 @@
  * an icon and a description
  */
 
+import { methodUtils } from '../../utils/method-utils.js';
+
 // @ts-check
 
 /**
@@ -19,7 +21,7 @@
  * @param {number} columns - The number of columns in the table, defaults to 3
  * @returns {HTMLTableElement} - The table with the specified tiles
  * */
-export function tile_table(table_spec, columns = 3) {
+export function tileTable(table_spec, columns = 3) {
     const rows = calculate_rows(table_spec, columns);
     const table = document.createElement('table');
     table.style.width = '100%';
@@ -43,6 +45,13 @@ export function tile_table(table_spec, columns = 3) {
     head.appendChild(link);
     head.appendChild(style);
     return table;
+}
+
+export function TileTableGenerator(resultsJson, method, threshold, options = {}) {
+    const utilsFns = methodUtils[method];
+    if (!utilsFns) throw new Error(`No utilities defined for method: ${method}`);
+    const tableSpec = utilsFns.tileFn(resultsJson, threshold);
+    return tileTable(tableSpec, options.columns || 3);
 }
 
 /**

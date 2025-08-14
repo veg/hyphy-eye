@@ -16,6 +16,7 @@ import * as utils from "../multihit/multihit-utils.js";
 import * as plots from "../multihit/multihit-plots.js";
 import * as tt from "../components/tile-table/tile-table.js";
 import {FileAttachment} from "observablehq:stdlib";
+import {html} from "htl";
 ```
 
 ```js
@@ -28,7 +29,7 @@ const proportionFormat = d3.format(".5p")
 # MULTI-HIT results summary
 
 ```js
-const results_json = Mutable(
+const resultsJson = Mutable(
   await FileAttachment("../data/multihit_test_data.json").json(),
 );
 
@@ -53,8 +54,8 @@ if (jsonUrl) {
     .then(data => {
       console.log('[MULTIHIT DEBUG] Fetched data from URL:', data);
       if (data && data.MLE) {
-        console.log('[MULTIHIT DEBUG] Setting results_json from URL data');
-        results_json.value = data;
+        console.log('[MULTIHIT DEBUG] Setting resultsJson from URL data');
+        resultsJson.value = data;
       } else {
         console.log('[MULTIHIT DEBUG] URL data missing MLE property');
       }
@@ -67,8 +68,8 @@ if (jsonUrl) {
     const data = JSON.parse(decodeURIComponent(jsonData));
     console.log('[MULTIHIT DEBUG] Parsed data from parameter:', data);
     if (data && data.MLE) {
-      console.log('[MULTIHIT DEBUG] Setting results_json from parameter data');
-      results_json.value = data;
+      console.log('[MULTIHIT DEBUG] Setting resultsJson from parameter data');
+      resultsJson.value = data;
     } else {
       console.log('[MULTIHIT DEBUG] Parameter data missing MLE property');
     }
@@ -87,8 +88,8 @@ if (jsonUrl) {
       const data = JSON.parse(localData);
       console.log('[MULTIHIT DEBUG] Parsed localStorage data:', Object.keys(data));
       if (data && data.MLE) {
-        console.log('[MULTIHIT DEBUG] Setting results_json from localStorage');
-        results_json.value = data;
+        console.log('[MULTIHIT DEBUG] Setting resultsJson from localStorage');
+        resultsJson.value = data;
       } else {
         console.log('[MULTIHIT DEBUG] localStorage data missing MLE property');
       }
@@ -107,6 +108,7 @@ if (jsonUrl) {
   console.log('[MULTIHIT DEBUG] No URL parameters found, using default test data');
 }
 
+// Listen for postMessage events to receive data
 window.addEventListener(
   "message",
   (event) => {
@@ -118,8 +120,8 @@ window.addEventListener(
       typeof event.data.data === "object" &&
       event.data.data.MLE
     ) {
-      console.log('[MULTIHIT DEBUG] Setting results_json from postMessage data');
-      results_json.value = event.data.data;
+      console.log('[MULTIHIT DEBUG] Setting resultsJson from postMessage data');
+      resultsJson.value = event.data.data;
     } else if (
       event.data &&
       event.data.type === "data-response" &&
@@ -128,8 +130,8 @@ window.addEventListener(
       console.log('[MULTIHIT DEBUG] Received data-response postMessage');
       // Handle response to data request
       if (event.data.data && event.data.data.MLE) {
-        console.log('[MULTIHIT DEBUG] Setting results_json from data-response');
-        results_json.value = event.data.data;
+        console.log('[MULTIHIT DEBUG] Setting resultsJson from data-response');
+        resultsJson.value = event.data.data;
       } else {
         console.log('[MULTIHIT DEBUG] data-response missing MLE property');
       }
@@ -145,74 +147,29 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.get_attributes(results_json);
-const tile_specs = utils.get_tile_specs(results_json);
+const attrs = utils.getMultihitAttributes(resultsJson);
+const tileSpecs = utils.getMultihitTileSpecs(resultsJson);
 ```
 
-<div>${tt.tile_table(tile_specs)}</div>
+<div>${tt.tileTable(tileSpecs)}</div>
 
 **Figure 1**. Evidence Ratios.
 
 ```js
-const fig1={
-  width: 400,
-  height: 200,
-  "data": {"values": attrs.evidence_ratios},
-  "mark": {type: "rule", tooltip : true},
-  "encoding": {
-    "facet": {
-      "field": "model",
-      "type": "ordinal",
-      "columns": 2
-    },
-    "x": {"field": "site", "type": "quantitative",  "axis" : {"grid" : false, title : "site"}},
-    "y": {"field": "er", "type": "quantitative",  "axis" : {"grid" : false, title : "Evidence Ratio"}},
-  }
-}
+const fig1 = plots.MultihitEvidenceRatiosPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig1})}</div>
+<div>${vl.render({ spec: fig1 })}</div>
 
 **Figure 2**. Site Log-Likelihood
 
 ```js
-const fig2={
-  width: 400,
-  height: 200,
-  "data": {"values": attrs.site_log_likelihood},
-  "mark": {type: "point", tooltip : true},
-  "encoding": {
-    "facet": {
-      "field": "model",
-      "type": "ordinal",
-      "columns": 2
-    },
-    "x": {"field": "site", "type": "quantitative",  "axis" : {"grid" : false, title : "site"}},
-    "y": {"field": "site_log_likelihood", "type": "quantitative",  "axis" : {"grid" : false, title : "Site Log-Likelihood"}},
-  }
-}
+const fig2 = plots.MultihitSiteLogLikelihoodPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig2})}</div>
+<div>${vl.render({ spec: fig2 })}</div>
 
 **Figure 3**. Model Fitting Benchmarks
 
 ```js
-const fig3={
-  width: 800,
-  height: 200,
-  "data": {"values": attrs.timers},
-  "mark": {type: "bar", tooltip : true,  point : false},
-  "encoding": {
-    "y": {"field": "model", "type": "ordinal",  "axis" : {"grid" : false, title : "Model"}, "sort": "-x"},
-    "x": {"field": "time", "type": "quantitative",  "axis" : {"grid" : false, title : "Time (seconds)"}, "scale" : {"type" :"sqrt"}},
-  }
-}
+const fig3 = plots.MultihitTimerBarPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig3})}</div>
-
-<hr>
-
-## hyphy-eye
-
-<br>
-
-View _more_ results at [hyphy-eye](/)!!
+<div>${vl.render({ spec: fig3 })}</div>

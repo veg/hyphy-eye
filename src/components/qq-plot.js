@@ -1,5 +1,5 @@
 import * as _ from "lodash-es";
-import * as ss from "../stats/chi-squared.js";
+import chiSquared from "../stats/chi-squared.js";
 
 /**
    * Generate a quantile-quantile plot data set for a given array of values, v.
@@ -15,7 +15,7 @@ function qq(v) {
     let qq = [{'x' : 0, 'y' : 0}];
 
     _.each (vs, (v, i)=> {
-        qq.push ({'x' : (i+1)/vs.length, 'y' : ss.cdf (v, 1)});
+        qq.push ({'x' : (i+1)/vs.length, 'y' : chiSquared(v, 1)});
     });
     qq.push ([{'x' : 1, 'y' : 1}]);
     

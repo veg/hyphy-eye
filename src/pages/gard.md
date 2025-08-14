@@ -5,7 +5,6 @@ footer: false
 pager: false
 theme: air
 ---
-
 ```js
 import * as d3 from "d3";
 import * as Plot from "npm:@observablehq/plot";
@@ -30,10 +29,17 @@ const percentageFormat = d3.format(".2p")
 const proportionFormat = d3.format(".5p")
 ```
 
-# GARD results summary
+# GARD
+<br>
+
+## Results file
 
 ```js
-const results_json = Mutable(
+const resultsFile = view(Inputs.file({label: html`<b>HyPhy results json:</b>`, accept: ".json", required: true}));
+```
+
+```js
+const resultsJson = Mutable(
   await FileAttachment("../data/gard_test_data.json").json(),
 );
 
@@ -58,8 +64,8 @@ if (jsonUrl) {
     .then(data => {
       console.log('[GARD DEBUG] Fetched data from URL:', data);
       if (data && data.MLE) {
-        console.log('[GARD DEBUG] Setting results_json from URL data');
-        results_json.value = data;
+        console.log('[GARD DEBUG] Setting resultsJson from URL data');
+        resultsJson.value = data;
       } else {
         console.log('[GARD DEBUG] URL data missing MLE property');
       }
@@ -72,8 +78,8 @@ if (jsonUrl) {
     const data = JSON.parse(decodeURIComponent(jsonData));
     console.log('[GARD DEBUG] Parsed data from parameter:', data);
     if (data && data.MLE) {
-      console.log('[GARD DEBUG] Setting results_json from parameter data');
-      results_json.value = data;
+      console.log('[GARD DEBUG] Setting resultsJson from parameter data');
+      resultsJson.value = data;
     } else {
       console.log('[GARD DEBUG] Parameter data missing MLE property');
     }
@@ -92,8 +98,8 @@ if (jsonUrl) {
       const data = JSON.parse(localData);
       console.log('[GARD DEBUG] Parsed localStorage data:', Object.keys(data));
       if (data && data.MLE) {
-        console.log('[GARD DEBUG] Setting results_json from localStorage');
-        results_json.value = data;
+        console.log('[GARD DEBUG] Setting resultsJson from localStorage');
+        resultsJson.value = data;
       } else {
         console.log('[GARD DEBUG] localStorage data missing MLE property');
       }
@@ -123,8 +129,8 @@ window.addEventListener(
       typeof event.data.data === "object" &&
       event.data.data.MLE
     ) {
-      console.log('[GARD DEBUG] Setting results_json from postMessage data');
-      results_json.value = event.data.data;
+      console.log('[GARD DEBUG] Setting resultsJson from postMessage data');
+      resultsJson.value = event.data.data;
     } else if (
       event.data &&
       event.data.type === "data-response" &&
@@ -133,8 +139,8 @@ window.addEventListener(
       console.log('[GARD DEBUG] Received data-response postMessage');
       // Handle response to data request
       if (event.data.data && event.data.data.MLE) {
-        console.log('[GARD DEBUG] Setting results_json from data-response');
-        results_json.value = event.data.data;
+        console.log('[GARD DEBUG] Setting resultsJson from data-response');
+        resultsJson.value = event.data.data;
       } else {
         console.log('[GARD DEBUG] data-response missing MLE property');
       }
@@ -150,84 +156,41 @@ window.addEventListener(
 ## Results summary
 
 ```js
-const attrs = utils.get_attributes(results_json);
-const tile_specs = utils.get_tile_specs(results_json);
-const tree_objects = plots.get_tree_objects(results_json);
-const tree_lengths = plots.get_tree_lengths(tree_objects);
-const gard_result_table = _.chain (results_json['siteBreakPointSupport']).toPairs().map ((d)=>{return {'site' : +d[0], 'support' : d[1]}}).value();
+const attrs = utils.getGardAttributes(resultsJson);
+const tileSpecs = utils.getGardTileSpecs(resultsJson);
+const treeObjects = plots.getGardTreeObjects(resultsJson);
+const treeLengths = plots.getGardTreeLengths(treeObjects);
+const gardResultTable = _.chain (resultsJson['siteBreakPointSupport']).toPairs().map ((d)=>{return {'site' : +d[0], 'support' : d[1]}}).value();
 ```
 
-<div>${tt.tile_table(tile_specs)}</div>
+<div>${tt.tileTable(tileSpecs)}</div>
 
-**Figure 1**. Left: the best placement of breakpoints inferred by the algorithm for each number of breakpoints considered. Right: the improvement in the c-AIC score between successive breakpoint numbers (log scale).
+**Figure 1**. Breakpoint placement and c-AIC improvements
 
 ```js
-// TODO: move these plots into gard-plots.js
-const fig1={
-  hconcat: [
-    {
-      width: 650,
-      height: attrs.stages*12,
-      "data": {"values": attrs.breakpointsProfile},
-      "mark": {type: "point", tooltip : true, filled : true},
-      "encoding": {
-        "x": {"field": "bp", "type": "quantitative", "axis" : {"grid" : false, "title" : "Coordinate"}},
-        "y": {"field": "model", "type": "ordinal", "axis" : {title: "# breakpoints"}},
-        "size" : {"condition": {"test": "datum['span'] >= " + attrs.stages/2, "value": "64"}, "value": "16"},
-        "color" : {"condition": {"test": "datum['span'] >= " + attrs.stages/2, "value": "firebrick"}, "value": "gray"}
-      }
-    },
-    {
-      width: 120,
-      height: attrs.stages*12,
-      "data": {"values": attrs.caicImprovements},
-      "mark": {type: "line", tooltip : true, filled : false, points: true},
-      "encoding": {
-        "x": {"field": "daic", "type": "quantitative", "axis" : {"grid" : false, "title" : "Delta c-AIC"}, scale : {"type" : "log"}},
-        "y": {"field": "bp", "type": "ordinal", "axis" : null},
-      }
-    }
-  ]}
+const fig1 = plots.GardBreakpointPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig1})}</div>
+<div>${vl.render({ spec: fig1 })}</div>
 
-**Figure 2**. Model-averaged support for breakpoint placement
+**Figure 2**. Model-averaged support
 
 ```js
-const fig2={
-  width: 800,
-  height: 200,
-  "data": {"values": attrs.siteSupport},
-  "mark": {type: "rule", tooltip : true},
-  "encoding": {
-    "x": {"field": "bp", "type": "quantitative",  "axis" : {"grid" : false, title : "coordinate"}},
-    "y": {"field": "support", "type": "quantitative",  "axis" : {"grid" : false, title : "Model averaged support"}},
-  }
-}
+const fig2 = plots.GardSupportPlotGenerator(resultsJson);
 ```
-<div>${vl.render({"spec": fig2})}</div>
+<div>${vl.render({ spec: fig2 })}</div>
 
-**Figure 3**. Total tree length by partition
+**Figure 3**. Total tree length
 
 ```js
-const fig3= {
-  width: 800,
-  height: 200,
-  "data": {"values": tree_lengths},
-  "mark": {type: "line", tooltip : true,  point : false},
-  "encoding": {
-    "x": {"field": "x", "type": "quantitative",  "axis" : {"grid" : false, title : "Coordinate"}},
-    "y": {"field": "L", "type": "quantitative",  "axis" : {"grid" : false, title : "Total tree length"}, "scale" : {"type" :"sqrt"}},
-  }
-}
+const fig3 = plots.GardTreeLengthPlotGenerator(treeLengths);
 ```
-<div>${vl.render({"spec": fig3})}</div>
+<div>${vl.render({ spec: fig3 })}</div>
 
 **Figure 4.** Trees for individial fragments
 
 ```js
 const variants = view(Inputs.select(
-  phylotreeUtils.seqNames(tree_objects[0].tree),
+  phylotreeUtils.seqNames(treeObjects[0].tree),
   {
     label: "Select some sequences to highlight",
     placeholder: "Select some sequences",
@@ -238,25 +201,17 @@ const variants = view(Inputs.select(
 
 ```js
 // TODO: this mess seems convoluted
-const displayed_trees = plots.get_displayed_trees(tree_objects, variants)
-const trees_html = plots.makeTreeDivs(tree_objects, displayed_trees)
-const trees_container = document.createElement("div")
-trees_container.innerHTML = trees_html;
+const displayedTrees = plots.getGardDisplayedTrees(treeObjects, variants)
+const treesHtml = plots.getGardTreeDivs(treeObjects, displayedTrees)
+const treesContainer = document.createElement("div")
+treesContainer.innerHTML = treesHtml;
 ```
 <link rel=stylesheet href='https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css'>
-<div>${trees_container}</div>
+<div>${treesContainer}</div>
 
 <hr>
 
 ## Suggested Citation
 
 <br>
-<p><tt>${results_json.analysis["citation"]}</tt></p>
-
-<hr>
-
-## hyphy-eye
-
-<br>
-
-View _more_ results at [hyphy-eye](/)!!
+<p><tt>${resultsJson.analysis["citation"]}</tt></p>

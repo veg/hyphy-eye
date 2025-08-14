@@ -121,7 +121,7 @@ function getLabelColor() {
  * @param {number} width - the width of the SVG element. Default is 500
  * @param {number} height - the height of the SVG element. Default is 1000
  */
-export function render(x, el, width = 1000, height = 1500) {
+export function renderBipartiteNetwork(x, el, width = 1000, height = 1500) {
     var margin = { top: 20, right: 20, bottom: 30, left: 50 },
         innerWidth = width - margin.left - margin.right,
         innerHeight = height - margin.top - margin.bottom;

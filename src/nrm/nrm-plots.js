@@ -1,26 +1,28 @@
 import * as d3 from "d3";
+import * as Plot from "@observablehq/plot";
 import * as _ from "lodash-es";
 import * as phylotreeUtils from "../utils/phylotree-utils.js";
 import * as d from "../stats/pairwise-distance.js";
+import * as utils from "./nrm-utils.js";
 
-export function get_branch_lengths(results_json, model_summary, tree_objects) {
-    const rootChildren = phylotreeUtils.rootChildren(tree_objects[0])
+export function getNrmBranchLengths(resultsJson, modelSummary, treeObjects) {
+    const rootChildren = phylotreeUtils.rootChildren(treeObjects[0])
 
     let bl = [];
-    _.each (results_json["branch attributes"]["0"], (d,b)=> {
+    _.each (resultsJson["branch attributes"]["0"], (d,b)=> {
         if (!rootChildren.has (b)) {
             let r = {'name' : b};
-            _.each (model_summary, (m)=>r[m[0]] = d[m[0]]);
+            _.each (modelSummary, (m)=>r[m[0]] = d[m[0]]);
             bl.push (r);
         }
     });
     return bl;
 }
 
-export function display_tree(results_json, i, treeDim, treeLabels, tree_objects, availableDistances, distanceFunction, modelForTree) {
-    let dim = treeDim.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
+export function getNrmTree(resultsJson, i, treeDim, treeLabels, treeObjects, availableDistances, distanceFunction, modelForTree) {
+    let dim = treeDim?.length ? _.map (treeDim.split ("x"), (d)=>+d) : null;
  
-      let T = tree_objects[i];
+      let T = treeObjects[i];
       var t = T.render({
         height:dim && dim[0] || 1024, 
         width:dim && dim[1] || 600,
@@ -45,22 +47,22 @@ export function display_tree(results_json, i, treeDim, treeLabels, tree_objects,
           if (showSeqNames) label += n.data.name;
           if (showFrequencies) {
               try {
-                let distances = results_json["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0];
+                let distances = resultsJson["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0];
                 if (distanceIndex == 0)
-                  label += " " + _.map (results_json["characters"][0], (d,i)=> d + ":" + floatFmt (distances[i])).join (', ');
+                  label += " " + _.map (resultsJson["characters"][0], (d,i)=> d + ":" + floatFmt (distances[i])).join (', ');
                 else 
-                  label += " " + results_json["characters"][0][distanceIndex-1] + ":" + floatFormat (distances[distanceIndex-1]);
+                  label += " " + resultsJson["characters"][0][distanceIndex-1] + ":" + floatFormat (distances[distanceIndex-1]);
               } catch {};
           }
           return label;
       });
 
   
-      let js_max = 0;
+      let jsMax = 0;
 
       _.each (T.getTips(), (n)=> {
-              let js = d.distance (results_json["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0],results_json["branch attributes"]["0"][n.parent.data.name][modelForTree + " frequencies"][0], distanceFunction, distanceIndex);
-               js_max = js > js_max ? js : js_max;
+              let js = d.distance (resultsJson["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0],resultsJson["branch attributes"]["0"][n.parent.data.name][modelForTree + " frequencies"][0], distanceFunction, distanceIndex);
+               jsMax = js > jsMax ? js : jsMax;
                //console.log (n);
           
       });
@@ -69,46 +71,129 @@ export function display_tree(results_json, i, treeDim, treeLabels, tree_objects,
       _.each (T.getInternals(), (n)=> {
           try {
             if (n.parent) {
-                let js = d.distance (results_json["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0],results_json["branch attributes"]["0"][n.parent.data.name][modelForTree + " frequencies"][0], distanceFunction);
-                 js_max = js > js_max ? js : js_max;
+                let js = d.distance (resultsJson["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0],resultsJson["branch attributes"]["0"][n.parent.data.name][modelForTree + " frequencies"][0], distanceFunction);
+                 jsMax = js > jsMax ? js : jsMax;
                  //console.log (n);
             }
           }  catch {};
       });
   
-      function sort_nodes (asc) {
+      function sortNodes (asc) {
           T.traverse_and_compute (function (n) {
                   var d = 1;
                   if (n.children && n.children.length) {
-                      d += d3.max (n.children, function (d) { return d["count_depth"];});
+                      d += d3.max (n.children, function (d) { return d["countDepth"];});
                   } 
 
-                  n["count_depth"] = d;
+                  n["countDepth"] = d;
               });
           T.resortChildren (function (a,b) {
-              return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
+              return (a["countDepth"] - b["countDepth"]) * (asc ? 1 : -1);
           });
         }
 
-        sort_nodes (true);
+        sortNodes (true);
         t.style_nodes ((e,n) => {
            if (n.children && n.children.length) return; 
-           let js = d.distance (results_json["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0],results_json["branch attributes"]["0"][n.data.name]["Observed frequencies"][0], distanceFunction);
-           e.selectAll ("circle").style ("fill", t.color_scale (js));
+           let js = d.distance (resultsJson["branch attributes"]["0"][n.data.name][modelForTree + " frequencies"][0],resultsJson["branch attributes"]["0"][n.data.name]["Observed frequencies"][0], distanceFunction);
+           e.selectAll ("circle").style ("fill", t.colorScale (js));
            e.selectAll ("title").data ([n.data.name]).join ("title").text ((d)=>d);
         });
 
-        t.color_scale = d3.scaleSequentialLog([1e-10,js_max],d3.interpolateWarm);
-        //treeMatrixColorScale.domain ([0,js_max]);
+        t.colorScale = d3.scaleSequentialLog([1e-10,jsMax],d3.interpolateWarm);
+        //treeMatrixColorScale.domain ([0,jsMax]);
 
         t.style_edges ((e,n) => {
            e.style ("stroke", null);
            if (n.source.parent) {
-             let js = d.distance (results_json["branch attributes"]["0"][n.source.data.name][modelForTree + " frequencies"][0],results_json["branch attributes"]["0"][n.target.data.name][modelForTree + " frequencies"][0], distanceFunction);
-             e.style ("stroke", t.color_scale (js));
+             let js = d.distance (resultsJson["branch attributes"]["0"][n.source.data.name][modelForTree + " frequencies"][0],resultsJson["branch attributes"]["0"][n.target.data.name][modelForTree + " frequencies"][0], distanceFunction);
+             e.style ("stroke", t.colorScale (js));
            }
         });
         t.placenodes();
         t.update();
         return t;      
-    }
+}
+
+// Generator for phylogenetic tree view with legend (Figure 2)
+export function NrmTreePlotGenerator(resultsJson, opts = {}) {
+  // Ensure phylotree CSS is loaded once
+  if (typeof document !== 'undefined' && !document.getElementById('phylotree-css')) {
+    const link = document.createElement('link');
+    link.id = 'phylotree-css';
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/phylotree@0.1/phylotree.css';
+    document.head.appendChild(link);
+  }
+  const attrs = utils.getNrmAttributes(resultsJson);
+  const treeDim = opts.treeDim || null;
+  const treeLabels = opts.treeLabels || [];
+  const availableDistances = opts.availableDistances || [];
+  const distanceFunction = opts.distanceFunction || 'default';
+  const modelForTree = opts.modelForTree || attrs.bestModel;
+  const treeObjects = phylotreeUtils.getTreeObjects(resultsJson, modelForTree);
+  const figure = getNrmTree(resultsJson, 0, treeDim, treeLabels, treeObjects, availableDistances, distanceFunction, modelForTree);
+  const container = document.createElement('div');
+  const scheme = document.createElement('div');
+  const label = document.createElement('text');
+  label.textContent = opts.label || 'Distance';
+  scheme.appendChild(label);
+  const legend = Plot.legend({
+    color: {
+      type: 'linear',
+      interpolate: figure.colorScale.interpolate,
+      domain: figure.colorScale.domain(),
+      range: figure.colorScale.range(),
+      ticks: 5,
+      tickFormat: 'g'
+    },
+    width: opts.legendWidth || 200
+  });
+  scheme.appendChild(legend);
+  scheme.appendChild(document.createElement('br'));
+  container.appendChild(scheme);
+  container.appendChild(figure.show());
+  return container;
+}
+
+export function NrmBranchLengthComparisonPlotGenerator(resultsJson, opts = {}) {
+  const attrs = utils.getNrmAttributes(resultsJson);
+  // determine fields for x and y
+  const xField = opts.xField || attrs.modelSummary[0][0];
+  const yField = opts.yField || attrs.modelSummary[1][0];
+  // build tree objects
+  const treeObjects = phylotreeUtils.getTreeObjects(resultsJson, opts.modelForTree || attrs.bestModel);
+  const branchLengths = getNrmBranchLengths(resultsJson, attrs.modelSummary, treeObjects);
+  return {
+    data: { values: branchLengths },
+    width: opts.width || 400,
+    height: opts.height || 400,
+    layer: [
+      {
+        mark: { type: "point", opacity: 0.5, size: 36, tooltip: true, filled: true, clip: true },
+        encoding: {
+          x: { field: xField, type: "quantitative", title: xField, axis: { grid: false, titleFontSize: 18 } },
+          y: { field: yField, type: "quantitative", title: yField, axis: { grid: false, titleFontSize: 18 } },
+          stroke: { value: "black" },
+          color: { value: "grey" }
+        }
+      },
+      {
+        mark: { type: "line", color: "firebrick", clip: true },
+        transform: [{ regression: yField, on: xField, method: "linear" }],
+        encoding: {
+          x: { field: xField, type: "quantitative" },
+          y: { field: yField, type: "quantitative" }
+        }
+      },
+      {
+        transform: [
+          { regression: yField, on: xField, method: "linear", params: true },
+          { calculate: `'y=' + format(datum.coef[0], '.4f') + '+' + format(datum.coef[1], '.4f') + 'x; R²: ' + format(datum.rSquared, '.2f')`, as: "R2" }
+        ],
+        mark: { type: "text", color: "firebrick", x: "width", size: 16, align: "right", y: -5 },
+        encoding: { text: { type: "nominal", field: "R2" } }
+      }
+    ]
+  };
+}

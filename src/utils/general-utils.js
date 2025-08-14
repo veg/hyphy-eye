@@ -14,7 +14,7 @@ import * as _ from "lodash-es";
  *   If either codon sequence is 'NNN', both counts are zero.
  */
 
-export function subs_for_pair(from, to) {
+export function subsForPair(from, to) {
 
     if (from == 'NNN' || to == 'NNN') {
         return [0,0];
@@ -30,28 +30,28 @@ export function subs_for_pair(from, to) {
       case 0:
           return [0,0];
       case 1:
-          if (translate_ambiguous_codon (from) == translate_ambiguous_codon(to)) {
+          if (translateAmbiguousCodon(from) == translateAmbiguousCodon(to)) {
               return [1,0];
           }
           return [0,1];
       case 2: {
-          let res = path_diff (from,to,[diffs[0],diffs[1]]);
-          _.each (path_diff (from,to,[diffs[1],diffs[0]]), (d,i) => {res[i] += d;});
+          let res = pathDiff(from,to,[diffs[0],diffs[1]]);
+          _.each (pathDiff(from,to,[diffs[1],diffs[0]]), (d,i) => {res[i] += d;});
           return _.map (res, (d)=>0.5*d);
       }
        case 3: {
-          let res = path_diff (from,to,[diffs[0],diffs[1],diffs[2]]);
-          _.each (path_diff (from,to,[diffs[0],diffs[2],diffs[1]]), (d,i) => {res[i] += d;});
-          _.each (path_diff (from,to,[diffs[1],diffs[0],diffs[2]]), (d,i) => {res[i] += d;});
-          _.each (path_diff (from,to,[diffs[1],diffs[2],diffs[0]]), (d,i) => {res[i] += d;});
-          _.each (path_diff (from,to,[diffs[2],diffs[0],diffs[1]]), (d,i) => {res[i] += d;});
-          _.each (path_diff (from,to,[diffs[2],diffs[1],diffs[0]]), (d,i) => {res[i] += d;});
+          let res = pathDiff(from,to,[diffs[0],diffs[1],diffs[2]]);
+          _.each (pathDiff(from,to,[diffs[0],diffs[2],diffs[1]]), (d,i) => {res[i] += d;});
+          _.each (pathDiff(from,to,[diffs[1],diffs[0],diffs[2]]), (d,i) => {res[i] += d;});
+          _.each (pathDiff(from,to,[diffs[1],diffs[2],diffs[0]]), (d,i) => {res[i] += d;});
+          _.each (pathDiff(from,to,[diffs[2],diffs[0],diffs[1]]), (d,i) => {res[i] += d;});
+          _.each (pathDiff(from,to,[diffs[2],diffs[1],diffs[0]]), (d,i) => {res[i] += d;});
           return _.map (res, (d)=>d/6); 
        }
     }
 }
 
-export const ambiguous_codes =  {
+export const ambiguousCodes =  {
       'A' : ['A'],
       'C' : ['C'],
       'G' : ['G'],
@@ -66,7 +66,7 @@ export const ambiguous_codes =  {
       'B' : ['C','G','T'],
       'D' : ['A','G','T'],
       'H' : ['A','C','T'],
-      'V' : ['A','C','T'],
+      'V' : ['A','C','G'],
       'N' : ['A','C','G','T'],
       '?' : ['A','C','G','T']
 };
@@ -81,18 +81,18 @@ export const ambiguous_codes =  {
  * @param {string} codon - a three-nucleotide codon
  * @return {string} the amino acid(s) corresponding to the codon
  */
-export function translate_ambiguous_codon(codon) {
-    const translation_table = get_translation_table();
+export function translateAmbiguousCodon(codon) {
+    const translationTable = getTranslationTable();
 
-    if (codon in translation_table) {
-      return  translation_table[codon];
+    if (codon in translationTable) {
+      return  translationTable[codon];
     }
   
     let options = {};
-    _.each (ambiguous_codes[codon[0]], (n1)=> {
-         _.each (ambiguous_codes[codon[1]], (n2)=> {
-            _.each (ambiguous_codes[codon[2]], (n3)=> {
-                let c = translation_table[n1+n2+n3];
+    _.each (ambiguousCodes[codon[0]], (n1)=> {
+         _.each (ambiguousCodes[codon[1]], (n2)=> {
+            _.each (ambiguousCodes[codon[2]], (n3)=> {
+                let c = translationTable[n1+n2+n3];
                 if (c in options) {
                   options[c] += 1; 
                 } else {
@@ -125,19 +125,19 @@ export function translate_ambiguous_codon(codon) {
  *   of synonymous substitutions, and the second element is the number of
  *   nonsynonymous substitutions.
  */
-export function path_diff(from,to,path) {
+export function pathDiff(from,to,path) {
     let result = [0,0];
     let curr = _.map (from),
         next = _.clone (curr);
    
     next [path[0]] = to[path[0]];
-    const is_syn = translate_ambiguous_codon (curr.join ("")) == translate_ambiguous_codon(next.join (""));
-    result[is_syn ? 0 : 1] += 1;
+    const isSyn = translateAmbiguousCodon (curr.join ("")) == translateAmbiguousCodon(next.join (""));
+    result[isSyn ? 0 : 1] += 1;
     for (let i = 1; i < path.length; i++) {
         curr = _.clone (next);
         next [path[i]] = to[path[i]];
-        const is_syn = translate_ambiguous_codon (curr.join ("")) == translate_ambiguous_codon(next.join (""));
-        result[is_syn ? 0 : 1] += 1;
+        const isSyn = translateAmbiguousCodon (curr.join ("")) == translateAmbiguousCodon(next.join (""));
+        result[isSyn ? 0 : 1] += 1;
     }
   
     return result;
@@ -154,14 +154,14 @@ export function path_diff(from,to,path) {
  * 
  * @return {Object} a dictionary mapping codons to amino acids
  */
-export function get_translation_table() {
+export function getTranslationTable() {
   var code = d3.csvParse("Codon,AA\nTTT,F\nTCT,S\nTAT,Y\nTGT,C\nTTC,F\nTCC,S\nTAC,Y\nTGC,C\nTTA,L\nTCA,S\nTAA,*\nTGA,*\nTTG,L\nTCG,S\nTAG,*\nTGG,W\nCTT,L\nCCT,P\nCAT,H\nCGT,R\nCTC,L\nCCC,P\nCAC,H\nCGC,R\nCTA,L\nCCA,P\nCAA,Q\nCGA,R\nCTG,L\nCCG,P\nCAG,Q\nCGG,R\nATT,I\nACT,T\nAAT,N\nAGT,S\nATC,I\nACC,T\nAAC,N\nAGC,S\nATA,I\nACA,T\nAAA,K\nAGA,R\nATG,M\nACG,T\nAAG,K\nAGG,R\nGTT,V\nGCT,A\nGAT,D\nGGT,G\nGTC,V\nGCC,A\nGAC,D\nGGC,G\nGTA,V\nGCA,A\nGAA,E\nGGA,G\nGTG,V\nGCG,A\nGAG,E\nGGG,G\n");
-  var mapped_code = {};
-  _.each (code, (v,k) => {mapped_code[v.Codon] = v.AA;});
-  mapped_code["---"] = "-";
-  mapped_code["NNN"] = "?";
+  var mappedCode = {};
+  _.each (code, (v,k) => {mappedCode[v.Codon] = v.AA;});
+  mappedCode["---"] = "-";
+  mappedCode["NNN"] = "?";
   
-  return mapped_code;
+  return mappedCode;
 }
 
 var count = 0;
@@ -180,4 +180,210 @@ var count = 0;
 export function uid(name) {
   name = name == null ? "" : name;
   return name + "-" + ++count;
+}
+
+/**
+ * Extracts common attributes from HyPhy results JSON that are shared across multiple methods
+ * 
+ * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
+ * @returns {Object} Common attributes extracted from the results
+ */
+export function extractCommonAttributes(resultsJson) {
+  const attributes = {};
+  
+  // Basic sequence and site information
+  if (_.has(resultsJson, 'input.number of sequences')) {
+    attributes.numberOfSequences = resultsJson.input["number of sequences"];
+  }
+  
+  if (_.has(resultsJson, 'input.number of sites')) {
+    attributes.numberOfSites = resultsJson.input["number of sites"];
+  }
+  
+  if (_.has(resultsJson, 'input.partition count')) {
+    attributes.numberOfPartitions = resultsJson.input["partition count"];
+  }
+  
+  // Extract partition sizes if available
+  if (resultsJson.tested) {
+    attributes.partitionSizes = Object.values(resultsJson.tested).map(
+      d => (d && typeof d === 'object') ? Object.values(d).filter(d => d === "test").length : 0
+    );
+  } else {
+    attributes.partitionSizes = [];
+  }
+  
+  // Extract tested branch information if available
+  if (_.has(resultsJson, 'tested')) {
+    const testedArray = Object.values(resultsJson.tested);
+    const testCounts = testedArray.map(obj => {
+      return (obj && typeof obj === 'object') ? Object.values(obj).filter(value => value === "test").length : 0;
+    });
+    attributes.testedBranchCount = d3.median(testCounts);
+  }
+  
+  return attributes;
+}
+
+/**
+ * Extracts rate distribution information from HyPhy results JSON
+ * 
+ * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
+ * @param {Array<string>} path - Path to the rate distribution in the results JSON
+ * @param {Array<string>} fields - Fields to extract from the rate distribution
+ * @returns {Object|null} Rate distribution information or null if not available
+ */
+export function extractRateDistribution(resultsJson, path, fields) {
+  const distribution = _.get(resultsJson, path);
+  
+  if (!distribution) {
+    return null;
+  }
+  
+  return _.map(distribution, (d) => {
+    return _.fromPairs(_.map(fields, (f) => [f, d[f]]));
+  });
+}
+
+/**
+ * Checks if the results JSON has background rate distributions
+ * 
+ * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
+ * @returns {boolean} Whether background rate distributions are available
+ */
+export function hasBackground(resultsJson) {
+  return !!_.get(resultsJson, ["fits", "Unconstrained model", "Rate Distributions", "Background"]);
+}
+
+/**
+ * Checks if the results JSON has error sink settings
+ * 
+ * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
+ * @returns {boolean} Whether error sink settings are available
+ */
+export function hasErrorSink(resultsJson) {
+  return !!(resultsJson["analysis"] && 
+           resultsJson["analysis"]["settings"] && 
+           resultsJson["analysis"]["settings"]["error-sink"]);
+}
+
+/**
+ * Retrieves and sorts rate distribution data from the results JSON.
+ * This function works with BUSTED, MEME, and aBSREL results formats.
+ *
+ * @param {Object} resultsJson - The JSON object containing the results
+ * @param {boolean} [hasErrorSink] - Whether to consider error sink in calculations
+ * @param {Array} keys - The path to access the rate distribution data
+ * @param {Array} [tags=["omega", "proportion"]] - The field names for rate and weight
+ *
+ * @returns {Array|null} A sorted array of objects, each containing:
+ *   - value: The rate value
+ *   - weight: The corresponding weight
+ *   The array is sorted by rate value. Returns null if no rate information is found.
+ */
+export function getRateDistribution(resultsJson, hasErrorSink, keys, tags = ["omega", "proportion"]) {
+    const rateInfo = _.get(resultsJson, keys);
+    if (!rateInfo) return null;
+
+    // Only handle error sink if hasErrorSink is explicitly provided as a boolean
+    let clipFirst = false;
+    if (typeof hasErrorSink === 'boolean' && hasErrorSink && tags[0] === 'omega') {
+        clipFirst = true;
+    }
+
+    let rateData;
+    if (clipFirst) {
+        // Filter out error sink rate (rate 0) for BUSTED and aBSREL
+        const entries = Object.entries(rateInfo);
+        rateData = Object.fromEntries(entries.filter(([key]) => key !== '0'));
+    } else {
+        rateData = rateInfo;
+    }
+
+    // Create rate distribution objects
+    const rateDistribution = _.map(rateData, (d) => ({
+        value: d[tags[0]],
+        weight: d[tags[1]]
+    }));
+
+    // Sort by rate value
+    return _.sortBy(rateDistribution, (d) => d.value);
+}
+
+/**
+ * Retrieves the rate distribution for a given branch in the results JSON.
+ * This function works with BUSTED, MEME, and aBSREL results formats.
+ *
+ * @param {Object} resultsJson - The JSON object containing the results
+ * @param {string} branch - The name of the branch to retrieve rate distribution for
+ * @param {Array} [keys] - The path to access the branch attributes
+ * @param {Array} [tags=["0", "1"]] - The field names for rate and weight
+ * @param {boolean} [hasErrorSink] - Whether to consider error sink in calculations
+ *
+ * @returns {Array|null} A sorted array of objects, each containing:
+ *   - value: The rate value
+ *   - weight: The corresponding weight
+ *   The array is sorted by rate value. Returns null if no rate information is found.
+ */
+export function getRateDistributionByBranch(resultsJson, branch, keys = ["branch attributes", "0"], tags = ["0", "1"], hasErrorSink) {
+    return getRateDistribution(resultsJson, hasErrorSink, [...keys, branch, "Rate Distributions"], tags);
+}
+
+/**
+ * Retrieves the corrected P-value for a given branch in the results JSON.
+ * This function works with BUSTED, MEME, and aBSREL results formats.
+ *
+ * @param {Object} resultsJson - The JSON object containing the results
+ * @param {string} branch - The name of the branch to retrieve p-value for
+ * @param {Array} [keys] - The path to access the branch attributes
+ * @param {string} [pvalueKey="Corrected P-value"] - The key for the p-value in the branch attributes
+ *
+ * @returns {number|null} The corrected P-value for the given branch, or
+ *   null if no P-value information is found.
+ */
+export function getBranchPvalue(resultsJson, branch, keys = ["branch attributes", "0"], pvalueKey = "Corrected P-value") {
+    return _.get(resultsJson, [...keys, branch, pvalueKey]);
+}
+
+/**
+ * Identifies which HyPhy method was used to produce the results JSON
+ * 
+ * @param {Object} resultsJson - The results JSON object from a HyPhy analysis
+ * @returns {string|null} The name of the HyPhy method used, or null if not identifiable
+ */
+export function identifyHyPhyMethod(resultsJson) {
+    // Check if results_json has the required structure
+    if (!resultsJson || !resultsJson.analysis || !resultsJson.analysis.info) {
+        console.log("no analysis.info")
+        return null;
+    }
+    
+    const info = resultsJson.analysis.info;
+    console.log("info", info)
+    
+    // Define method patterns to search for
+    const methodPatterns = [
+        { pattern: /BUSTED/i, method: 'BUSTED' },
+        { pattern: /aBSREL/i, method: 'aBSREL' },
+        { pattern: /FEL/i, method: 'FEL' },
+        { pattern: /MEME/i, method: 'MEME' },
+        { pattern: /GARD/i, method: 'GARD' },
+        { pattern: /SLAC/i, method: 'SLAC' },
+        { pattern: /FUBAR/i, method: 'FUBAR' },
+        { pattern: /RELAX/i, method: 'RELAX' },
+        { pattern: /NRM/i, method: 'NRM' },
+        { pattern: /MULTIHIT/i, method: 'MULTIHIT' }
+    ];
+    
+    // Check for method name in analysis.info
+    for (const methodObj of methodPatterns) {
+        console.log("methodObj", methodObj)
+        // Check if the method name appears in analysis.info
+        if (info.includes(methodObj.method)) {
+            console.log("found", methodObj.method)
+            return methodObj.method;
+        }
+    }
+    
+    return null;
 }
